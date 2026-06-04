@@ -110,6 +110,7 @@ const FoodItemSchema = new Schema<IFoodItem>(
 // MongoDB cannot create a compound index where two fields are BOTH arrays in the same index definition. This is called the "parallel arrays" restriction. Both tags and meal_types are arrays so combining them
 // in one compound index causes MongoDB to throw error code 171.
 // Compound index for region plus meal_type queries. Covers. find foods WHERE region = X AND meal_types includes Y
+// The 1 means ascending order
 
 FoodItemSchema.index({ region: 1, meal_types: 1 });
 

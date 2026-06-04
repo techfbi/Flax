@@ -1,9 +1,10 @@
+import "dotenv/config";
 import mongoose from "mongoose";
 import { FoodItem } from "../models/food.model.js";
-import "dotenv/config";
 import { env } from "../config/env.js";
 
 const foods = [
+  // Each item must match the IFoodItem interface from food.model.ts.
 
   // ==========================================================================
   // NIGERIA
@@ -1654,6 +1655,9 @@ const foods = [
 
 // ---------------------------------------------------------------------------
 // Run seed
+// Designed to be run once or safely re-run.
+// Connects to MongoDB, inserts all food items, then disconnects cleanly.
+// Duplicate names are silently skipped due to the unique index on name
 // ---------------------------------------------------------------------------
 const seedFoods = async (): Promise<void> => {
   try {
@@ -1663,10 +1667,10 @@ const seedFoods = async (): Promise<void> => {
 
     console.log("MongoDB connected for seeding.");
 
-    const result = await FoodItem.insertMany(foods, { ordered: false });
+    const result = await FoodItem.insertMany(foods, { ordered: false }); // ordered: false allows continuing on duplicate key errors. Without this, the first duplicate would stop the entire insert operation.
     console.log(`Seeded ${result.length} food items successfully.`);
   } catch (err: any) {
-    if (err.code === 11000) {
+    if (err.code === 11000) { // MongoDB's duplicate key error code
       console.log("Some items already exist. skipping duplicates.");
       if (err.result?.nInserted) {
         console.log(`${err.result.nInserted} new items inserted.`);

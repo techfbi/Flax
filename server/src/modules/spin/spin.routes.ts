@@ -15,9 +15,9 @@ export const spinRouter = Router();
 spinRouter.use(authenticate);
 
 // Returns available filter options for the user's region
-spinRouter.get("/filters", getFilters);
+spinRouter.get("/filters", getFilters); //GET /api/spin/filters
 
 // Flagging system
-spinRouter.post("/flag", validate(flagMealSchema), flagMealHandler);
-spinRouter.get("/flagged", getFlaggedHandler);
-spinRouter.delete("/flag/:flagId", unflagMealHandler);
+spinRouter.post("/flag", validate(flagMealSchema), flagMealHandler); // POST /api/spin/flag
+spinRouter.get("/flagged", getFlaggedHandler); // GET /api/spin/flagged
+spinRouter.delete("/flag/:flagId", unflagMealHandler); // DELETE /api/spin/flag/:flagId

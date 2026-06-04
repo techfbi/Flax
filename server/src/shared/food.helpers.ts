@@ -4,18 +4,16 @@ import { env } from "../config/env.js";
 // Example input. "foods/nigeria/jollof-rice.jpg"
 // Example output. "https://pub-xxx.r2.dev/foods/nigeria/jollof-rice.jpg"
 //
-// To migrate image hosting. change MEDIA_BASE_URL in .env only.
-// No database changes needed ever.
+// To migrate image hosting. we change MEDIA_BASE_URL in .env only. No database changes needed ever.
 export const buildImageUrl = (imagePath: string): string => {
   return `${env.MEDIA_BASE_URL}/${imagePath}`;
 };
 
-// Takes any object that has image_path and returns it
-// with image_url attached. Use this before returning
+// Takes any object that has image_path and returns it with image_url attached. we use this before returning
 // any food data to the frontend.
-export const withImageUrl = <T extends { image_path: string }>(
+export const withImageUrl = <T extends { image_path: string }>( // This means this function accepts ANY object type, as long as it has image_path.
   food: T
-): T & { image_url: string } => {
+): T & { image_url: string } => { // Means return the original object type PLUS image_url.
   return {
     ...food,
     image_url: buildImageUrl(food.image_path),

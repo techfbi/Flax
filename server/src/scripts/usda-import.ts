@@ -2,7 +2,7 @@
 // Usage: npx tsx scripts/usda-import.ts
 //
 // How it works.
-// 1. You define a list of food names to search for.
+// 1. defined a list of food names to search for.
 // 2. For each name, the script queries the USDA API.
 // 3. It maps the USDA response to our food_items schema.
 // 4. It inserts into MongoDB, skipping duplicates.
