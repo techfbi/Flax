@@ -12,6 +12,7 @@ export interface IFoodItem extends Document {
   allergen_tags: string[];
   region: string;
   image_path: string;
+  ingredients: string[];
   calories_per_100g: number;
   protein_g: number;
   carbs_g: number;
@@ -54,6 +55,10 @@ const FoodItemSchema = new Schema<IFoodItem>(
       index: true,
     },
     allergen_tags: {
+      type: [String],
+      default: [],
+    },
+    ingredients: {
       type: [String],
       default: [],
     },

@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
-import { FoodItem, type IFoodItem } from "../../models/food.model.js";
+import { FoodItem } from "../../models/food.model.js";
 import { redis } from "../../config/db.redis.js";
 import { pgPool } from "../../config/db.postgres.js";
 import { withImageUrl } from "../../shared/food.helpers.js";
 import { AppError } from "../../shared/errors.js";
 import type { FlagMealInput } from "./spin.schema.js";
+import { getUserPantryNames } from "../pantry/pantry.service.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -24,6 +25,7 @@ export interface FoodResult {
   tags: string[];
   meal_types: string[];
   allergen_tags: string[];
+  ingredients: string[];
   calories_per_100g: number;
   protein_g: number;
   carbs_g: number;
@@ -33,29 +35,27 @@ export interface FoodResult {
 // ---------------------------------------------------------------------------
 // Build Redis cache key from region and filters.
 // Different filter combinations get independent cache entries so they never overwrite each other.
-
 // Examples of generated keys.
 //   "food:Nigeria"
 //   "food:Nigeria:mt:lunch"
 //   "food:Nigeria:mt:dinner:tags:spicy,high-protein"
-//
 // Tags are sorted alphabetically before joining so that ["high-protein", "spicy"] and ["spicy", "high-protein"] produce
 // the same key and hit the same cache entry.
 // ---------------------------------------------------------------------------
 const buildCacheKey = (region: string, filters: SpinFilters): string => {
   const parts = [`food:${region}`];
   if (filters.meal_type) parts.push(`mt:${filters.meal_type}`);
-  if (filters.tags?.length) parts.push(`tags:${filters.tags.sort().join(",")}`); //This is where we sorted alphabetically to avoid duplicate keys
+  if (filters.tags?.length) parts.push(`tags:${filters.tags.sort().join(",")}`); // sorted alphabetically to avoid duplicate keys
   return parts.join(":");
 };
 
 // ---------------------------------------------------------------------------
 // Get food refs to exclude for this user. Combines two exclusion sources in one query using UNION.
-// 1. Foods seen in the last 48 hours via spin_history. Prevents the same meal appearing twice within 2 days
+// 1. Foods seen in the last 48 hours via spin_history. Prevents the same meal appearing twice within 2 days.
 // 2. Foods permanently flagged via flagged_meals. Which will never appear again until user removes flag.
 // UNION automatically removes duplicates so a food "flagged" AND "recently seen" only appears once in the result.
 // ---------------------------------------------------------------------------
-export const getExcludedFoodRefs = async ( userId: string ): Promise<string[]> => {
+export const getExcludedFoodRefs = async (userId: string): Promise<string[]> => {
   const result = await pgPool.query(
     `SELECT food_ref FROM spin_history
      WHERE user_id = $1
@@ -74,6 +74,121 @@ export const getExcludedFoodRefs = async ( userId: string ): Promise<string[]> =
 };
 
 // ---------------------------------------------------------------------------
+// applyPantryLogic
+// Shared logic for applying pantry filtering on top of base-filtered foods.
+// Extracted into its own function because it is called identically whether
+// the food list came from Redis cache or fresh from MongoDB.
+// This prevents code duplication between the cache hit path and the DB path.
+// ---------------------------------------------------------------------------
+const applyPantryLogic = async (
+  foodsWithUrls: FoodResult[],
+  userAllergens: string[],
+  excludeIds: string[],
+  userId: string
+): Promise<{ foods: FoodResult[]; pantryMatchUsed: boolean }> => {
+
+  // Fetch user pantry items for matching
+  const userPantry = await getUserPantryNames(userId);
+
+  // Apply allergen and exclusion filters first
+  const baseFiltered = filterResults(foodsWithUrls, userAllergens, excludeIds);
+
+  // If user has no pantry items, skip pantry filtering entirely.
+  // Return the base filtered list as-is.
+  if (userPantry.length === 0) {
+    if (baseFiltered.length === 0) {
+      // Both pantry and base are empty. determine best error message.
+      const withoutExclusions = filterResults(foodsWithUrls, userAllergens, []);
+
+      if (withoutExclusions.length === 0) {
+        throw new AppError(
+          "No meals match your current filters without triggering your allergens. " +
+          "Try changing your filters.",
+          404,
+          "NO_FOODS_AFTER_ALLERGENS"
+        );
+      }
+
+      throw new AppError(
+        "You have seen all available meals matching these filters recently. " +
+        "Try different filters or come back later.",
+        404,
+        "NO_FOODS_AFTER_EXCLUSIONS"
+      );
+    }
+    return { foods: baseFiltered, pantryMatchUsed: false };
+  }
+
+  // Apply pantry filter on top of allergen and exclusion filtered list.
+  // A food matches if its ingredients array contains at least one item from the user's pantry using partial case-insensitive matching.
+  const pantryFiltered = filterByPantry(baseFiltered, userPantry);
+
+  // If pantry filter produces results, use them.
+  if (pantryFiltered.length > 0) {
+    return { foods: pantryFiltered, pantryMatchUsed: true };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Graceful fallback.
+  // Pantry filter produced zero results but we have base filtered items.
+  // Return the base filtered list with pantryMatchUsed: false so the frontend knows to show the subtle fallback note to the user.
+  // ---------------------------------------------------------------------------
+  if (baseFiltered.length > 0) {
+    console.log(
+      `[REMOVE LOG LATER] Pantry filter produced no results for user. ${userId}. ` +
+      "Falling back to full filtered list."
+    );
+    return { foods: baseFiltered, pantryMatchUsed: false };
+  }
+
+  // Both pantry filter and base filter are empty.
+  // Before throwing an error, we try relaxing the 48-hour recency window.
+  // We never relax allergens (health safety) or flagged meals (user preference).
+  // We only relax recently seen foods because that restriction is temporary.
+
+  // Get flagged refs only. no time filter.
+  const flaggedResult = await pgPool.query(
+    "SELECT food_ref FROM flagged_meals WHERE user_id = $1",
+    [userId]
+  );
+  const flaggedOnly = new Set(
+    flaggedResult.rows.map((r: { food_ref: string }) => r.food_ref)
+  );
+
+  // Filter using only allergens and permanent flags. ignore 48hr window.
+  const withRelaxedRecency = foodsWithUrls.filter((food) => {
+    // Always respect flags
+    if (flaggedOnly.has(food._id)) return false;
+
+    // Always respect allergens
+    if (userAllergens.length > 0) {
+      const foodAllergens = food.allergen_tags.map((a: string) => a.toLowerCase());
+      const lowerAllergens = new Set(userAllergens.map((a) => a.toLowerCase()));
+      if (foodAllergens.some((a: string) => lowerAllergens.has(a))) return false;
+    }
+
+    return true;
+  });
+
+  if (withRelaxedRecency.length === 0) {
+    // Even with recency relaxed, nothing available.
+    // Allergens plus flags are causing the block.
+    throw new AppError(
+      "No meals match your current filters without triggering your allergens. " +
+      "Try changing your filters.",
+      404,
+      "NO_FOODS_AFTER_ALLERGENS"
+    );
+  }
+
+  // Recency relaxed fallback succeeded.
+  console.log(
+    `[REMOVE LOG LATER] All recent meals seen. showing previously seen meals for user. ${userId}`
+  );
+  return { foods: withRelaxedRecency, pantryMatchUsed: false };
+};
+
+// ---------------------------------------------------------------------------
 // Get foods for the spin wheel. Returns a filtered list of foods for the user's region.
 // Results are cached in Redis for 1 hour to avoid hitting MongoDB on every spin.
 // Allergen filtering and exclusion filtering happen after cache retrieval because they are per-user and cannot be cached generically.
@@ -82,8 +197,9 @@ export const getFoodsForSpin = async (
   region: string,
   filters: SpinFilters,
   userAllergens: string[],
-  excludeIds: string[] = []
-): Promise<FoodResult[]> => {
+  excludeIds: string[] = [],
+  userId: string
+): Promise<{ foods: FoodResult[]; pantryMatchUsed: boolean }> => {
   const cacheKey = buildCacheKey(region, filters);
 
   // Check Redis cache first
@@ -92,8 +208,12 @@ export const getFoodsForSpin = async (
 
     if (cached) {
       console.log(`[REMOVE LOG LATER] Food cache hit. key. ${cacheKey}`);
-      const cachedFoods = JSON.parse(cached) as FoodResult[]; //Parse the cached JSON string back into an array of FoodResult objects
-      return filterResults(cachedFoods, userAllergens, excludeIds); // Apply per-user filters to the cached list and return
+      // Parse the cached JSON string back into an array of FoodResult objects.
+      // Then pass through the same pantry logic as the MongoDB path.
+      // The return type must match the function signature in both the cache
+      // hit path and the MongoDB path. applyPantryLogic handles both.
+      const cachedFoods = JSON.parse(cached) as FoodResult[];
+      return applyPantryLogic(cachedFoods, userAllergens, excludeIds, userId);
     }
   } catch (err) {
     // If Redis fails, continue to MongoDB. we didnt block spin due to cache failure.
@@ -103,7 +223,7 @@ export const getFoodsForSpin = async (
     );
   }
 
-  // BUILD MONGODB QUERY and Since we don't know beforehand which properties will exist, a fixed type wouldn't work well.
+  // BUILD MONGODB QUERY. Since we don't know beforehand which properties will exist, a fixed type wouldn't work well.
   const query: Record<string, unknown> = {
     region,
     is_verified: true,
@@ -111,7 +231,7 @@ export const getFoodsForSpin = async (
 
   if (filters.meal_type) {
     // When a field is an array in MongoDB, querying for a single value checks if the array CONTAINS that value among other values.
-    query.meal_types = filters.meal_type; // Dynamically adding to the queryfield
+    query.meal_types = filters.meal_type; // Dynamically adding to the query field
   }
 
   if (filters.tags?.length) {
@@ -121,8 +241,8 @@ export const getFoodsForSpin = async (
   }
 
   const foods = await FoodItem.find(query)
-    .select("-__v -createdAt -updatedAt -usda_ref -regional_names") // Exclude those fields from the result
-    .lean(); // We do not want our returned object to be full Mongoose doucument instance (i.e the methods, getters, internal trackking etc). To get faster and use less memory js objects for safe caching
+    .select("-__v -createdAt -updatedAt -usda_ref -regional_names") // Exclude those fields from the result. ingredients is NOT excluded and is included by default.
+    .lean(); // We do not want our returned object to be full Mongoose document instance (i.e the methods, getters, internal tracking etc). To get faster and use less memory js objects for safe caching.
 
   if (foods.length === 0) {
     throw new AppError(
@@ -132,7 +252,7 @@ export const getFoodsForSpin = async (
     );
   }
 
-  // Attach full image URLs before caching
+  // Attach full image URLs before caching.
   // We convert the MongoDB ObjectId to a string because ObjectId is a special Mongoose type that does not serialize to JSON cleanly.
   const foodsWithUrls = foods.map((food) =>
     withImageUrl({
@@ -152,10 +272,14 @@ export const getFoodsForSpin = async (
     console.error("[REMOVE LOG LATER] Redis cache write failed.", err);
   }
 
-  return filterResults(foodsWithUrls, userAllergens, excludeIds);
+  // Pass through pantry logic and return.
+  // applyPantryLogic handles allergen filtering, exclusion filtering,
+  // pantry matching, graceful fallback, and all error cases.
+  return applyPantryLogic(foodsWithUrls, userAllergens, excludeIds, userId);
 };
 
 // ---------------------------------------------------------------------------
+// filterResults
 // Apply allergen and exclusion filters to a food list.
 // Separated into its own function so it can be called identically
 // whether the list came from Redis cache or fresh from MongoDB.
@@ -176,18 +300,50 @@ const filterResults = (
   // Remove foods containing any of the user's allergens
   if (userAllergens.length > 0) {
     const lowerAllergens = new Set(
-      userAllergens.map((a) => a.toLowerCase()) // case-insensitive so that allergen "peanut and Peanut and PEANUT " will match
+      userAllergens.map((a) => a.toLowerCase()) // case-insensitive so that allergen "peanut" and "Peanut" and "PEANUT" will all match
     );
     filtered = filtered.filter((food) => {
       const foodAllergens = (food.allergen_tags as string[]).map((a) =>
         a.toLowerCase()
       );
-      // returns true (keep this food) ONLY if no allergen matches.( foodAllergens.some(...) means does ANY allergen match?)
-      return !foodAllergens.some((a) => lowerAllergens.has(a)); 
+      // returns true (keep this food) ONLY if no allergen matches. (foodAllergens.some(...) means does ANY allergen match?)
+      return !foodAllergens.some((a) => lowerAllergens.has(a));
     });
   }
 
   return filtered;
+};
+
+// ---------------------------------------------------------------------------
+// filterByPantry
+// Filters a food list to only those whose ingredients array contains
+// at least one item from the user's pantry.
+// Matching is partial and case-insensitive.
+// "palm oil" in pantry matches "palm oil" in ingredients.
+// "yam" in pantry matches "water yam" and "yam flour" in ingredients.
+// A food passes if ANY ONE of its ingredients matches ANY ONE pantry item.
+// We do not require all ingredients because users rarely have every ingredient at home.
+// ---------------------------------------------------------------------------
+const filterByPantry = (
+  foods: FoodResult[],
+  userPantry: string[]
+): FoodResult[] => {
+  if (userPantry.length === 0) return foods;
+
+  const lowerPantry = userPantry.map((p) => p.toLowerCase());
+
+  return foods.filter((food) => {
+    const foodIngredients = (food.ingredients as string[]).map((i) =>
+      i.toLowerCase()
+    );
+
+    return foodIngredients.some((ingredient) =>
+      lowerPantry.some(
+        (pantryItem) =>
+          ingredient.includes(pantryItem) || pantryItem.includes(ingredient)
+      )
+    );
+  });
 };
 
 // ---------------------------------------------------------------------------
@@ -200,7 +356,7 @@ export const getAvailableFilters = async (
 ): Promise<{ meal_types: string[]; tags: string[] }> => {
   const cacheKey = `filters:${region}`;
 
-  // check cache first
+  // Check cache first
   try {
     const cached = await redis.get(cacheKey);
     if (cached) return JSON.parse(cached);
@@ -211,17 +367,16 @@ export const getAvailableFilters = async (
     );
   }
 
-  // MongoDB aggregation pipeline.
-  // Aggregate all unique tags and meal_types for this region
+  // MongoDB aggregation pipeline
   const result = await FoodItem.aggregate([
-    { $match: { region, is_verified: true } }, // $match. filter to verified foods in this region only.
+    { $match: { region, is_verified: true } }, // filter to verified foods in this region only
     {
       $group: {
         _id: null,
         all_tags: { $addToSet: "$tags" },
         all_meal_types: { $addToSet: "$meal_types" },
       },
-    }, // $group. collect all tags and meal_types arrays into sets. $addToSet prevents duplicate arrays from being added.
+    }, // collect all tags and meal_types arrays into sets. $addToSet prevents duplicate arrays from being added.
     {
       $project: {
         tags: {
@@ -238,15 +393,15 @@ export const getAvailableFilters = async (
             in: { $setUnion: ["$$value", "$$this"] },
           },
         },
-      }, // $project. flatten the nested sets into single flat arrays. $reduce with $setUnion merges the array-of-arrays into one flat array.
+      }, // flatten the nested sets into single flat arrays. $reduce with $setUnion merges the array-of-arrays into one flat array.
     },
   ]);
 
-  // If the aggregation returns no results (empty collection or no verified items for this region), 
+  // If the aggregation returns no results (empty collection or no verified items for this region),
   // fall back to empty arrays so the frontend receives a valid response rather than an error.
   const filters = result[0] ?? { tags: [], meal_types: [] };
 
-  // cache for 24hrs
+  // Cache for 24 hours
   try {
     await redis.setEx(cacheKey, 24 * 3600, JSON.stringify(filters));
   } catch (err) {
@@ -262,8 +417,9 @@ export const getAvailableFilters = async (
 // ---------------------------------------------------------------------------
 // Flag a meal as "do not show anymore" for this user.
 // Permanently excludes it from all future spins.
+// ON CONFLICT DO NOTHING means if the user tries to flag the same meal twice, the second attempt silently succeeds without throwing a duplicate key error.
 // ---------------------------------------------------------------------------
-export const flagMeal = async ( userId: string, input: FlagMealInput ): Promise<void> => {
+export const flagMeal = async (userId: string, input: FlagMealInput): Promise<void> => {
   await pgPool.query(
     `INSERT INTO flagged_meals (user_id, food_ref, food_name)
      VALUES ($1, $2, $3)
@@ -278,7 +434,7 @@ export const flagMeal = async ( userId: string, input: FlagMealInput ): Promise<
 
 // ---------------------------------------------------------------------------
 // Get all meals flagged by this user.
-// Used to render the flagged meals management screen. Order by most recent
+// Used to render the flagged meals management screen. Ordered by most recent.
 // ---------------------------------------------------------------------------
 export const getFlaggedMeals = async (userId: string) => {
   const result = await pgPool.query(
@@ -294,6 +450,8 @@ export const getFlaggedMeals = async (userId: string) => {
 
 // ---------------------------------------------------------------------------
 // Remove a flag so the meal can appear in spins again.
+// The WHERE clause includes user_id to prevent a user from removing
+// another user's flags by guessing flag IDs.
 // ---------------------------------------------------------------------------
 export const unflagMeal = async (
   userId: string,

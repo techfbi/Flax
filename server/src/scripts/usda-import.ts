@@ -152,6 +152,7 @@ const mapToFoodItem = (
     tags: searchConfig.tags,
     meal_types: searchConfig.mealTypes,
     allergen_tags: [],  // USDA does not reliably provide allergen data. review manually.
+    ingredients: [],  // TRACK. populate manually in Atlas after reviewing each USDA item
     region: REGION,
     image_path: `foods/${REGION.toLowerCase()}/${cleanName
       .toLowerCase()

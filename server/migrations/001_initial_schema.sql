@@ -103,6 +103,21 @@ CREATE TABLE IF NOT EXISTS flagged_meals (
   UNIQUE(user_id, food_ref)  -- one flag per meal per user
 );
 
+-- Stores foodstuff ingredients a user has at home.
+-- Used to filter spin suggestions to meals the user can actually make.
+-- Maximum 20 items per user enforced at application layer.
+CREATE TABLE IF NOT EXISTS pantry_items (
+  id         SERIAL PRIMARY KEY,
+  user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name       TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, name)  -- one entry per ingredient per user. case handled in app
+);
+
+
+-- Covers quick lookup of all pantry items for a user when generating spin results
+CREATE INDEX IF NOT EXISTS idx_pantry_items_user
+  ON pantry_items(user_id); 
 
 -- Covers quick lookup of all flagged meals for a user when generating spin results
 CREATE INDEX IF NOT EXISTS idx_flagged_meals_user

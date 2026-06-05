@@ -1,5 +1,5 @@
 // Imports food items from a CSV spreadsheet into MongoDB.
-//
+// My CSV is saved at the root of the project as bulk-foods.csv.
 // Usage. npx tsx scripts/bulk-import.ts bulk-foods.csv
 //
 // The CSV must follow the structure defined in the DEVLOG.
@@ -78,6 +78,7 @@ const mapRowToFoodItem = (row: Record<string, string>) => {
     tags: splitField(row.tags ?? ""),
     meal_types: splitField(row.meal_types ?? ""),
     allergen_tags: splitField(row.allergen_tags ?? ""),
+    ingredients: splitField(row.ingredients ?? ""),
     region: row.region?.trim(),
     image_path: row.image_path?.trim(),
     calories_per_100g: parseFloat(row.calories_per_100g) || 0,
