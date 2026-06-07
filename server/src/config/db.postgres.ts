@@ -11,7 +11,7 @@ export const pgPool = new Pool({
   connectionString: env.DATABASE_URL,
   max: 10,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
+  connectionTimeoutMillis: 20000, // 20s timeout
 });
 
 pgPool.on("error", (err) => {
