@@ -15,6 +15,7 @@ const envSchema = z.object({
   USDA_API_KEY: z.string().min(1),
   MEDIA_BASE_URL: z.string().url(),
   GEMINI_API_KEY: z.string().min(1),
+  GROQ_API_KEY: z.string().min(1),
   CLIENT_URL: z.string().url(),
   RESEND_API_KEY: z.string().min(1),
   // Controls whether email OTP verification is required on registration.

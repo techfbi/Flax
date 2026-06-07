@@ -6,6 +6,7 @@ import { withImageUrl } from "../../shared/food.helpers.js";
 import { AppError } from "../../shared/errors.js";
 import type { FlagMealInput } from "./spin.schema.js";
 import { getUserPantryNames } from "../pantry/pantry.service.js";
+import { geminiModel } from "../../config/gemini.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -461,4 +462,167 @@ export const unflagMeal = async (
     "DELETE FROM flagged_meals WHERE id = $1 AND user_id = $2",
     [flagId, userId]
   );
+};
+
+
+// ---------------------------------------------------------------------------
+// generateSpinReasoning
+// Asks Gemini to explain in 2 to 3 sentences why this specific meal is a good suggestion for this user right now.
+//
+// We pass structured context about the user so Gemini can personalise
+// the reasoning. Gemini only adds the human-readable explanation layer.
+//
+// If Gemini fails for any reason (rate limit, network, timeout),
+// we return a safe fallback message. the spin result itself is never
+// blocked by an AI failure.
+// ---------------------------------------------------------------------------
+export const generateSpinReasoning = async (
+  food: FoodResult,
+  context: {
+    healthGoal: string | null;
+    dietaryStyle: string | null;
+    mealType: string | null;
+    timeOfDay: string;
+    pantryMatchUsed: boolean;
+    region: string;
+  }
+): Promise<string> => {
+  // We build a tight, structured prompt. We give Gemini only what it needs. no raw user data that could
+  // be used for prompt injection.
+  const prompt = `You are a friendly nutrition assistant expert for a food app.
+
+A user has just spun the wheel and landed on: ${food.name}
+
+User context:
+- Region: ${context.region}
+- Health goal: ${context.healthGoal ?? "not specified"}
+- Dietary style: ${context.dietaryStyle ?? "not specified"}
+- Meal type filter selected: ${context.mealType ?? "any"}
+- Time of day: ${context.timeOfDay}
+- Meal matched their pantry ingredients: ${context.pantryMatchUsed ? "yes" : "no"}
+
+Food details:
+- Description: ${food.description}
+- Calories per 100g: ${food.calories_per_100g}
+- Protein: ${food.protein_g}g, Carbs: ${food.carbs_g}g, Fat: ${food.fat_g}g
+
+Write exactly 2 to 3 short sentences explaining why this meal is a good suggestion for this user right now.
+Be specific to their context. Be warm and encouraging but not over the top.
+Do not repeat the food name more than once.
+Do not mention calorie numbers unless directly relevant to their health goal.
+Do not make medical claims.
+Respond with only the explanation text. no labels, no bullet points, no greeting.`;
+
+  try {
+    const result = await geminiModel.generateContent(prompt);
+    const text = result.response.text().trim();
+
+    if (!text) {
+      console.warn("[REMOVE LOG LATER] Gemini returned empty response for spin reasoning.");
+      return getFallbackReasoning(food.name);
+    }
+
+    return text;
+  } catch (err: any) {
+    // Gemini failure must never break the spin result.
+    // I log the error and return a safe fallback.
+    console.error("Gemini spin reasoning failed.", err?.message ?? err);
+    return getFallbackReasoning(food.name);
+  }
+};
+
+// ---------------------------------------------------------------------------
+// getFallbackReasoning
+// Store several fallback messages in an array and randomly pick one.
+// Returns a safe, generic explanation when Gemini is unavailable.
+// This ensures the user always gets a complete spin result even if
+// the AI service is down.
+// ---------------------------------------------------------------------------
+const getFallbackReasoning = (foodName: string): string => {
+  const fallbacks = [
+    `${foodName} looks like a great choice for this meal. It is a well-balanced option that fits your current preferences.`,
+
+    `Based on your selected preferences, ${foodName} is a reasonable meal suggestion. You can give it a try.`,
+
+    `${foodName} matches the filters applied to your spin. It could be a tasty option to add some variety to your meal choices today.`,
+  ];
+
+  const randomIndex = Math.floor(Math.random() * fallbacks.length);
+
+  return fallbacks[randomIndex];
+};
+
+
+// ---------------------------------------------------------------------------
+// HEALTH GOAL TAG PREFERENCES
+// Maps each health goal to preferred and deprioritised tags.
+// Used for weighted random selection so the spinner favours foods that
+// align with the user's goal without hard-excluding anything.
+// ---------------------------------------------------------------------------
+const HEALTH_GOAL_WEIGHTS: Record<
+  string,
+  { prefer: string[]; deprioritise: string[] }
+> = {
+  weight_loss: {
+    prefer: ["light", "low-carb", "high-protein", "salad", "healthy", "vegetables"],
+    deprioritise: ["high-fat", "sweet", "party-food", "comfort-food", "high-carb"],
+  },
+  muscle_gain: {
+    prefer: ["high-protein"],
+    deprioritise: ["light", "low-carb"],
+  },
+  maintenance: {
+    prefer: [],
+    deprioritise: [],
+  },
+  general_health: {
+    prefer: ["nutritious", "vegetables", "healthy", "light"],
+    deprioritise: ["fast-food", "sweet", "street-food"],
+  },
+};
+
+// ---------------------------------------------------------------------------
+// pickFoodByHealthGoal
+// Applies weighted random selection based on the user's health goal.
+// Foods matching preferred tags get weight 3.
+// Foods matching deprioritised tags get weight 1.
+// All other foods get weight 2.
+// This means preferred foods are 3x more likely to be picked than
+// deprioritised foods but deprioritised foods can still appear occasionally.
+// Pure Math.random() is used when no health goal is set.
+// ---------------------------------------------------------------------------
+export const pickFoodByHealthGoal = (
+  foods: FoodResult[],
+  healthGoal: string | null
+): FoodResult => {
+  // No health goal set or unrecognised goal. pure random selection.
+  if (!healthGoal || !HEALTH_GOAL_WEIGHTS[healthGoal]) {
+    return foods[Math.floor(Math.random() * foods.length)];
+  }
+
+  const { prefer, deprioritise } = HEALTH_GOAL_WEIGHTS[healthGoal];
+
+  // Assign weight to each food based on its tags
+  const weighted = foods.map((food) => {
+    const tags = food.tags as string[];
+
+    const isPreferred = prefer.some((tag) => tags.includes(tag));
+    const isDeprioritised = deprioritise.some((tag) => tags.includes(tag));
+
+    // Preferred beats deprioritised if a food has both tags somehow
+    const weight = isPreferred ? 3 : isDeprioritised ? 1 : 2;
+
+    return { food, weight };
+  });
+
+  // Build a weighted pool. a food with weight 3 appears 3 times in the pool.
+  // Picking randomly from this pool gives the correct probability distribution. i.e there is high chance to pick preferred foods but still a chance to pick deprioritised foods.
+  const pool: FoodResult[] = [];
+  for (const { food, weight } of weighted) {
+    for (let i = 0; i < weight; i++) {
+      pool.push(food);
+    }
+  }
+
+  return pool[Math.floor(Math.random() * pool.length)];
 };
