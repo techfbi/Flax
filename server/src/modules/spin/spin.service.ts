@@ -486,7 +486,7 @@ export const generateSpinReasoning = async (
     region: string;
   }
 ): Promise<string> => {
-  const prompt = `You are a friendly nutrition assistant for a food suggestion app.
+  const prompt = `You are an expert and friendly nutrition assistant for a food suggestion app.
 
   A user has just spun the wheel and landed on: ${food.name}
 
@@ -502,8 +502,29 @@ export const generateSpinReasoning = async (
   - Description: ${food.description}
   - Protein: ${food.protein_g}g per 100g, Carbs: ${food.carbs_g}g per 100g, Fat: ${food.fat_g}g per 100g
 
-  Write exactly 2 to 3 short sentences explaining why this meal is a good suggestion for this user right now.
-  Be specific to their context. Be warm and encouraging but not over the top.
+  Write exactly 2 short sentences. maximum 200 characters. Focus on the single most relevant aspect of this meal for this user right now.
+  Possible aspects include:
+  - protein support
+  - satiety
+  - convenience
+  - flavour
+  - cultural relevance
+  - pantry usefulness
+  - meal timing
+  - variety
+  - enjoyment
+  - goal matching
+  Choose whichever aspect best fits the meal and user context.
+
+  Avoid repeating common phrases such as:
+  "start your day"
+  "provide energy"
+  "support muscle growth"
+  "balanced meal"
+  "good source of protein"
+  Vary sentence structure and wording across responses.
+  Be warm and encouraging but not over the top.
+  Be creative and dynamic in your reasoning. Avoid repeating the same phrases and sentence structures across different spins for the same user. Make it feel fresh and personalised every time.
   Do not repeat the food name more than once.
   Do not mention exact numbers unless directly relevant to their health goal.
   Do not make medical claims.
