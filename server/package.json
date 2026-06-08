@@ -8,7 +8,7 @@
     "build": "rimraf dist && tsc",
     "start": "node dist/server.js",
     "seed": "tsx src/seeds/food.seed.ts",
-    "bulk-import": "tsx src/scripts/bulk-import.ts bulk-foods.csv", 
+    "bulk-import": "tsx src/scripts/bulk-import.ts bulk-foods.csv",
     "usda-import": "tsx src/scripts/usda-import.ts",
     "type-check": "tsc --noEmit"
   },
@@ -38,6 +38,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "groq-sdk": "^1.2.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.6.1",

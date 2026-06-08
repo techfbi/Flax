@@ -6,8 +6,7 @@ import { withImageUrl } from "../../shared/food.helpers.js";
 import { AppError } from "../../shared/errors.js";
 import type { FlagMealInput } from "./spin.schema.js";
 import { getUserPantryNames } from "../pantry/pantry.service.js";
-import { geminiModel } from "../../config/gemini.js";
-
+import { generateText } from "../../config/ai.js";
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -462,19 +461,19 @@ export const unflagMeal = async (
     "DELETE FROM flagged_meals WHERE id = $1 AND user_id = $2",
     [flagId, userId]
   );
-};
+}
 
 
 // ---------------------------------------------------------------------------
 // generateSpinReasoning
-// Asks Gemini to explain in 2 to 3 sentences why this specific meal is a good suggestion for this user right now.
+// Asks the AI to explain in 2 to 3 sentences why this specific meal is a good suggestion for this user right now.
 //
-// We pass structured context about the user so Gemini can personalise
-// the reasoning. Gemini only adds the human-readable explanation layer.
+// We pass structured context about the user so the model can personalise the reasoning. We never ask the AI to pick the food or calculate
+// nutrition values. the database handles both. AI only adds the
+// human-readable explanation layer.
 //
-// If Gemini fails for any reason (rate limit, network, timeout),
-// we return a safe fallback message. the spin result itself is never
-// blocked by an AI failure.
+// If both Groq models fail, we return a random hard fallback string.
+// The spin result is never blocked by an AI failure.
 // ---------------------------------------------------------------------------
 export const generateSpinReasoning = async (
   food: FoodResult,
@@ -487,71 +486,78 @@ export const generateSpinReasoning = async (
     region: string;
   }
 ): Promise<string> => {
-  // We build a tight, structured prompt. We give Gemini only what it needs. no raw user data that could
-  // be used for prompt injection.
-  const prompt = `You are a friendly nutrition assistant expert for a food app.
+  const prompt = `You are an expert and friendly nutrition assistant for a food suggestion app.
 
-A user has just spun the wheel and landed on: ${food.name}
+  A user has just spun the wheel and landed on: ${food.name}
 
-User context:
-- Region: ${context.region}
-- Health goal: ${context.healthGoal ?? "not specified"}
-- Dietary style: ${context.dietaryStyle ?? "not specified"}
-- Meal type filter selected: ${context.mealType ?? "any"}
-- Time of day: ${context.timeOfDay}
-- Meal matched their pantry ingredients: ${context.pantryMatchUsed ? "yes" : "no"}
+  User context:
+  - Region: ${context.region}
+  - Health goal: ${context.healthGoal ?? "not specified"}
+  - Dietary style: ${context.dietaryStyle ?? "not specified"}
+  - Meal type filter selected: ${context.mealType ?? "any"}
+  - Time of day: ${context.timeOfDay}
+  - Meal matched their pantry ingredients: ${context.pantryMatchUsed ? "yes" : "no"}
 
-Food details:
-- Description: ${food.description}
-- Calories per 100g: ${food.calories_per_100g}
-- Protein: ${food.protein_g}g, Carbs: ${food.carbs_g}g, Fat: ${food.fat_g}g
+  Food details:
+  - Description: ${food.description}
+  - Protein: ${food.protein_g}g per 100g, Carbs: ${food.carbs_g}g per 100g, Fat: ${food.fat_g}g per 100g
 
-Write exactly 2 to 3 short sentences explaining why this meal is a good suggestion for this user right now.
-Be specific to their context. Be warm and encouraging but not over the top.
-Do not repeat the food name more than once.
-Do not mention calorie numbers unless directly relevant to their health goal.
-Do not make medical claims.
-Respond with only the explanation text. no labels, no bullet points, no greeting.`;
+  Write exactly 2 short sentences. maximum 200 characters. Focus on the single most relevant aspect of this meal for this user right now.
+  Possible aspects include:
+  - protein support
+  - satiety
+  - convenience
+  - flavour
+  - cultural relevance
+  - pantry usefulness
+  - meal timing
+  - variety
+  - enjoyment
+  - goal matching
+  Choose whichever aspect best fits the meal and user context.
 
-  try {
-    const result = await geminiModel.generateContent(prompt);
-    const text = result.response.text().trim();
+  Avoid repeating common phrases such as:
+  "start your day"
+  "provide energy"
+  "support muscle growth"
+  "balanced meal"
+  "good source of protein"
+  Vary sentence structure and wording across responses.
+  Be warm and encouraging but not over the top.
+  Be creative and dynamic in your reasoning. Avoid repeating the same phrases and sentence structures across different spins for the same user. Make it feel fresh and personalised every time.
+  Do not repeat the food name more than once.
+  Do not mention exact numbers unless directly relevant to their health goal.
+  Do not make medical claims.
+  Respond with ONLY the explanation text. no labels, no bullet points, no greeting, no sign-off, no emoji, no unnecessary hyphen, no medical diagnosis, no dangerous instructions/self harm advice, no hateful content, no explicit sexual context.`;
 
-    if (!text) {
-      console.warn("[REMOVE LOG LATER] Gemini returned empty response for spin reasoning.");
-      return getFallbackReasoning(food.name);
-    }
+  const { text } = await generateText(prompt, 300, 0.7);
 
-    return text;
-  } catch (err: any) {
-    // Gemini failure must never break the spin result.
-    // I log the error and return a safe fallback.
-    console.error("Gemini spin reasoning failed.", err?.message ?? err);
+  if (!text) {
+    // Both models failed. use hard fallback.
+    console.warn(
+      "[REMOVE LOG LATER] All AI models failed for spin reasoning. Using hard fallback."
+    );
     return getFallbackReasoning(food.name);
   }
+
+  return text;
 };
 
 // ---------------------------------------------------------------------------
 // getFallbackReasoning
-// Store several fallback messages in an array and randomly pick one.
-// Returns a safe, generic explanation when Gemini is unavailable.
-// This ensures the user always gets a complete spin result even if
-// the AI service is down.
+// Returns a randomly selected generic explanation when all AI models fail.
+// Random selection prevents users seeing the same text repeatedly
+// if the AI is down for an extended period.
 // ---------------------------------------------------------------------------
 const getFallbackReasoning = (foodName: string): string => {
   const fallbacks = [
     `${foodName} looks like a great choice for this meal. It is a well-balanced option that fits your current preferences.`,
-
-    `Based on your selected preferences, ${foodName} is a reasonable meal suggestion. You can give it a try.`,
-
+    `Based on your selected preferences, ${foodName} is a solid meal suggestion. Would you like to give it a try?`,
     `${foodName} matches the filters applied to your spin. It could be a tasty option to add some variety to your meal choices today.`,
   ];
 
-  const randomIndex = Math.floor(Math.random() * fallbacks.length);
-
-  return fallbacks[randomIndex];
+  return fallbacks[Math.floor(Math.random() * fallbacks.length)];
 };
-
 
 // ---------------------------------------------------------------------------
 // HEALTH GOAL TAG PREFERENCES

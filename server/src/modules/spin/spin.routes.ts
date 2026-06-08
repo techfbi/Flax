@@ -28,7 +28,6 @@ const rejectSpinSchema = z.object({
   rejection_reason: z.string().max(200).optional(),
 });
 
-
 // All spin routes require authentication
 spinRouter.use(authenticate);
 
