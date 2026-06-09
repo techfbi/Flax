@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS meal_logs (
   custom_name    TEXT,                       -- NULL if meal came from the food catalogue
   quantity_grams INTEGER NOT NULL DEFAULT 100,
   meal_type      TEXT NOT NULL,              -- breakfast | lunch | dinner | snack
+  food_name      TEXT NOT NULL,              -- denormalised for display without MongoDB lookup
   logged_date    DATE NOT NULL,
   calories       NUMERIC(8,2),
   protein_g      NUMERIC(8,2),
