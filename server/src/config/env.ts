@@ -14,7 +14,7 @@ const envSchema = z.object({
   REFRESH_TOKEN_SECRET: z.string().min(32),
   USDA_API_KEY: z.string().min(1),
   MEDIA_BASE_URL: z.string().url(),
-  GEMINI_API_KEY: z.string().min(1),
+  GEMINI_API_KEY: z.string().min(1).optional(),
   GROQ_API_KEY: z.string().min(1),
   CLIENT_URL: z.string().url(),
   RESEND_API_KEY: z.string().min(1),

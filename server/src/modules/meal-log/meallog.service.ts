@@ -11,6 +11,7 @@ export interface MealLogEntry {
   id: string;
   food_ref: string;
   food_name: string;
+  custom_name: string;
   quantity_grams: number;
   meal_type: string;
   logged_date: string;
@@ -92,11 +93,11 @@ export const createMealLog = async (
   // ---------------------------------------------------------------------------
   const result = await pgPool.query(
     `INSERT INTO meal_logs
-       (user_id, food_ref, food_name, quantity_grams, meal_type,
+       (user_id, food_ref, food_name, custom_name, quantity_grams, meal_type,
         logged_date, calories, protein_g, carbs_g, fat_g, source)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'catalogue')
      RETURNING
-       id, food_ref, food_name, quantity_grams, meal_type,
+       id, food_ref, food_name, custom_name, quantity_grams, meal_type,
        logged_date, calories, protein_g, carbs_g, fat_g, source, created_at`,
     [
       userId,
@@ -133,7 +134,7 @@ export const getMealLogs = async (
 
   const result = await pgPool.query(
     `SELECT
-       id, food_ref, food_name, quantity_grams, meal_type,
+       id, food_ref, food_name, custom_name, quantity_grams, meal_type,
        logged_date, calories, protein_g, carbs_g, fat_g, source, created_at
      FROM meal_logs
      WHERE user_id = $1
