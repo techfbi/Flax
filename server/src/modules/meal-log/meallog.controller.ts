@@ -1,35 +1,71 @@
 import type { Request, Response, NextFunction } from "express";
 import {
-  createMealLog,
+  createCatalogueMealLog,
+  createCustomMealLog,
   getMealLogs,
   deleteMealLog,
   getDashboardData,
 } from "./meallog.service.js";
 import { sendSuccess } from "../../shared/response.js";
 import { AppError } from "../../shared/errors.js";
-import type { CreateMealLogInput } from "./meallog.schema.js";
+import {
+  catalogueMealLogSchema,
+  customMealLogSchema,
+} from "./meallog.schema.js";
 
 // ---------------------------------------------------------------------------
 // POST /api/meal-logs
-// Logs a meal from the food catalogue for the authenticated user.
-// Nutrition values are calculated server-side from the food catalogue data.
-// The client sends food_ref, food_name, quantity_grams, meal_type, and optionally logged_date. Everything else is computed here.
+// Accepts both catalogue and custom meal logs in one endpoint. The presence of food_ref in the body determines which path is taken.
 // ---------------------------------------------------------------------------
-export const logMeal = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
+export const logMeal = async ( req: Request, res: Response, next: NextFunction ): Promise<void> => {
   try {
-    const input = req.body as CreateMealLogInput;
-    const log = await createMealLog(req.user!.id, input);
+    // food_ref present means from catalogue. custom_name present means from custom.
+    // If neither is present we return a clear error rather than letting the validation fail with a confusing message.
+    const isCatalogue = typeof req.body?.food_ref === "string" && req.body.food_ref.length > 0;
+    const isCustom    = typeof req.body?.custom_name === "string" && req.body.custom_name.length > 0;
 
-    sendSuccess({
-      res,
-      statusCode: 201,
-      message: "Meal logged successfully.",
-      data: { log },
-    });
+    if (!isCatalogue && !isCustom) {
+      throw new AppError(
+        "Pick either from catalogue meal or input a custom meal.",
+        400,
+        "MISSING_MEAL_IDENTIFIER"
+      );
+    }
+
+    if (isCatalogue && isCustom) {
+      throw new AppError(
+        "Choose either a catalogue meal or a custom meal, not both.",
+        400,
+        "AMBIGUOUS_MEAL_SOURCE"
+      );
+    }
+
+    if (isCatalogue) {
+      // Validate against the catalogue schema then call the catalogue service.
+      const parsed = catalogueMealLogSchema.safeParse(req.body); // using safeparse() instead of parse() to get back structured response from zod.
+      if (!parsed.success) {
+        throw new AppError(
+          parsed.error.issues[0]?.message ?? "Invalid input",
+          400,
+          "VALIDATION_ERROR"
+        );
+      }
+      const log = await createCatalogueMealLog(req.user!.id, parsed.data);
+      sendSuccess({ res, statusCode: 201, message: "Meal logged successfully.", data: { log } });
+      return;
+    }
+
+    // Custom path. validate and call the custom service.
+    const parsed = customMealLogSchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw new AppError(
+        parsed.error.issues[0]?.message ?? "Invalid input",
+        400,
+        "VALIDATION_ERROR"
+      );
+    }
+    const log = await createCustomMealLog(req.user!.id, parsed.data);
+    sendSuccess({ res, statusCode: 201, message: "Meal logged successfully.", data: { log } });
   } catch (err) {
     next(err);
   }
@@ -37,7 +73,7 @@ export const logMeal = async (
 
 // ---------------------------------------------------------------------------
 // GET /api/meal-logs?date=YYYY-MM-DD
-// Returns all meal logs for the authenticated user on the given date.If no date query param is provided, defaults to today.
+// Returns all logs for the authenticated user on the given date. Defaults to today if no date param is provided.
 // ---------------------------------------------------------------------------
 export const getLogs = async (
   req: Request,
@@ -45,10 +81,8 @@ export const getLogs = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // date comes from query string not body. e.g. /api/meal-logs?date=2026-06-07
     const date = req.query.date as string | undefined;
 
-    // Validate date format if provided
     if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       throw new AppError(
         "Date must be in YYYY-MM-DD format",
@@ -70,7 +104,7 @@ export const getLogs = async (
 
 // ---------------------------------------------------------------------------
 // DELETE /api/meal-logs/:id
-// Deletes a specific meal log entry.The service verifies the log belongs to the authenticated user.
+// Deletes a specific log entry. Service verifies ownership.
 // ---------------------------------------------------------------------------
 export const deleteLog = async (
   req: Request,
@@ -85,7 +119,6 @@ export const deleteLog = async (
     }
 
     await deleteMealLog(req.user!.id, logId);
-
     sendSuccess({ res, message: "Meal log deleted." });
   } catch (err) {
     next(err);
@@ -94,8 +127,7 @@ export const deleteLog = async (
 
 // ---------------------------------------------------------------------------
 // GET /api/meal-logs/dashboard?date=YYYY-MM-DD
-// Returns the full dashboard data for the authenticated user.
-// Includes daily totals, breakdown by meal type, calorie target, and 7-day weekly trend. If no date provided, defaults to today.
+// Returns daily totals, meal type breakdown, calorie target, and 7-day trend.
 // ---------------------------------------------------------------------------
 export const getDashboard = async (
   req: Request,
@@ -114,7 +146,6 @@ export const getDashboard = async (
     }
 
     const dashboard = await getDashboardData(req.user!.id, date);
-
     sendSuccess({ res, data: { dashboard } });
   } catch (err) {
     next(err);

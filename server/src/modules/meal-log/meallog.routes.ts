@@ -1,8 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../../middleware/authenticate.js";
-import { validate } from "../../middleware/validate.js";
 import { rateLimiter } from "../../middleware/rateLimiter.js";
-import { createMealLogSchema } from "./meallog.schema.js";
 import {
   logMeal,
   getLogs,
@@ -13,7 +11,6 @@ import {
 export const mealLogRouter = Router();
 
 // Dedicated rate limiter for meal logging.
-// Prevents scripted bulk logging that could pollute nutrition data.
 const mealLogLimiter = rateLimiter({
   windowSeconds: 60,
   maxRequests: 20, // 20 req per minute.
@@ -23,9 +20,7 @@ const mealLogLimiter = rateLimiter({
 // All meal log routes require authentication
 mealLogRouter.use(authenticate);
 
-// IMPORTANT. dashboard route must be defined BEFORE /:id routes.
 mealLogRouter.get("/dashboard", getDashboard);
-
 mealLogRouter.get("/", getLogs);
-mealLogRouter.post("/", mealLogLimiter, validate(createMealLogSchema), logMeal);
+mealLogRouter.post("/", mealLogLimiter, logMeal); // Validation now happens in the controller since we have two different schemas based on the presence of food_ref or custom_name in the request body.
 mealLogRouter.delete("/:id", deleteLog);

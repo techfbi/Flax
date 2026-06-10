@@ -1,22 +1,20 @@
 import { z } from "zod";
 
 // ---------------------------------------------------------------------------
-// Schema for logging a meal from the food catalogue. food_ref is the MongoDB ObjectId of the food item as a string.
-// quantity_grams is how much of the food the user ate. meal_type must match the enum values used in the food catalogue.
-// logged_date defaults to today if not provided so users can log a meal they just ate without having to type the date.
+// Catalogue meal log schema.
+// User picks a food from the catalogue (spin result or search).
+// Nutrition is calculated server-side from MongoDB. user cannot override it. food_ref is the MongoDB ObjectId. food_name is stored for display.
 // ---------------------------------------------------------------------------
-export const createMealLogSchema = z.object({
+export const catalogueMealLogSchema = z.object({
   food_ref: z
     .string()
     .min(1, "Food reference is required")
     .regex(/^[a-f\d]{24}$/i, "Invalid food reference format"),
-    // MongoDB ObjectIds are exactly 24 hex characters.This validation bocks garbage value reaching database
 
   food_name: z
     .string()
     .min(1, "Food name is required")
     .max(100),
-    // Stored directly in the log for display purposes. Avoids a MongoDB lookup every time we render the log list.
 
   quantity_grams: z
     .number()
@@ -24,16 +22,49 @@ export const createMealLogSchema = z.object({
     .min(10, "Quantity must be at least 10 grams")
     .max(3000, "Quantity cannot exceed 3000 grams"),
 
-  meal_type: z.enum(["breakfast", "lunch", "dinner", "snack", "brunch"])
-    .describe("Meal type must be breakfast, lunch, dinner, snack, or brunch"),
+  meal_type: z.enum(["breakfast", "lunch", "dinner", "snack", "brunch"]),
 
   logged_date: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
     .optional()
     .transform((val) => val ?? new Date().toISOString().split("T")[0]),
-    // If no date provided, default to today in YYYY-MM-DD format.
-    // toISOString gives UTC date which is fine for logging purposes.
 });
 
-export type CreateMealLogInput = z.infer<typeof createMealLogSchema>;
+// ---------------------------------------------------------------------------
+// Custom meal log schema.
+// User types a meal name that is not in the catalogue. Nutrition values are optional. if not provided they are stored as 0
+// and the log is considered nutritionally untracked. We accept per-100g values and scale them by quantity_grams server-side,
+// exactly the same calculation as catalogue logs. This keeps the dashboard aggregation consistent regardless of source.
+// ---------------------------------------------------------------------------
+export const customMealLogSchema = z.object({
+  custom_name: z
+    .string()
+    .min(1, "Meal name is required")
+    .max(100, "Meal name cannot exceed 100 characters")
+    .transform((val) => val.trim()),
+
+  quantity_grams: z
+    .number()
+    .int("Quantity must be a whole number")
+    .min(10, "Quantity must be at least 10 grams")
+    .max(3000, "Quantity cannot exceed 3000 grams"),
+
+  meal_type: z.enum(["breakfast", "lunch", "dinner", "snack", "brunch"]),
+
+  logged_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
+    .optional()
+    .transform((val) => val ?? new Date().toISOString().split("T")[0]),
+
+  // Nutrition values are per 100g, matching the catalogue convention.
+  // All optional. default to 0 if not provided.
+  calories_per_100g: z.number().min(0).max(10000).optional().default(0),
+  protein_g:         z.number().min(0).max(1000).optional().default(0),
+  carbs_g:           z.number().min(0).max(1000).optional().default(0),
+  fat_g:             z.number().min(0).max(1000).optional().default(0),
+});
+
+export type CatalogueMealLogInput = z.infer<typeof catalogueMealLogSchema>;
+export type CustomMealLogInput    = z.infer<typeof customMealLogSchema>;
