@@ -10,7 +10,7 @@ import { userRouter } from "./modules/user/user.routes.js";
 import { spinRouter } from "./modules/spin/spin.routes.js";
 import { pantryRouter } from "./modules/pantry/pantry.routes.js";
 import { mealLogRouter } from "./modules/meal-log/meallog.routes.js";
-// import { chatRouter } from "./modules/chat/chat.routes.js";
+import { chatRouter } from "./modules/chat/chat.routes.js";
 
 export const app = express();
 
@@ -63,7 +63,7 @@ app.use("/api/users", userRouter);
 app.use("/api/spin", spinRouter);
 app.use("/api/pantry", pantryRouter);
 app.use("/api/meal-logs", mealLogRouter);
-// app.use("/api/chat", chatRouter);
+app.use("/api/chat", chatRouter);
 
 app.use((_req, res) => {
   res.status(404).json({

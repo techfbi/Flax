@@ -11,8 +11,7 @@ interface RateLimitOptions {
 // ---------------------------------------------------------------------------
 // In-memory fallback store
 // Active only when Redis is unreachable.
-// Safe on single Render instance. On multiple instances, effective limit
-// becomes (maxRequests * instanceCount) because stores do not share state.
+// Safe on single Render instance. On multiple instances, effective limit becomes (maxRequests * instanceCount) because stores do not share state.
 //
 // If at all i scale beyond one render I have to replace this fallback
 // with a hard rejection when Redis is down and set up alerting instead.
@@ -116,10 +115,8 @@ export function rateLimiter({
         pipeline.expire(key, windowSeconds);
         const results = await pipeline.exec();
 
-        // pipeline.exec() returns ReplyUnion[] — a union type that TypeScript
-        // cannot safely narrow to number with a direct cast.
-        // I cast through unknown first (safe because I confirmed the shape
-        // with the test-redis.ts output — results[0] is always a number here),
+        // pipeline.exec() returns ReplyUnion[], a union type that TypeScript cannot safely narrow to number with a direct cast.
+        // I cast through unknown first (safe because I confirmed the shape with the test-redis.ts output results[0] is always a number here),
         // then guard with typeof to satisfy TypeScript's type checker.
 
         const rawCount = results?.[0] as unknown;

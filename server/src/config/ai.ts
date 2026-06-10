@@ -97,3 +97,62 @@ export const generateChatResponse = async (
 ): Promise<{ text: string; modelUsed: string; isFallback: boolean }> => {
   return generateText(prompt, 800, 0.6);
 };
+
+// ---------------------------------------------------------------------------
+// generateChatCompletion
+// Used exclusively by the chat module. this function takes a structured messages array
+// matching the Groq chat completions API format.
+// ---------------------------------------------------------------------------
+export const generateChatCompletion = async (
+  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>
+): Promise<{ text: string; modelUsed: string; isFallback: boolean }> => {
+
+  // Attempt 1. primary model
+  try {
+    const response = await groq.chat.completions.create({
+      model: PRIMARY_MODEL,
+      messages,
+      max_tokens: 800,
+      temperature: 0.6,
+    });
+
+    const text = response.choices[0]?.message?.content?.trim() ?? "";
+
+    if (!text) throw new Error("Primary model returned empty response");
+
+    console.log(`[REMOVE LOG LATER] Chat response from primary model. ${PRIMARY_MODEL}`);
+    return { text, modelUsed: PRIMARY_MODEL, isFallback: false };
+
+  } catch (primaryErr: any) {
+    console.warn(
+      `[REMOVE LOG LATER] Primary chat model failed. ${primaryErr?.message ?? primaryErr}. ` +
+      `Trying fallback. ${FALLBACK_MODEL}`
+    );
+  }
+
+  // Attempt 2. fallback model
+  try {
+    const response = await groq.chat.completions.create({
+      model: FALLBACK_MODEL,
+      messages,
+      max_tokens: 800,
+      temperature: 0.6,
+    });
+
+    const text = response.choices[0]?.message?.content?.trim() ?? "";
+
+    if (!text) throw new Error("Fallback model returned empty response");
+
+    console.warn(
+      `[REMOVE LOG LATER] Chat response from fallback model. ${FALLBACK_MODEL}. ` +
+      "Primary model was unavailable."
+    );
+    return { text, modelUsed: FALLBACK_MODEL, isFallback: true };
+
+  } catch (fallbackErr: any) {
+    console.error(
+      `[REMOVE LOG LATER] Both chat models failed. ${fallbackErr?.message ?? fallbackErr}`
+    );
+    return { text: "", modelUsed: "none", isFallback: true };
+  }
+};
