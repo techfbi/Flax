@@ -77,10 +77,14 @@ redis.on("ready", () => {
 // ---------------------------------------------------------------------------
 const getClientKey = (req: Request, prefix: string): string => {
   // req.ip is populated correctly only after app.set("trust proxy", 1) in app.ts.
-  // We fall back through a chain rather than landing on "unknown" silently,
-  // so if ip is still missing we can see it clearly in logs.
-  const ip =
-    req.ip ??
+  // And if the request is authenticated we use req.user.id instead to ensure the limit is per user not per IP, which is more user friendly and effective against brute force attacks.
+
+  if (req.user?.id) {
+    return `rl:${prefix}:user:${req.user.id}`;
+  }
+
+  // Unauthenticated routes (login, register, forgot password) use IP address.
+  const ip = req.ip ??
     (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ??
     "NO_IP_FOUND";
 
@@ -228,7 +232,7 @@ export const spinLimiter = rateLimiter({
   keyPrefix: "spin",
 });
 
-// Chat. per minute window. protects Gemini API quota.
+// Chat. per minute window. protects Groq API token budget.
 export const chatLimiter = rateLimiter({
   windowSeconds: 60,
   maxRequests: 20,
