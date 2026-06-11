@@ -14,7 +14,8 @@ const FOOD_KEYWORDS = [
   "calorie", "calories", "protein", "carbs", "carbohydrate", "fat", "fibre",
   "fiber", "vitamin", "mineral", "weight", "health", "healthy", "recipe",
   "ingredient", "cook", "cooking", "breakfast", "lunch", "dinner", "snack",
-  "drink", "water", "sugar", "sodium", "cholesterol", "portion", "serving",
+  "yesterday", "today", "tomorrow", "target", "goal", "plan",
+  "recommend", "recommend me", "suggest", "what should i", "drink", "water", "sugar", "sodium", "cholesterol", "portion", "serving",
   "hungry", "hunger", "fullness", "digest", "metabolism", "energy", "muscle",
   "lose weight", "gain weight", "blood sugar", "iron", "calcium", "omega",
   "vegetable", "fruit", "grain", "legume", "meat", "fish", "dairy", "egg",
@@ -30,8 +31,8 @@ const OFF_TOPIC_PATTERNS = [
   /\b(code|programming|software|javascript|python|typescript)\b/i,
   /\b(movie|film|music|song|actor|celebrity|sport|football|basketball)\b/i,
   /\b(math|algebra|geometry|calculus|equation|formula)\b/i,
-  /\b(write me a|tell me a joke|poem|story|essay)\b/i,
-  /\b(capital of|history of|what is the|who invented|wikipedia)\b/i,
+  /\b(capital of|history of|who invented|wikipedia)\b/i,
+  /\b(tell me a joke|make me laugh|funny)\b/i,
 ];
 
 export interface GuardResult {
