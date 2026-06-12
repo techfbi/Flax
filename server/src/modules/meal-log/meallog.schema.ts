@@ -66,5 +66,30 @@ export const customMealLogSchema = z.object({
   fat_g:             z.number().min(0).max(1000).optional().default(0),
 });
 
+// ---------------------------------------------------------------------------
+// Patch schema for editing an existing meal log entry. Only quantity_grams and meal_type are editable.
+// We make both fields optional individually, then add a .refine() to enforce that at least one is present.
+// ---------------------------------------------------------------------------
+export const patchMealLogSchema = z
+  .object({
+    quantity_grams: z
+      .number()
+      .int("Quantity must be a whole number")
+      .min(10, "Quantity must be at least 10 grams")
+      .max(3000, "Quantity cannot exceed 3000 grams")
+      .optional(),
+
+    meal_type: z
+      .enum(["breakfast", "lunch", "dinner", "snack", "brunch"])
+      .optional(),
+  })
+  .refine(
+    (data) => data.quantity_grams !== undefined || data.meal_type !== undefined,
+    {
+      message: "Provide at least one field to update. quantity grams or meal type.",
+    }
+  );
+
+export type PatchMealLogInput = z.infer<typeof patchMealLogSchema>;
 export type CatalogueMealLogInput = z.infer<typeof catalogueMealLogSchema>;
-export type CustomMealLogInput    = z.infer<typeof customMealLogSchema>;
+export type CustomMealLogInput = z.infer<typeof customMealLogSchema>;

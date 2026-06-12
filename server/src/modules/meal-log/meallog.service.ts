@@ -1,7 +1,7 @@
 import { pgPool } from "../../config/db.postgres.js";
 import { FoodItem } from "../../models/food.model.js";
 import { AppError } from "../../shared/errors.js";
-import type { CatalogueMealLogInput, CustomMealLogInput } from "./meallog.schema.js";
+import type { CatalogueMealLogInput, CustomMealLogInput, PatchMealLogInput } from "./meallog.schema.js";
 import mongoose from "mongoose";
 
 // ---------------------------------------------------------------------------
@@ -124,25 +124,30 @@ export const createCustomMealLog = async (
   const fat_g     = Math.round(input.fat_g * factor * 100) / 100;
 
   const result = await pgPool.query(
-    `INSERT INTO meal_logs
-       (user_id, food_ref, food_name, custom_name, quantity_grams,
-        meal_type, logged_date, calories, protein_g, carbs_g, fat_g, source)
-     VALUES ($1, NULL, NULL, $2, $3, $4, $5, $6, $7, $8, $9, 'custom')
-     RETURNING
-       id, food_ref, food_name, custom_name, quantity_grams, meal_type,
-       logged_date, calories, protein_g, carbs_g, fat_g, source, created_at`,
-    [
-      userId,
-      input.custom_name,
-      input.quantity_grams,
-      input.meal_type,
-      input.logged_date,
-      calories,
-      protein_g,
-      carbs_g,
-      fat_g,
-    ]
-  );
+  `INSERT INTO meal_logs
+     (user_id, food_ref, food_name, custom_name, quantity_grams,
+      meal_type, logged_date, calories, protein_g, carbs_g, fat_g,
+      source, calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g)
+   VALUES ($1, NULL, NULL, $2, $3, $4, $5, $6, $7, $8, $9, 'custom', $10, $11, $12, $13)
+   RETURNING
+     id, food_ref, food_name, custom_name, quantity_grams, meal_type,
+     logged_date, calories, protein_g, carbs_g, fat_g, source, created_at`,
+  [
+    userId,
+    input.custom_name,
+    input.quantity_grams,
+    input.meal_type,
+    input.logged_date,
+    calories,
+    protein_g,
+    carbs_g,
+    fat_g,
+    input.calories_per_100g,  // stored so PATCH can recalculate
+    input.protein_g, // stored per-100g value
+    input.carbs_g,  // stored per-100g value
+    input.fat_g,  // stored per-100g value
+  ]
+);
 
   console.log(
     `[REMOVE LOG LATER] Custom meal logged. user. ${userId}. name. ${input.custom_name}. ` +
@@ -295,4 +300,134 @@ export const getDashboardData = async (
     })),
     log_count: parseInt(totals.log_count, 10),
   };
+};
+
+// ---------------------------------------------------------------------------
+// update the Meal Log
+// Edits an existing meal log entry. Only quantity_grams and meal_type are editable. When quantity_grams changes, nutrition values are
+// recalculated to stay accurate.
+//
+// Catalogue logs: recalculate using MongoDB per-100g values (source of truth).
+// Custom logs: recalculate using the per-100g values stored at log time
+// in the calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g
+// columns. Without those stored values we could not recalculate.
+// ---------------------------------------------------------------------------
+export const updateMealLog = async (
+  userId: string,
+  logId: string,
+  input: PatchMealLogInput
+): Promise<MealLogEntry> => {
+
+  // Fetch the existing log to determine source and get current values.
+  const existing = await pgPool.query(
+    `SELECT
+       id, user_id, food_ref, source, quantity_grams,
+       calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g
+     FROM meal_logs
+     WHERE id = $1 AND user_id = $2`,
+    [logId, userId]
+  );
+
+  if (existing.rows.length === 0) {
+    throw new AppError(
+      "Meal log not found.",
+      404,
+      "LOG_NOT_FOUND"
+    );
+  }
+
+  const log = existing.rows[0];
+
+  // The quantity we will use for calculation. use new value if provided, otherwise keep the existing quantity.
+  const newQuantity = input.quantity_grams ?? log.quantity_grams;
+  const newMealType = input.meal_type ?? null; // null means no change
+
+  // Recalculate nutrition only if quantity changed.
+  let updatedCalories: number | null = null;
+  let updatedProtein: number | null = null;
+  let updatedCarbs: number | null = null;
+  let updatedFat: number | null = null;
+
+  if (input.quantity_grams !== undefined && input.quantity_grams !== log.quantity_grams) {
+    const factor = newQuantity / 100;
+
+    if (log.source === "catalogue" && log.food_ref) {
+      // Catalogue log. fetch current per-100g values from MongoDB. We always go back to MongoDB here rather than storing the values
+      // because the food catalogue could be updated by admins at any time.
+      const food = await FoodItem.findById( new mongoose.Types.ObjectId(log.food_ref) )
+        .select("calories_per_100g protein_g carbs_g fat_g is_verified")
+        .lean();
+
+      if (!food) {
+        throw new AppError(
+          "The original food item no longer exists in the catalogue.",
+          404,
+          "FOOD_NOT_FOUND"
+        );
+      }
+
+      // we * by 100 then / by 100 to round to 2 decimal places. this keeps the display values consistent and avoids showing long floats.
+      updatedCalories = Math.round(food.calories_per_100g * factor * 100) / 100;
+      updatedProtein = Math.round(food.protein_g * factor * 100) / 100;
+      updatedCarbs = Math.round(food.carbs_g * factor * 100) / 100;
+      updatedFat = Math.round(food.fat_g * factor * 100) / 100;
+
+    } else if (log.source === "custom") {
+      // Custom log. use the per-100g values stored at log time.
+      // If the user entered no nutrition when logging, these are 0 and the recalculated values will also be 0. that is correct.
+      updatedCalories = Math.round((log.calories_per_100g ?? 0) * factor * 100) / 100;
+      updatedProtein = Math.round((log.protein_per_100g ?? 0) * factor * 100) / 100;
+      updatedCarbs = Math.round((log.carbs_per_100g ?? 0) * factor * 100) / 100;
+      updatedFat = Math.round((log.fat_per_100g ?? 0) * factor * 100) / 100;
+    }
+  }
+
+  // Build the UPDATE query dynamically based on what changed.
+  // We only SET columns that actually need to change. This avoids overwriting nutrition with null when only meal_type changed.
+  const setClauses: string[] = [];
+  const values: unknown[] = [];
+  let paramIndex = 1;
+
+  if (input.quantity_grams !== undefined) {
+    setClauses.push(`quantity_grams = $${paramIndex++}`);
+    values.push(newQuantity);
+  }
+
+  if (newMealType !== null) {
+    setClauses.push(`meal_type = $${paramIndex++}`);
+    values.push(newMealType);
+  }
+
+  // Only add nutrition SET clauses if recalculation happened.
+  if (updatedCalories !== null) {
+    setClauses.push(`calories = $${paramIndex++}`);
+    values.push(updatedCalories);
+    setClauses.push(`protein_g = $${paramIndex++}`);
+    values.push(updatedProtein);
+    setClauses.push(`carbs_g = $${paramIndex++}`);
+    values.push(updatedCarbs);
+    setClauses.push(`fat_g = $${paramIndex++}`);
+    values.push(updatedFat);
+  }
+
+  // Add the WHERE clause parameters at the end.
+  values.push(logId);
+  values.push(userId);
+
+  const result = await pgPool.query(
+    `UPDATE meal_logs
+     SET ${setClauses.join(", ")}
+     WHERE id = $${paramIndex++} AND user_id = $${paramIndex}
+     RETURNING
+       id, food_ref, food_name, custom_name, quantity_grams, meal_type,
+       logged_date, calories, protein_g, carbs_g, fat_g, source, created_at`,
+    values
+  );
+
+  console.log(
+    `[REMOVE LOG LATER] Meal log updated. user. ${userId}. logId. ${logId}. ` +
+    `quantity. ${newQuantity}g`
+  );
+
+  return result.rows[0];
 };

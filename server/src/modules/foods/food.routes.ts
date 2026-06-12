@@ -8,7 +8,7 @@ export const foodRouter = Router();
 // Moderate rate limit. search is a read-only MongoDB operation but regex queries are more expensive than indexed lookups so we protect it.
 const searchLimiter = rateLimiter({
   windowSeconds: 60,
-  maxRequests: 30,
+  maxRequests: 60,
   keyPrefix: "food:search",
 });
 

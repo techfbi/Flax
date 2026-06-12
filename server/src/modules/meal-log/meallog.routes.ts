@@ -6,6 +6,7 @@ import {
   getLogs,
   deleteLog,
   getDashboard,
+  patchLog,
 } from "./meallog.controller.js";
 
 export const mealLogRouter = Router();
@@ -23,4 +24,5 @@ mealLogRouter.use(authenticate);
 mealLogRouter.get("/dashboard", getDashboard);
 mealLogRouter.get("/", getLogs);
 mealLogRouter.post("/", mealLogLimiter, logMeal); // Validation now happens in the controller since we have two different schemas based on the presence of food_ref or custom_name in the request body.
+mealLogRouter.patch("/:id", patchLog);
 mealLogRouter.delete("/:id", deleteLog);

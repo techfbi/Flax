@@ -5,12 +5,14 @@ import {
   getMealLogs,
   deleteMealLog,
   getDashboardData,
+  updateMealLog,
 } from "./meallog.service.js";
 import { sendSuccess } from "../../shared/response.js";
 import { AppError } from "../../shared/errors.js";
 import {
   catalogueMealLogSchema,
   customMealLogSchema,
+  patchMealLogSchema,
 } from "./meallog.schema.js";
 
 // ---------------------------------------------------------------------------
@@ -147,6 +149,42 @@ export const getDashboard = async (
 
     const dashboard = await getDashboardData(req.user!.id, date);
     sendSuccess({ res, data: { dashboard } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+// ---------------------------------------------------------------------------
+// PATCH /api/meal-logs/:id
+// Edits quantity_grams or meal_type on an existing log entry.
+// Nutrition values are recalculated automatically when quantity changes.
+// ---------------------------------------------------------------------------
+export const patchLog = async ( req: Request, res: Response, next: NextFunction ): Promise<void> => {
+  try {
+    const logId = req.params.id as string;
+
+    if (!logId) {
+      throw new AppError("Log ID is required.", 400, "MISSING_ID");
+    }
+
+    const parsed = patchMealLogSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      throw new AppError(
+        parsed.error.issues[0]?.message ?? "Invalid input.",
+        400,
+        "VALIDATION_ERROR"
+      );
+    }
+
+    const log = await updateMealLog(req.user!.id, logId, parsed.data);
+
+    sendSuccess({
+      res,
+      message: "Meal log updated.",
+      data: { log },
+    });
   } catch (err) {
     next(err);
   }
