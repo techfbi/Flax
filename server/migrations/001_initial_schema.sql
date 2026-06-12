@@ -69,6 +69,12 @@ CREATE TABLE IF NOT EXISTS meal_logs (
   protein_g      NUMERIC(8,2),
   carbs_g        NUMERIC(8,2),
   fat_g          NUMERIC(8,2),
+  --store per 100g values for custom meal logs so quantity edits can recalculate nutrition correctly
+  -- Catalogue logs leave these NULL because MongoDB is always the source of truth for their nutrition values.
+  calories_per_100g  NUMERIC(8,2),
+  protein_per_100g   NUMERIC(8,2),
+  carbs_per_100g     NUMERIC(8,2),
+  fat_per_100g       NUMERIC(8,2),
   source         TEXT NOT NULL DEFAULT 'manual', -- spin | manual | chat
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
