@@ -5,9 +5,8 @@ import { env } from "../../config/env.js";
 import { AppError } from "../../shared/errors.js";
 import { generateToken, hashToken } from "../../shared/crypto.js";
 import type { RegisterInput, LoginInput } from "./auth.schema.js";
-import { sendPasswordResetEmail } from "../../config/email.js";
+import { sendPasswordResetEmail, sendOtpEmail, sendWelcomeEmail } from "../../config/email.js";
 import type { ForgotPasswordInput, ResetPasswordInput } from "./auth.schema.js";
-import { sendOtpEmail } from "../../config/email.js";
 import type { VerifyOtpInput, ResendOtpInput } from "./auth.schema.js";
 
 // ---------------------------------------------------------------------------
@@ -523,6 +522,10 @@ export const verifyRegistrationOtp = async (
   console.log(
     `OTP verified. user created successfully. ${user.id}`
   );
+
+  // Fire and forget. does not block the response or affect registration outcome.
+  // at larger scale queueing this email to a background worker would be more robust, but for now this is sufficient.
+  void sendWelcomeEmail(user.email, user.display_name);
 
   return { user, tokens: { accessToken, refreshToken } };
 };

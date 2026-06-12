@@ -67,3 +67,32 @@ export const sendOtpEmail = async ( toEmail: string, displayName: string, otp: s
     console.error("Failed to send OTP email.", error);
   }
 };
+
+// ---------------------------------------------------------------------------
+// Sends a welcome email after successful registration.
+// Always fire and forget. registration must never fail or be delayed because this email failed to send.
+// ---------------------------------------------------------------------------
+export const sendWelcomeEmail = async (toEmail: string, displayName: string): Promise<void> => {
+  const { error } = await resend.emails.send({
+    from: "Nutridec <onboarding@resend.dev>", // change to real domain email later
+    to: toEmail,
+    subject: "Welcome to Nutridec",
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+        <h2>Welcome to Nutridec, ${displayName}</h2>
+        <p>Your account is ready. Here is what you can do next.</p>
+        <ul>
+          <li>Set up your health profile so spins and Noura can personalise suggestions for you</li>
+          <li>Spin the wheel for your first meal suggestion</li>
+          <li>Add ingredients to your pantry so spins match what you have at home</li>
+          <li>Log your meals to track your daily nutrition</li>
+        </ul>
+        <p>If you have any questions, just reply to this email.</p>
+      </div>
+    `,
+  });
+
+  if (error) {
+    console.error("[REMOVE LOG LATER] Failed to send welcome email.", error);
+  }
+};
