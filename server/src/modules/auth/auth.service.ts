@@ -8,6 +8,7 @@ import type { RegisterInput, LoginInput } from "./auth.schema.js";
 import { sendPasswordResetEmail, sendOtpEmail, sendWelcomeEmail } from "../../config/email.js";
 import type { ForgotPasswordInput, ResetPasswordInput } from "./auth.schema.js";
 import type { VerifyOtpInput, ResendOtpInput } from "./auth.schema.js";
+import { exchangeCodeForProfile } from "../../config/google.js";
 
 // ---------------------------------------------------------------------------
 // Set Types
@@ -38,10 +39,7 @@ const generateAccessToken = (userId: string, role: string): string => {
 
 // Generates a refresh token, stores its hash in the database, and returns the raw token to be sent to the client.
 // We store only the hash, if the DB is breached, raw tokens cannot be replayed.
-const generateAndStoreRefreshToken = async (
-  userId: string,
-  familyId: string
-): Promise<string> => {
+const generateAndStoreRefreshToken = async ( userId: string, familyId: string ): Promise<string> => {
   const rawToken = generateToken(48);       // 96-character random hex string
   const tokenHash = hashToken(rawToken);    // SHA-256 hash. what we store
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
@@ -299,6 +297,87 @@ export const refreshTokens = async (rawToken: string): Promise<TokenPair> => {
 
   return { accessToken, refreshToken };
 }
+
+// ---------------------------------------------------------------------------
+// Google sign in
+// Handles both new account creation and returning user login through
+// Google OAuth. Applies the account linking rules.
+// ---------------------------------------------------------------------------
+export const googleAuth = async (code: string): Promise<{ user: SafeUser; tokens: TokenPair; isNewUser: boolean; }> => {
+  const profile = await exchangeCodeForProfile(code);
+
+  const result = await pgPool.query(
+    `SELECT id, email, display_name, role, is_verified, created_at, provider
+     FROM users
+     WHERE email = $1 AND deleted_at IS NULL`,
+    [profile.email]
+  );
+
+  const existing = result.rows[0];
+  let user: typeof existing;
+  let isNewUser = false;
+
+  if (existing) {
+    // Account exists. check the provider to apply linking rules.
+    if (existing.provider !== "google") {
+      throw new AppError(
+        "An account already exists with this email. Please log in with your password instead.",
+        409,
+        "ACCOUNT_USES_PASSWORD"
+      );
+    }
+
+    // Returning Google user, that signed up with google
+    user = existing;
+  } else {
+    // New account via Google.
+    const insertResult = await pgPool.query(
+      `INSERT INTO users (email, display_name, provider, provider_id, is_verified)
+       VALUES ($1, $2, 'google', $3, TRUE)
+       RETURNING id, email, display_name, role, is_verified, created_at, provider`,
+      [profile.email, profile.name, profile.sub]
+    );
+
+    user = insertResult.rows[0];
+    isNewUser = true;
+
+    // Create an empty health profile row, same as normal registration.
+    await pgPool.query(
+      `INSERT INTO health_profiles (user_id) VALUES ($1)`,
+      [user.id]
+    );
+
+    // Fire and forget. never blocks the auth response.
+    void sendWelcomeEmail(user.email, user.display_name);
+
+    console.log(`[REMOVE LOG LATER] New user created via Google. ${user.id}`);
+  }
+
+  // Update last login timestamp for both new and returning users.
+  await pgPool.query(
+    "UPDATE users SET last_login_at = NOW() WHERE id = $1",
+    [user.id]
+  );
+
+  // Issue our own token pair, identical to password login.
+  // Google's tokens are not stored or used again past this point.
+  const familyId = generateToken(16);
+  const refreshToken = await generateAndStoreRefreshToken(user.id, familyId);
+  const accessToken = generateAccessToken(user.id, user.role);
+
+  const safeUser: SafeUser = {
+    id: user.id,
+    email: user.email,
+    display_name: user.display_name,
+    role: user.role,
+    is_verified: user.is_verified,
+    created_at: user.created_at,
+  };
+
+  console.log(`[REMOVE LOG LATER] User authenticated via Google. ${user.id}. new account. ${isNewUser}`);
+
+  return { user: safeUser, tokens: { accessToken, refreshToken }, isNewUser };
+};
 
 // ---------------------------------------------------------------------------
 // Logout

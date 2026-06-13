@@ -10,8 +10,8 @@ import {
 } from "./auth.service.js";
 import { sendSuccess } from "../../shared/response.js";
 import type { RegisterInput, LoginInput, ForgotPasswordInput, ResetPasswordInput } from "./auth.schema.js";
-import { verifyRegistrationOtp, resendOtp } from "./auth.service.js";
-import type { VerifyOtpInput, ResendOtpInput } from "./auth.schema.js";
+import { verifyRegistrationOtp, resendOtp, googleAuth } from "./auth.service.js";
+import type { VerifyOtpInput, ResendOtpInput, GoogleAuthInput } from "./auth.schema.js";
 
 // ---------------------------------------------------------------------------
 // Cookie configuration
@@ -134,6 +134,32 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
     next(err);
   }
 }
+
+// ---------------------------------------------------------------------------
+// POST /api/auth/google
+// Receives the authorization code from the frontend after the user completes the Google consent screen and is redirected back to the frontend.
+// ---------------------------------------------------------------------------
+export const googleAuthHandler = async ( req: Request, res: Response, next: NextFunction ): Promise<void> => {
+  try {
+    const { code } = req.body as GoogleAuthInput;
+
+    const { user, tokens, isNewUser } = await googleAuth(code);
+
+    setRefreshCookie(res, tokens.refreshToken);
+
+    sendSuccess({
+      res,
+      message: isNewUser ? "Account created with Google." : "Logged in with Google.",
+      data: {
+        user,
+        accessToken: tokens.accessToken,
+        isNewUser,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
 // ---------------------------------------------------------------------------
 // POST /api/auth/logout

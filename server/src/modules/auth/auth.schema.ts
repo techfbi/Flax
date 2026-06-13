@@ -99,6 +99,14 @@ export const resendOtpSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
+// Google OAuth callback schema.
+// The frontend sends only the authorization code it received from Google.
+// ---------------------------------------------------------------------------
+export const googleAuthSchema = z.object({
+  code: z.string().min(1, "Authorization code is required"),
+});
+
+// ---------------------------------------------------------------------------
 // TypeScript types inferred from schemas
 // we can use these as the type of req.body after the validate() middleware runs.
 // ---------------------------------------------------------------------------
@@ -108,3 +116,4 @@ export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type ResendOtpInput = z.infer<typeof resendOtpSchema>;
+export type GoogleAuthInput = z.infer<typeof googleAuthSchema>;

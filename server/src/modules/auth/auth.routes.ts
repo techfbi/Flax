@@ -3,7 +3,7 @@ import { loginLimiter, registerLimiter, forgotPasswordLimiter, verifyOtpLimiter,
 import { validate } from "../../middleware/validate.js";
 import { authenticate } from "../../middleware/authenticate.js";
 import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "./auth.schema.js";
-import { verifyOtpSchema, resendOtpSchema } from "./auth.schema.js";
+import { verifyOtpSchema, resendOtpSchema, googleAuthSchema } from "./auth.schema.js";
 import {
   register,
   login,
@@ -14,6 +14,7 @@ import {
   resetPasswordHandler,
   verifyOtp,
   resendOtpHandler,
+  googleAuthHandler,
 } from "./auth.controller.js";
 
 export const authRouter = Router();
@@ -23,6 +24,7 @@ export const authRouter = Router();
 authRouter.post("/register", registerLimiter, validate(registerSchema), register);
 authRouter.post("/login", loginLimiter, validate(loginSchema), login);
 authRouter.post("/refresh", refreshLimiter, refresh);
+authRouter.post("/google", loginLimiter, validate(googleAuthSchema), googleAuthHandler); // same limiter as login cos they can be the same abuse
 authRouter.post("/logout", logout);  // no limiter. logout should always succeed
 authRouter.post("/forgot-password", forgotPasswordLimiter, validate(forgotPasswordSchema), forgotPassword);
 authRouter.post("/reset-password", validate(resetPasswordSchema), resetPasswordHandler);
