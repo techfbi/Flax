@@ -7,6 +7,12 @@ import type {
   ChangePasswordInput,
   DeleteAccountInput,
 } from "./user.schema.js";
+import {
+  calculateCaloricTarget,
+  calculateWaterTarget,
+  type BiologicalSex,
+  type ActivityLevel,
+} from "../../shared/calculations.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -29,6 +35,12 @@ export interface FullProfile {
     allergies: string[];
     health_conditions: string[];
     calorie_target: number | null;
+    biological_sex: string | null;
+    activity_level: string | null;
+    height_cm: number | null;
+    weight_kg: number | null;
+    age: number | null;
+    water_target_ml: number | null;
   } | null;
 }
 
@@ -43,7 +55,8 @@ export const getFullProfile = async (userId: string): Promise<FullProfile> => {
        u.id, u.email, u.display_name, u.avatar_url,
        u.role, u.is_verified, u.provider,u.created_at, u.last_login_at,
        hp.region, hp.dietary_style, hp.health_goal,
-       hp.allergies, hp.health_conditions, hp.calorie_target
+       hp.allergies, hp.health_conditions, hp.calorie_target,
+       hp.biological_sex, hp.activity_level, hp.height_cm, hp.weight_kg, hp.age, hp.water_target_ml
      FROM users u
      LEFT JOIN health_profiles hp ON hp.user_id = u.id
      WHERE u.id = $1 AND u.deleted_at IS NULL`,
@@ -76,6 +89,12 @@ export const getFullProfile = async (userId: string): Promise<FullProfile> => {
           allergies: row.allergies ?? [],
           health_conditions: row.health_conditions ?? [],
           calorie_target: row.calorie_target,
+          biological_sex: row.biological_sex,
+          activity_level: row.activity_level,
+          height_cm: row.height_cm,
+          weight_kg: row.weight_kg,
+          age: row.age,
+          water_target_ml: row.water_target_ml,
         }
       : null,
   };
@@ -179,6 +198,80 @@ export const updateHealthProfile = async (
   // Always update the updated_at timestamp
   fields.push(`updated_at = NOW()`);
   values.push(userId);
+
+  // ---------------------------------------------------------------------------
+  // Auto-calculate calorie target and water target when the relevant fields are being updated. We fetch the current profile first so we have all
+  // required values even if the user only changed one of them (e.g. updated weight but not height or sex).
+  // We only auto-calculate if calorie_target was NOT explicitly provided in this request, users might want to manually overide the calculation and input their target
+  // ---------------------------------------------------------------------------
+  const shouldRecalculate =
+    input.biological_sex !== undefined ||
+    input.activity_level !== undefined ||
+    input.height_cm      !== undefined ||
+    input.weight_kg      !== undefined ||
+    input.age            !== undefined ||
+    input.health_goal    !== undefined;
+
+  if (shouldRecalculate) {
+    const currentResult = await pgPool.query(
+      `SELECT biological_sex, activity_level, height_cm, weight_kg, age,
+              health_goal, water_target_ml
+       FROM health_profiles WHERE user_id = $1`,
+      [userId]
+    );
+
+    const current = currentResult.rows[0] ?? {};
+
+    // Merge current values with incoming values so we always have a complete set.
+    const sex      = (input.biological_sex ?? current.biological_sex) as BiologicalSex | null;
+    const activity = (input.activity_level ?? current.activity_level) as ActivityLevel | null;
+    const height   = input.height_cm  ?? current.height_cm;
+    const weight   = input.weight_kg  ?? current.weight_kg;
+    const age      = input.age        ?? current.age;
+    const goal     = input.health_goal ?? current.health_goal;
+
+    // Only auto-calculate calorie target if all required fields are present
+    // and the user did not manually provide a calorie_target in this request.
+    if (sex && activity && height && weight && age && input.calorie_target === undefined) {
+      const autoCalorie = calculateCaloricTarget(sex, weight, height, age, activity, goal);
+      fields.push(`calorie_target = $${paramIndex++}`);
+      values.push(autoCalorie);
+    }
+
+    // Auto-calculate water target if sex and activity are available. Only override if the user has not set a manual water_target_ml.
+    // We check the current stored value. null means no manual override set.
+    if (sex && activity && input.water_target_ml === undefined && current.water_target_ml === null) {
+      const autoWater = calculateWaterTarget(sex, activity);
+      fields.push(`water_target_ml = $${paramIndex++}`);
+      values.push(autoWater);
+    }
+  }
+
+  // Handle the new fields in the dynamic SET builder
+  if (input.biological_sex !== undefined) {
+    fields.push(`biological_sex = $${paramIndex++}`);
+    values.push(input.biological_sex);
+  }
+  if (input.activity_level !== undefined) {
+    fields.push(`activity_level = $${paramIndex++}`);
+    values.push(input.activity_level);
+  }
+  if (input.height_cm !== undefined) {
+    fields.push(`height_cm = $${paramIndex++}`);
+    values.push(input.height_cm);
+  }
+  if (input.weight_kg !== undefined) {
+    fields.push(`weight_kg = $${paramIndex++}`);
+    values.push(input.weight_kg);
+  }
+  if (input.age !== undefined) {
+    fields.push(`age = $${paramIndex++}`);
+    values.push(input.age);
+  }
+  if (input.water_target_ml !== undefined) {
+    fields.push(`water_target_ml = $${paramIndex++}`);
+    values.push(input.water_target_ml);
+  }
 
   await pgPool.query(
     `UPDATE health_profiles SET ${fields.join(", ")} WHERE user_id = $${paramIndex}`,

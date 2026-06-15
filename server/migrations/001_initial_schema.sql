@@ -53,6 +53,13 @@ CREATE TABLE IF NOT EXISTS health_profiles (
   allergies         JSONB NOT NULL DEFAULT '[]',
   health_conditions JSONB NOT NULL DEFAULT '[]',
   calorie_target    INTEGER,
+  -- biological sex and activity level for auto-calculation of calorie target and water intake target.
+  biological_sex    TEXT,
+  activity_level    TEXT,
+  water_target_ml   INTEGER,
+  height_cm      INTEGER,
+  weight_kg      NUMERIC(5,1),
+  age            INTEGER,
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -121,6 +128,69 @@ CREATE TABLE IF NOT EXISTS pantry_items (
   UNIQUE(user_id, name)  -- one entry per ingredient per user. case handled in app
 );
 
+-- Stores meals a user has validated with a thumbs up from spin results.
+-- UNIQUE constraint prevents duplicate validations for the same food.
+CREATE TABLE IF NOT EXISTS validated_meals (
+  id         SERIAL PRIMARY KEY,
+  user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  food_ref   TEXT NOT NULL, -- food_ref is the MongoDB ObjectId.
+  food_name  TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, food_ref)
+);
+
+-- Stores web push subscriptions for browser push notifications.
+-- p256dh and auth are the encryption keys from the browser subscription object.
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id         SERIAL PRIMARY KEY,
+  user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  endpoint   TEXT NOT NULL UNIQUE, -- the unique browser push service URL. and prevent storing duplicate subscriptions for the same browser tab.
+  p256dh     TEXT NOT NULL,
+  auth       TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Tracks daily streak counters for meal logging and water intake.
+-- last_meal_log_date and last_water_log_date are the most recent dates that contributed to each streak. Used to detect broken streaks.
+-- milestone columns track the highest streak ever reached for achievement display.
+CREATE TABLE IF NOT EXISTS streaks (
+  id                    SERIAL PRIMARY KEY,
+  user_id               UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  meal_streak           INTEGER NOT NULL DEFAULT 0, -- meal_streak. consecutive days with at least one meal logged.
+  meal_streak_best      INTEGER NOT NULL DEFAULT 0,
+  last_meal_log_date    DATE,
+  water_streak          INTEGER NOT NULL DEFAULT 0, -- water_streak. consecutive days where water logged >= 80% of water_target_ml.
+  water_streak_best     INTEGER NOT NULL DEFAULT 0,
+  last_water_log_date   DATE,
+  updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Stores individual water intake log entries.
+-- logged_date is stored separately for efficient daily aggregation.
+CREATE TABLE IF NOT EXISTS water_logs (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  amount_ml   INTEGER NOT NULL, -- this is how much the user logged in that entry.
+  logged_date DATE NOT NULL,
+  logged_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+
+-- Covers quick lookup of all validated meals for a user when generating spin results
+CREATE INDEX IF NOT EXISTS idx_validated_meals_user
+  ON validated_meals(user_id); 
+
+-- for quick retrieval of all subscriptions when sending notifications
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user
+  ON push_subscriptions(user_id); 
+
+-- covers the daily water intake aggregation query for streak calculation and dashboard display
+CREATE INDEX IF NOT EXISTS idx_water_logs_user_date
+  ON water_logs(user_id, logged_date DESC); 
+
+-- covers quick lookup of streak counters when logging meals or water to check for streak breaks and update counters
+CREATE INDEX IF NOT EXISTS idx_streaks_user
+  ON streaks(user_id); 
 
 -- Covers quick lookup of all pantry items for a user when generating spin results
 CREATE INDEX IF NOT EXISTS idx_pantry_items_user

@@ -593,40 +593,58 @@ const HEALTH_GOAL_WEIGHTS: Record<
 
 // ---------------------------------------------------------------------------
 // pickFoodByHealthGoal
-// Applies weighted random selection based on the user's health goal.
-// Foods matching preferred tags get weight 3.
-// Foods matching deprioritised tags get weight 1.
-// All other foods get weight 2.
+// Applies weighted random selection based on the user's health goal. Foods matching preferred tags get weight 3.
+// Foods matching deprioritised tags get weight 1. All other foods get weight 2.
 // This means preferred foods are 3x more likely to be picked than
 // deprioritised foods but deprioritised foods can still appear occasionally.
-// Pure Math.random() is used when no health goal is set.
+// If no health goal or an unrecognized health goal is provided, no tags are preferred or deprioritised, but validated boost still applies.
 // ---------------------------------------------------------------------------
 export const pickFoodByHealthGoal = (
   foods: FoodResult[],
-  healthGoal: string | null
+  healthGoal: string | null,
+  validatedRefs: Set<string> = new Set()
 ): FoodResult => {
-  // No health goal set or unrecognised goal. pure random selection.
   if (!healthGoal || !HEALTH_GOAL_WEIGHTS[healthGoal]) {
-    return foods[Math.floor(Math.random() * foods.length)];
+    // No health goal but still apply validated boost.
+    return pickWithValidatedBoost(foods, [], [], validatedRefs);
   }
 
   const { prefer, deprioritise } = HEALTH_GOAL_WEIGHTS[healthGoal];
+  return pickWithValidatedBoost(foods, prefer, deprioritise, validatedRefs);
+};
 
-  // Assign weight to each food based on its tags
+// ---------------------------------------------------------------------------
+// pickWithValidatedBoost
+// Separated from pickFoodByHealthGoal to keep the weighting logic readable.
+// Weight hierarchy from highest to lowest priority:
+//   validated + preferred  = weight 9  (3 × 3)
+//   validated + neutral    = weight 6  (3 × 2)
+//   validated + deprioritised = weight 3 (3 × 1)
+//   preferred only         = weight 3
+//   neutral                = weight 2
+//   deprioritised          = weight 1
+// Validated meals are always weighted at 3x their normal weight.
+// Health goal still matters within the validated set so a user who
+// validated a heavy meal but switches to weight_loss goal still sees lighter validated meals ranked above heavier ones.
+// ---------------------------------------------------------------------------
+const pickWithValidatedBoost = (
+  foods: FoodResult[],
+  prefer: string[],
+  deprioritise: string[],
+  validatedRefs: Set<string>
+): FoodResult => {
   const weighted = foods.map((food) => {
     const tags = food.tags as string[];
+    const isValidated = validatedRefs.has(food._id); // check if this food is in the user's validated set
+    const isPreferred = prefer.length > 0 && prefer.some((tag) => tags.includes(tag));
+    const isDeprioritised = deprioritise.length > 0 && deprioritise.some((tag) => tags.includes(tag));
 
-    const isPreferred = prefer.some((tag) => tags.includes(tag));
-    const isDeprioritised = deprioritise.some((tag) => tags.includes(tag));
-
-    // Preferred beats deprioritised if a food has both tags somehow
-    const weight = isPreferred ? 3 : isDeprioritised ? 1 : 2;
+    const baseWeight = isPreferred ? 3 : isDeprioritised ? 1 : 2;
+    const weight     = isValidated ? baseWeight * 3 : baseWeight;
 
     return { food, weight };
   });
 
-  // Build a weighted pool. a food with weight 3 appears 3 times in the pool.
-  // Picking randomly from this pool gives the correct probability distribution. i.e there is high chance to pick preferred foods but still a chance to pick deprioritised foods.
   const pool: FoodResult[] = [];
   for (const { food, weight } of weighted) {
     for (let i = 0; i < weight; i++) {
@@ -635,4 +653,58 @@ export const pickFoodByHealthGoal = (
   }
 
   return pool[Math.floor(Math.random() * pool.length)];
+};
+
+
+// ---------------------------------------------------------------------------
+// validateMeal
+// Stores a thumbs up reaction against a food for this user. ON CONFLICT DO NOTHING makes this idempotent. tapping thumbs up twice
+// on the same food is silently ignored.
+// ---------------------------------------------------------------------------
+export const validateMeal = async (
+  userId: string,
+  foodRef: string,
+  foodName: string
+): Promise<void> => {
+  await pgPool.query(
+    `INSERT INTO validated_meals (user_id, food_ref, food_name)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (user_id, food_ref) DO NOTHING`,
+    [userId, foodRef, foodName]
+  );
+
+  console.log(
+    `[REMOVE LOG LATER] Meal validated. user. ${userId}. food. ${foodName}`
+  );
+};
+
+// ---------------------------------------------------------------------------
+// unvalidateMeal
+// Removes a thumbs up. user_id in WHERE prevents removing another user's validation.
+// ---------------------------------------------------------------------------
+export const unvalidateMeal = async (
+  userId: string,
+  foodRef: string
+): Promise<void> => {
+  await pgPool.query(
+    "DELETE FROM validated_meals WHERE user_id = $1 AND food_ref = $2",
+    [userId, foodRef]
+  );
+
+  console.log(
+    `[REMOVE LOG LATER] Meal validation removed. user. ${userId}. food. ${foodRef}`
+  );
+};
+
+// ---------------------------------------------------------------------------
+// getValidatedFoodRefs
+// Returns the validated foodrefs. Called inside spin controller alongside getExcludedFoodRefs so both PostgreSQL lookups can happen in parallel using Promise.all.
+// ---------------------------------------------------------------------------
+export const getValidatedFoodRefs = async (userId: string): Promise<Set<string>> => {
+  const result = await pgPool.query(
+    "SELECT food_ref FROM validated_meals WHERE user_id = $1",
+    [userId]
+  );
+
+  return new Set(result.rows.map((r: { food_ref: string }) => r.food_ref));
 };

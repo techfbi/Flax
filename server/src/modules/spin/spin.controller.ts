@@ -2,7 +2,8 @@ import type { Request, Response, NextFunction } from "express";
 import { pgPool } from "../../config/db.postgres.js";
 import { sendSuccess } from "../../shared/response.js";
 import { AppError } from "../../shared/errors.js";
-import { getExcludedFoodRefs, getFoodsForSpin, generateSpinReasoning, SpinFilters, pickFoodByHealthGoal } from "./spin.service.js";
+import { getExcludedFoodRefs, getFoodsForSpin, generateSpinReasoning, SpinFilters, pickFoodByHealthGoal, getValidatedFoodRefs } from "./spin.service.js";
+import { validateMeal, unvalidateMeal } from "./spin.service.js";
 import {
   getAvailableFilters,
   flagMeal,
@@ -126,19 +127,21 @@ export const spin = async ( req: Request, res: Response, next: NextFunction ): P
     const userId = req.user!.id;
 
     // ---------------------------------------------------------------------------
-    // Step 1. Get user profile data needed for filtering and Gemini context
+    // Step 1. Get user profile data needed for filtering and Groq context
     // ---------------------------------------------------------------------------
-    const profileResult = await pgPool.query(
-      `SELECT
-         hp.region, hp.dietary_style, hp.health_goal,
-         hp.allergies, hp.health_conditions
-       FROM health_profiles hp
-       WHERE hp.user_id = $1`,
-      [userId]
-    );
+    const [profileResult, excludeIds, validatedRefs] = await Promise.all([
+      pgPool.query(
+        `SELECT hp.region, hp.dietary_style, hp.health_goal, hp.allergies, hp.health_conditions
+        FROM health_profiles hp
+        WHERE hp.user_id = $1`,
+        [userId]
+      ),
+      getExcludedFoodRefs(userId),
+      getValidatedFoodRefs(userId),
+    ]);
 
     const profile = profileResult.rows[0];
-
+    
     if (!profile?.region) {
       throw new AppError(
         "Please complete your profile and set your region before spinning.",
@@ -161,12 +164,7 @@ export const spin = async ( req: Request, res: Response, next: NextFunction ): P
     }
 
     // ---------------------------------------------------------------------------
-    // Step 3. Get exclusion list. recently seen + permanently flagged
-    // ---------------------------------------------------------------------------
-    const excludeIds = await getExcludedFoodRefs(userId);
-
-    // ---------------------------------------------------------------------------
-    // Step 4. Get filtered food list
+    // Step 3. Get filtered food list
     // ---------------------------------------------------------------------------
     const { foods, pantryMatchUsed } = await getFoodsForSpin(
       profile.region,
@@ -176,15 +174,11 @@ export const spin = async ( req: Request, res: Response, next: NextFunction ): P
       userId
     );
 
-    // ---------------------------------------------------------------------------
-    // Step 5. Pick food by biased randomness based on health goal. This adds a personalized touch to the randomness. Two users with the same filters might get different results based on their health goals.
-    // Applies weighted random selection based on the user's health goal.
-    // We pick the winner here and the frontend uses the animation to dramatically reveal it.
-    // ---------------------------------------------------------------------------
-    const selectedFood = pickFoodByHealthGoal(foods, profile.health_goal);
+      // Then pass validatedRefs to pickFoodByHealthGoal:
+    const selectedFood = pickFoodByHealthGoal(foods, profile.health_goal, validatedRefs);
 
     // ---------------------------------------------------------------------------
-    // Step 6. Determine time of day for Gemini context
+    // Step 4. Determine time of day for Groq context
     // ---------------------------------------------------------------------------
     const hour = new Date().getHours();
     const timeOfDay =
@@ -193,8 +187,8 @@ export const spin = async ( req: Request, res: Response, next: NextFunction ): P
       hour < 21 ? "evening" : "night";
 
     // ---------------------------------------------------------------------------
-    // Step 7. Generate Gemini reasoning
-    // This runs after we have selected the food so Gemini knows exactly what was picked. We do not let Gemini pick the food.
+    // Step 5. Generate Groq reasoning
+    // This runs after we have selected the food so Groq knows exactly what was picked. We do not let Groq pick the food.
     // ---------------------------------------------------------------------------
     const reasoning = await generateSpinReasoning(selectedFood, {
       healthGoal: profile.health_goal,
@@ -206,8 +200,8 @@ export const spin = async ( req: Request, res: Response, next: NextFunction ): P
     });
 
     // ---------------------------------------------------------------------------
-    // Step 8. Record the spin in history
-    // Stored after Gemini call to avoid recording if Gemini throws.
+    // Step 6. Record the spin in history
+    // Stored after Groq call to avoid recording if Groq throws.
     // food_ref is the MongoDB _id. result_name is stored as fallback display.
     // ---------------------------------------------------------------------------
     await pgPool.query(
@@ -226,7 +220,7 @@ export const spin = async ( req: Request, res: Response, next: NextFunction ): P
     );
 
     // ---------------------------------------------------------------------------
-    // Step 9. Return the result
+    // Step 7. Return the result
     // ---------------------------------------------------------------------------
     sendSuccess({
       res,
@@ -277,6 +271,44 @@ export const rejectSpin = async (
     );
 
     sendSuccess({ res, message: "Spin rejected. Spinning again." });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ---------------------------------------------------------------------------
+// POST /api/spin/validate
+// Records a thumbs up on a spun meal. Idempotent.
+// ---------------------------------------------------------------------------
+export const validateMealHandler = async ( req: Request, res: Response, next: NextFunction ): Promise<void> => {
+  try {
+    const { food_ref, food_name } = req.body as { food_ref: string; food_name: string };
+
+    if (!food_ref || !food_name) {
+      throw new AppError("food reference and name are required.", 400, "MISSING_FIELDS");
+    }
+
+    await validateMeal(req.user!.id, food_ref, food_name);
+    sendSuccess({ res, message: "Liked meal. It will be prioritised in your future spins." });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ---------------------------------------------------------------------------
+// DELETE /api/spin/validate/:foodRef
+// Removes a thumbs up reaction from a meal.
+// ---------------------------------------------------------------------------
+export const unvalidateMealHandler = async ( req: Request, res: Response, next: NextFunction ): Promise<void> => {
+  try {
+    const foodRef = req.params.foodRef as string;
+
+    if (!foodRef) {
+      throw new AppError("Food reference is required.", 400, "MISSING_FIELDS");
+    }
+
+    await unvalidateMeal(req.user!.id, foodRef);
+    sendSuccess({ res, message: "Liked meal removed." });
   } catch (err) {
     next(err);
   }

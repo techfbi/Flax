@@ -11,6 +11,8 @@ import {
   unflagMealHandler,
   spin,
   rejectSpin,
+  validateMealHandler, 
+  unvalidateMealHandler,
 } from "./spin.controller.js";
 
 export const spinRouter = Router();
@@ -42,3 +44,7 @@ spinRouter.post("/reject", validate(rejectSpinSchema), rejectSpin);   // POST /a
 spinRouter.post("/flag", validate(flagMealSchema), flagMealHandler); // POST /api/spin/flag
 spinRouter.get("/flagged", getFlaggedHandler); // GET /api/spin/flagged
 spinRouter.delete("/flag/:flagId", unflagMealHandler); // DELETE /api/spin/flag/:flagId
+
+// Validation system i.e thumbs up liked meals that should be prioritised in future spins
+spinRouter.post("/validate", validateMealHandler);
+spinRouter.delete("/validate/:foodRef", unvalidateMealHandler);

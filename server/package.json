@@ -24,6 +24,7 @@
     "@types/node": "^25.6.2",
     "@types/pg": "^8.20.0",
     "@types/validator": "^13.15.10",
+    "@types/web-push": "^3.6.4",
     "nodemon": "^3.1.14",
     "rimraf": "^6.1.3",
     "ts-node": "^10.9.2",
@@ -45,6 +46,7 @@
     "redis": "^5.12.1",
     "resend": "^6.12.3",
     "validator": "^13.15.35",
+    "web-push": "^3.6.7",
     "zod": "^4.4.3"
   }
 }

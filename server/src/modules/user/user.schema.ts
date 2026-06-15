@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { passwordSchema } from "../auth/auth.schema.js";
-
+import type { BiologicalSex, ActivityLevel } from "../../shared/calculations.js";
 //---------------------------------------------------------------------------
 // Update basic profile fields.
 // All fields optional. user can update one or all at once.
@@ -63,6 +63,45 @@ export const updateHealthSchema = z.object({
     .int()
     .min(500, "Calorie target must be at least 500")
     .max(10000, "Calorie target seems too high")
+    .optional()
+    .nullable(),
+  biological_sex: z
+    .enum(["male", "female"])
+    .optional(),
+  activity_level: z
+    .enum([
+      "sedentary",
+      "lightly_active",
+      "moderately_active",
+      "very_active",
+      "extremely_active",
+    ])
+    .optional(),
+  height_cm: z
+    .number()
+    .int()
+    .min(50,  "Height must be at least 50cm")
+    .max(300, "Height seems incorrect")
+    .optional(),
+  weight_kg: z
+    .number()
+    .min(10,  "Weight must be at least 10kg")
+    .max(500, "Weight seems incorrect")
+    .optional(),
+  age: z
+    .number()
+    .int()
+    .min(10,  "Age must be at least 10")
+    .max(120, "Age seems incorrect")
+    .optional(),
+
+  // Allow user to manually override the auto-calculated water target.
+  // If null, the auto-calculated value is used.
+  water_target_ml: z
+    .number()
+    .int()
+    .min(500,  "Water target must be at least 500ml")
+    .max(8000, "Water target seems too high")
     .optional()
     .nullable(),
 });
