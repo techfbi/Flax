@@ -577,6 +577,10 @@ const HEALTH_GOAL_WEIGHTS: Record<
     prefer: ["high-protein"],
     deprioritise: ["light", "low-carb"],
   },
+  weight_gain: {
+    prefer:       ["high-fat", "high-carb", "filling", "comfort-food", "sweet", "heavy"],
+    deprioritise: ["light", "low-carb"],
+},
   maintenance: {
     prefer: [],
     deprioritise: [],
