@@ -16,7 +16,7 @@ const foods = [
     regional_names: ["Benachin", "Riz Jollof"],
     description:
       "Tomato-based spicy rice cooked with pepper, onions, seasoning, and oil. The most celebrated West African rice dish. A staple at parties, family gatherings, and everyday meals across Nigeria.",
-    tags: ["high-carb", "spicy", "filling", "popular", "party-food", "local"],
+    tags: ["high-carb", "spicy", "filling", "popular", "party-food", "local", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: [],
     region: "Nigeria",
@@ -34,7 +34,7 @@ const foods = [
     regional_names: [],
     description:
       "Rice stir-fried with mixed vegetables, liver or shrimp, seasoning, and oil. A party food staple and popular everyday meal across Nigerian households and restaurants.",
-    tags: ["high-carb", "filling", "popular", "party-food", "local"],
+    tags: ["high-carb", "filling", "popular", "party-food", "local", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["shellfish"],
     region: "Nigeria",
@@ -52,7 +52,7 @@ const foods = [
     regional_names: [],
     description:
       "Plain boiled rice served with rich Nigerian tomato pepper stew and choice of meat or fish. One of the most commonly eaten meal combinations across all age groups in Nigeria.",
-    tags: ["high-carb", "filling", "popular", "local", "combo"],
+    tags: ["high-carb", "filling", "popular", "local", "combo", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: [],
     region: "Nigeria",
@@ -70,7 +70,7 @@ const foods = [
     regional_names: ["Wa ati Wake"],
     description:
       "Rice cooked or served together with beans. A protein-rich combination that is affordable and filling. Eaten across all regions of Nigeria for breakfast or lunch.",
-    tags: ["high-carb", "high-protein", "filling", "local", "combo", "budget"],
+    tags: ["high-carb", "high-protein", "filling", "local", "combo", "budget", "heavy"],
     meal_types: ["breakfast", "lunch"],
     allergen_tags: [],
     region: "Nigeria",
@@ -88,7 +88,7 @@ const foods = [
     regional_names: [],
     description:
       "Rice cooked with coconut milk giving it a rich slightly sweet flavour. Popular at parties and special occasions. Often served with fried chicken or fish.",
-    tags: ["high-carb", "filling", "party-food", "popular", "local"],
+    tags: ["high-carb", "filling", "party-food", "popular", "local", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: [],
     region: "Nigeria",
@@ -106,7 +106,7 @@ const foods = [
     regional_names: ["Concoction Rice"],
     description:
       "Local village-style rice cooked with palm oil, smoked fish, crayfish, peppers, and local spices. Bold, smoky, and deeply flavourful. A comfort meal rooted in tradition.",
-    tags: ["high-carb", "spicy", "local", "filling", "traditional"],
+    tags: ["high-carb", "spicy", "local", "filling", "traditional", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Nigeria",
@@ -124,7 +124,7 @@ const foods = [
     regional_names: ["Designer Stew", "Ofada Stew"],
     description:
       "Local unpolished Nigerian brown rice served with a rich spicy green pepper sauce made with assorted offal and palm oil. A distinct Yoruba delicacy with an unforgettable flavour.",
-    tags: ["spicy", "traditional", "high-protein", "popular", "local", "combo", "yoruba"],
+    tags: ["spicy", "traditional", "high-protein", "popular", "local", "combo", "yoruba", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: [],
     region: "Nigeria",
@@ -142,7 +142,7 @@ const foods = [
     regional_names: ["Jollof Spaghetti"],
     description:
       "Spaghetti cooked directly in a jollof-style tomato and pepper sauce until the pasta absorbs all the flavour. A Nigerian twist on pasta popular among young people and students.",
-    tags: ["high-carb", "filling", "popular", "local", "spicy"],
+    tags: ["high-carb", "filling", "popular", "local", "spicy", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["gluten"],
     region: "Nigeria",
@@ -160,7 +160,7 @@ const foods = [
     regional_names: [],
     description:
       "Boiled spaghetti served alongside Nigerian tomato stew with meat or fish. A simple affordable and filling meal popular in Nigerian student households.",
-    tags: ["high-carb", "filling", "budget", "combo", "popular"],
+    tags: ["high-carb", "filling", "budget", "combo", "popular", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["gluten"],
     region: "Nigeria",
@@ -182,7 +182,7 @@ const foods = [
     regional_names: ["Ewa", "Wake", "Agwa"],
     description:
       "Beans seasoned with pepper, onions, crayfish, and oil. A protein-rich meal eaten across all of Nigeria for breakfast or lunch. Simple, nutritious, and deeply satisfying.",
-    tags: ["high-protein", "filling", "local", "budget", "vegetarian"],
+    tags: ["high-protein", "filling", "local", "budget", "vegetarian", "heavy"],
     meal_types: ["breakfast", "lunch"],
     allergen_tags: [],
     region: "Nigeria",
@@ -200,7 +200,7 @@ const foods = [
     regional_names: ["Ewa and Dodo"],
     description:
       "Cooked beans paired with fried ripe plantain. A beloved Nigerian combination that balances savoury protein with natural sweetness. Popular across households for breakfast and lunch.",
-    tags: ["high-protein", "filling", "popular", "local", "combo"],
+    tags: ["high-protein", "filling", "popular", "local", "combo", "heavy"],
     meal_types: ["breakfast", "lunch"],
     allergen_tags: [],
     region: "Nigeria",
@@ -218,7 +218,7 @@ const foods = [
     regional_names: [],
     description:
       "Stewed beans eaten with soft Nigerian bread. A common and filling breakfast combination especially popular among students and working-class Nigerians.",
-    tags: ["high-protein", "filling", "local", "combo", "budget"],
+    tags: ["high-protein", "filling", "local", "combo", "budget", "heavy"],
     meal_types: ["breakfast", "brunch"],
     allergen_tags: ["gluten"],
     region: "Nigeria",
@@ -236,7 +236,7 @@ const foods = [
     regional_names: ["Ewa Aganyin"],
     description:
       "Soft overcooked mashed beans served with a distinctively spicy dark palm oil pepper sauce. A Yoruba street food classic. The sauce is what makes this dish legendary.",
-    tags: ["high-protein", "spicy", "street-food", "local", "yoruba", "popular", "filling"],
+    tags: ["high-protein", "spicy", "street-food", "local", "yoruba", "popular", "filling", "heavy"],
     meal_types: ["breakfast", "lunch"],
     allergen_tags: [],
     region: "Nigeria",
@@ -330,7 +330,7 @@ const foods = [
     regional_names: [],
     description:
       "Deep-fried yam slices served with spicy egg sauce. A popular Nigerian breakfast and brunch option. The crispy yam paired with a rich egg sauce is a widely loved combination.",
-    tags: ["filling", "local", "combo", "popular", "fried", "street-food"],
+    tags: ["filling", "local", "combo", "popular", "fried", "street-food", "heavy"],
     meal_types: ["breakfast", "brunch"],
     allergen_tags: ["eggs"],
     region: "Nigeria",
@@ -348,7 +348,7 @@ const foods = [
     regional_names: ["Asaro", "Yam Porridge"],
     description:
       "Yam cooked down in a rich sauce of palm oil, peppers, crayfish, and leafy vegetables until soft and creamy. A deeply comforting one-pot Nigerian meal eaten across all regions.",
-    tags: ["filling", "local", "traditional", "comfort-food", "popular"],
+    tags: ["filling", "local", "traditional", "comfort-food", "popular", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: [],
     region: "Nigeria",
@@ -366,7 +366,7 @@ const foods = [
     regional_names: ["Yam and Plantain Pepper Soup"],
     description:
       "A Delta delicacy of yam and unripe plantain cooked in a rich spicy pepper soup broth with assorted meat and fish. A unique and intensely flavoured southern Nigerian meal.",
-    tags: ["spicy", "traditional", "filling", "local", "soups"],
+    tags: ["spicy", "traditional", "filling", "local", "soups", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Nigeria",
@@ -388,7 +388,7 @@ const foods = [
     regional_names: ["Garri and Egusi"],
     description:
       "Eba made from garri served with thick melon seed egusi soup. One of the most widely eaten meal combinations in Nigeria. Affordable, filling, and deeply traditional.",
-    tags: ["swallow", "filling", "local", "traditional", "combo", "popular"],
+    tags: ["swallow", "filling", "local", "traditional", "combo", "popular", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Nigeria",
@@ -406,7 +406,7 @@ const foods = [
     regional_names: [],
     description:
       "Eba served with draw okra soup. The slippery texture of okra soup makes swallowing effortless. A popular everyday combination across southern Nigeria.",
-    tags: ["swallow", "filling", "local", "combo", "popular"],
+    tags: ["swallow", "filling", "local", "combo", "popular", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish", "shellfish"],
     region: "Nigeria",
@@ -424,7 +424,7 @@ const foods = [
     regional_names: [],
     description:
       "Garri swallow served with traditional Igbo bitterleaf soup thickened with cocoyam. A hearty and nutritious combination from eastern Nigeria.",
-    tags: ["swallow", "filling", "local", "combo", "igbo", "traditional"],
+    tags: ["swallow", "filling", "local", "combo", "igbo", "traditional", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Nigeria",
@@ -442,7 +442,7 @@ const foods = [
     regional_names: ["Iyan and Egusi"],
     description:
       "Smooth stretchy pounded yam served with rich melon seed soup. A classic Nigerian combination enjoyed at everyday meals and celebrations. Considered the king of Nigerian swallow combinations.",
-    tags: ["swallow", "filling", "local", "traditional", "combo", "popular", "party-food", "yoruba"],
+    tags: ["swallow", "filling", "local", "traditional", "combo", "popular", "party-food", "yoruba", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Nigeria",
@@ -460,7 +460,7 @@ const foods = [
     regional_names: ["Iyan and Efo"],
     description:
       "Smooth pounded yam paired with rich leafy vegetable soup. A highly nutritious combination providing carbohydrates, protein, and vitamins in one meal.",
-    tags: ["swallow", "filling", "local", "combo", "nutritious"],
+    tags: ["swallow", "filling", "local", "combo", "nutritious", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Nigeria",
@@ -478,7 +478,7 @@ const foods = [
     regional_names: ["Iyan and Oha"],
     description:
       "Smooth pounded yam served with Oha leaf soup, a delicacy from eastern Nigeria. Oha leaves have a distinctive mild flavour and are cooked with assorted meats and cocoyam thickener.",
-    tags: ["swallow", "filling", "local", "combo", "igbo", "traditional"],
+    tags: ["swallow", "filling", "local", "combo", "igbo", "traditional", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Nigeria",
@@ -496,7 +496,7 @@ const foods = [
     regional_names: ["Amala and Gbegiri"],
     description:
       "Dark yam flour swallow served with smooth ewedu soup and gbegiri bean soup topped with meat stew. The defining meal of Yoruba cuisine. Deeply satisfying and full of culture.",
-    tags: ["swallow", "filling", "local", "traditional", "combo", "yoruba", "popular"],
+    tags: ["swallow", "filling", "local", "traditional", "combo", "yoruba", "popular", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Nigeria",
@@ -514,7 +514,7 @@ const foods = [
     regional_names: [],
     description:
       "Dark amala swallow paired with rich Yoruba vegetable stew. A hearty southwest Nigerian combination packed with nutrients from the leafy vegetables and protein from assorted meats.",
-    tags: ["swallow", "filling", "local", "combo", "yoruba"],
+    tags: ["swallow", "filling", "local", "combo", "yoruba", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Nigeria",
@@ -532,7 +532,7 @@ const foods = [
     regional_names: [],
     description:
       "Smooth semolina swallow served with rich Yoruba vegetable stew. A satisfying and nutritious combination popular in southwest Nigeria.",
-    tags: ["swallow", "filling", "local", "combo", "yoruba"],
+    tags: ["swallow", "filling", "local", "combo", "yoruba", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Nigeria",
@@ -550,7 +550,7 @@ const foods = [
     regional_names: [],
     description:
       "Smooth semolina swallow served with thick egusi soup. A popular combination that gives the richness of egusi without the heaviness of pounded yam.",
-    tags: ["swallow", "filling", "local", "combo"],
+    tags: ["swallow", "filling", "local", "combo", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Nigeria",
@@ -568,7 +568,7 @@ const foods = [
     regional_names: ["Akpu and Ogbono"],
     description:
       "Fermented cassava swallow served with thick ogbono draw soup. A classic Igbo and southern Nigerian combination. The slight sourness of fufu complements the earthy ogbono perfectly.",
-    tags: ["swallow", "filling", "local", "traditional", "combo", "igbo", "yoruba"],
+    tags: ["swallow", "filling", "local", "traditional", "combo", "igbo", "yoruba", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Nigeria",
@@ -586,7 +586,7 @@ const foods = [
     regional_names: ["Akpu and Egusi"],
     description:
       "Fermented cassava swallow served with rich egusi soup. Popular in eastern and southern Nigeria. The bold flavour of fermented fufu pairs intensely with the nutty egusi.",
-    tags: ["swallow", "filling", "local", "traditional", "combo", "igbo", "yoruba"],
+    tags: ["swallow", "filling", "local", "traditional", "combo", "igbo", "yoruba", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Nigeria",
@@ -604,7 +604,7 @@ const foods = [
     regional_names: [],
     description:
       "Whole wheat swallow served with the rich southern Nigerian afang soup made from afang and water leaves. A nutritious alternative to other swallows with higher fibre content.",
-    tags: ["swallow", "filling", "local", "combo", "nutritious", "high-fibre"],
+    tags: ["swallow", "filling", "local", "combo", "nutritious", "high-fibre", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["gluten", "fish"],
     region: "Nigeria",
@@ -626,7 +626,7 @@ const foods = [
     regional_names: ["Ofe Egusi", "Miyan Gushi"],
     description:
       "Thick Nigerian soup made from ground melon seeds cooked with leafy vegetables, palm oil, and assorted meat or fish. Rich in protein and healthy fats. Served with any swallow.",
-    tags: ["soups", "high-protein", "high-fat", "traditional", "filling", "local"],
+    tags: ["soups", "high-protein", "high-fat", "traditional", "filling", "local", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish", "shellfish"],
     region: "Nigeria",
@@ -644,7 +644,7 @@ const foods = [
     regional_names: ["Vegetable Soup"],
     description:
       "Rich Yoruba spinach stew cooked with assorted meat, fish, palm oil, peppers, and crayfish. One of the most nutritious Nigerian soups. Best served with pounded yam or eba.",
-    tags: ["soups", "high-protein", "vegetables", "traditional", "local", "yoruba", "iron-rich"],
+    tags: ["soups", "high-protein", "vegetables", "traditional", "local", "yoruba", "iron-rich", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish", "shellfish"],
     region: "Nigeria",
@@ -662,7 +662,7 @@ const foods = [
     regional_names: ["Draw Soup", "Apon"],
     description:
       "Thick draw soup made from ground ogbono seeds. Known for its mucilaginous texture that makes swallowing easy. Cooked with assorted meat, fish, and leafy vegetables.",
-    tags: ["soups", "filling", "local", "traditional"],
+    tags: ["soups", "filling", "local", "traditional", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Nigeria",
@@ -716,7 +716,7 @@ const foods = [
     regional_names: ["Ofe Akwu", "Palm Nut Soup"],
     description:
       "Rich Delta and Igbo soup made from fresh palm fruit extract, spiced with local herbs and served with assorted meat or fish. Deep orange in colour and intensely flavourful.",
-    tags: ["soups", "traditional", "high-fat", "filling", "local", "igbo"],
+    tags: ["soups", "traditional", "high-fat", "filling", "local", "igbo", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish", "shellfish"],
     region: "Nigeria",
@@ -734,7 +734,7 @@ const foods = [
     regional_names: [],
     description:
       "Nutritious vegetable soup from the Efik and Ibibio people made with afang leaves and water leaves cooked with assorted meat and fish. Rich, thick, and deeply flavourful.",
-    tags: ["soups", "local", "filling", "traditional", "efik", "ibibio", "vegetables"],
+    tags: ["soups", "local", "filling", "traditional", "efik", "ibibio", "vegetables", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish", "shellfish"],
     region: "Nigeria",
@@ -752,7 +752,7 @@ const foods = [
     regional_names: ["Vegetable Soup Cross River"],
     description:
       "A premium Efik soup made with ugu leaves and water leaves cooked with assorted meat, seafood, and periwinkle. Considered one of the most nutritious Nigerian soups.",
-    tags: ["soups", "local", "filling", "traditional", "efik", "vegetables", "high-protein"],
+    tags: ["soups", "local", "filling", "traditional", "efik", "vegetables", "high-protein", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish", "shellfish"],
     region: "Nigeria",
@@ -770,7 +770,7 @@ const foods = [
     regional_names: ["Ofe Onugbu"],
     description:
       "Traditional Igbo soup made with bitterleaf vegetables, cocoyam as thickener, assorted meat, and fish. The bitterleaf is washed thoroughly to reduce bitterness. A hearty nutritious bowl.",
-    tags: ["soups", "local", "traditional", "filling", "igbo", "vegetables"],
+    tags: ["soups", "local", "traditional", "filling", "igbo", "vegetables", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Nigeria",
@@ -806,7 +806,7 @@ const foods = [
     regional_names: ["Ora Soup"],
     description:
       "A delicacy from eastern Nigeria made with Oha leaves, cocoyam as thickener, assorted meat, and fish. The Oha leaf has a distinctive mild earthy flavour unique to Igbo cuisine.",
-    tags: ["soups", "local", "traditional", "filling", "igbo"],
+    tags: ["soups", "local", "traditional", "filling", "igbo", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Nigeria",
@@ -860,7 +860,7 @@ const foods = [
     regional_names: ["Cow Foot Delicacy"],
     description:
       "Spicy cow foot dish cooked with palm oil, utazi leaves, and a blend of spices. A popular Igbo delicacy served as a social snack in restaurants and beer parlours across Nigeria.",
-    tags: ["spicy", "street-food", "local", "igbo", "high-protein", "snack"],
+    tags: ["spicy", "street-food", "local", "igbo", "high-protein", "snack", "heavy"],
     meal_types: ["snack", "dinner"],
     allergen_tags: [],
     region: "Nigeria",
@@ -878,7 +878,7 @@ const foods = [
     regional_names: ["Pumpkin Soup"],
     description:
       "A northern Nigerian soup made from pumpkin cooked with groundnut paste, tomatoes, and assorted meats. Rich, creamy, and distinctly Hausa in character. Often served with tuwo shinkafa.",
-    tags: ["soups", "traditional", "filling", "hausa", "local", "northern-nigerian"],
+    tags: ["soups", "traditional", "filling", "hausa", "local", "northern-nigerian", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["peanuts", "fish"],
     region: "Nigeria",
@@ -896,7 +896,7 @@ const foods = [
     regional_names: [],
     description:
       "A Cross River delicacy made from grated water yam wrapped in cocoyam leaves and cooked with assorted meat, seafood, and spices. Labour-intensive and deeply flavourful.",
-    tags: ["traditional", "filling", "local", "efik", "ibibio", "high-protein", "spicy"],
+    tags: ["traditional", "filling", "local", "efik", "ibibio", "high-protein", "spicy", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish", "shellfish"],
     region: "Nigeria",
@@ -1264,7 +1264,7 @@ const foods = [
     regional_names: ["Game Meat Stew"],
     description:
       "Stew made with wild game meat such as grasscutter or antelope cooked with tomatoes, peppers, and local spices. A delicacy in many Nigerian communities with a distinctive gamey flavour.",
-    tags: ["high-protein", "traditional", "local", "spicy", "filling", "unique"],
+    tags: ["high-protein", "traditional", "local", "spicy", "filling", "unique", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: [],
     region: "Nigeria",
@@ -1286,7 +1286,7 @@ const foods = [
     regional_names: ["Ghanaian Jollof"],
     description:
       "Ghanaian jollof rice cooked in a tomato and pepper base, distinct from Nigerian jollof in its spice profile and use of more tomatoes. Served at funerals, weddings, and everyday meals.",
-    tags: ["high-carb", "spicy", "filling", "popular", "party-food", "local"],
+    tags: ["high-carb", "spicy", "filling", "popular", "party-food", "local", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: [],
     region: "Ghana",
@@ -1304,7 +1304,7 @@ const foods = [
     regional_names: ["Rice and Beans Ghana"],
     description:
       "A popular Ghanaian dish of rice and black-eyed beans cooked together with dried sorghum leaves that give it a reddish-brown colour. Served with stew, spaghetti, fried plantain, boiled egg, and shito.",
-    tags: ["high-carb", "high-protein", "filling", "popular", "local", "street-food", "combo"],
+    tags: ["high-carb", "high-protein", "filling", "popular", "local", "street-food", "combo", "heavy"],
     meal_types: ["breakfast", "lunch"],
     allergen_tags: ["eggs", "fish"],
     region: "Ghana",
@@ -1322,7 +1322,7 @@ const foods = [
     regional_names: ["Fufu and Nkrakra"],
     description:
       "Smooth cassava and plantain fufu served with a clear peppery light soup made with goat, chicken, or fish. A cornerstone of Ghanaian cuisine eaten with hands by tradition.",
-    tags: ["swallow", "filling", "local", "traditional", "combo", "spicy"],
+    tags: ["swallow", "filling", "local", "traditional", "combo", "spicy", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Ghana",
@@ -1340,7 +1340,7 @@ const foods = [
     regional_names: [],
     description:
       "Fermented corn and cassava dough swallow served with whole grilled tilapia and pepper sauce. A defining Ghanaian meal. The slight sourness of banku pairs perfectly with smoky grilled fish.",
-    tags: ["swallow", "filling", "local", "traditional", "combo", "high-protein", "popular"],
+    tags: ["swallow", "filling", "local", "traditional", "combo", "high-protein", "popular", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Ghana",
@@ -1376,7 +1376,7 @@ const foods = [
     regional_names: ["Dokono"],
     description:
       "Fermented corn dumpling wrapped in banana leaves served with grilled or fried fish and pepper sauce. A traditional Ga and Fante staple eaten across coastal Ghana.",
-    tags: ["swallow", "filling", "local", "traditional", "combo", "high-protein"],
+    tags: ["swallow", "filling", "local", "traditional", "combo", "high-protein", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish"],
     region: "Ghana",
@@ -1394,7 +1394,7 @@ const foods = [
     regional_names: ["Peanut Soup", "Nkate Nkwan"],
     description:
       "Rich Ghanaian soup made from ground roasted peanuts cooked with chicken or meat, tomatoes, and peppers. Creamy, hearty, and deeply comforting. Usually served with fufu or rice.",
-    tags: ["soups", "high-fat", "high-protein", "filling", "local", "traditional"],
+    tags: ["soups", "high-fat", "high-protein", "filling", "local", "traditional", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["peanuts", "fish"],
     region: "Ghana",
@@ -1412,7 +1412,7 @@ const foods = [
     regional_names: ["Palava Sauce", "Cocoyam Leaf Stew"],
     description:
       "Ghanaian stew made from cocoyam leaves cooked with fish, eggs, and palm oil. A nutritious traditional dish often served with boiled yam, plantain, or rice.",
-    tags: ["soups", "vegetables", "traditional", "local", "nutritious"],
+    tags: ["soups", "vegetables", "traditional", "local", "nutritious", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish", "eggs"],
     region: "Ghana",
@@ -1430,7 +1430,7 @@ const foods = [
     regional_names: ["Beans Stew with Plantain"],
     description:
       "Ghanaian black-eyed beans stew cooked in palm oil served with fried ripe plantain. A beloved Ghanaian combination. The red colour comes from palm oil and tomato base.",
-    tags: ["high-protein", "filling", "local", "traditional", "combo", "popular", "vegetarian"],
+    tags: ["high-protein", "filling", "local", "traditional", "combo", "popular", "vegetarian", "heavy"],
     meal_types: ["breakfast", "lunch"],
     allergen_tags: [],
     region: "Ghana",
@@ -1448,7 +1448,7 @@ const foods = [
     regional_names: ["Rice Balls"],
     description:
       "Soft sticky rice balls made from overcooked rice moulded into rounds. Eaten with groundnut soup or palm nut soup. A northern Ghanaian staple now eaten across the country.",
-    tags: ["swallow", "filling", "local", "traditional", "combo"],
+    tags: ["swallow", "filling", "local", "traditional", "combo", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: [],
     region: "Ghana",
@@ -1466,7 +1466,7 @@ const foods = [
     regional_names: ["TZ"],
     description:
       "A thick porridge made from millet or corn flour popular in northern Ghana. Served with ayoyo soup made from jute leaves. The Ghanaian equivalent of tuwo shinkafa.",
-    tags: ["swallow", "filling", "local", "traditional", "northern-ghana"],
+    tags: ["swallow", "filling", "local", "traditional", "northern-ghana", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: [],
     region: "Ghana",
@@ -1484,7 +1484,7 @@ const foods = [
     regional_names: ["Boiled Yam and Palava Sauce"],
     description:
       "Boiled yam or plantain served with kontomire stew. A traditional Ghanaian home meal that is nutritious, filling, and simple to prepare.",
-    tags: ["filling", "local", "traditional", "combo", "nutritious"],
+    tags: ["filling", "local", "traditional", "combo", "nutritious", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["fish", "eggs"],
     region: "Ghana",
@@ -1542,7 +1542,7 @@ const foods = [
     regional_names: ["Ma Po Dou Fu"],
     description:
       "Sichuan dish of soft tofu in a fiery sauce made from fermented black beans, chili bean paste, and ground pork. Numbing, spicy, and deeply savoury.",
-    tags: ["spicy", "high-protein", "filling", "traditional"],
+    tags: ["spicy", "high-protein", "filling", "traditional", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["soy"],
     region: "China",
@@ -1560,7 +1560,7 @@ const foods = [
     regional_names: ["Beijing Roast Duck"],
     description:
       "Iconic Beijing dish of whole duck roasted to achieve crispy skin, served with thin pancakes, hoisin sauce, cucumber, and spring onion. A celebratory meal and culinary symbol of China.",
-    tags: ["high-protein", "popular", "traditional", "party-food", "filling"],
+    tags: ["high-protein", "popular", "traditional", "party-food", "filling", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["gluten", "soy"],
     region: "China",
@@ -1578,7 +1578,7 @@ const foods = [
     regional_names: ["Yangzhou Fried Rice"],
     description:
       "Wok-fried rice with eggs, mixed vegetables, shrimp, and soy sauce. A versatile Chinese staple eaten across all regions. The foundation of Chinese rice cookery.",
-    tags: ["high-carb", "popular", "filling", "quick"],
+    tags: ["high-carb", "popular", "filling", "quick", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["eggs", "shellfish", "soy", "gluten"],
     region: "China",
@@ -1600,7 +1600,7 @@ const foods = [
     regional_names: ["Biryani"],
     description:
       "Fragrant mixed rice dish made with long-grain basmati rice, spiced chicken, caramelised onions, and saffron. Aromatic, colourful, and deeply satisfying. A celebratory meal across India.",
-    tags: ["high-carb", "spiced", "filling", "popular", "aromatic", "party-food"],
+    tags: ["high-carb", "spiced", "filling", "popular", "aromatic", "party-food", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["dairy"],
     region: "India",
@@ -1636,7 +1636,7 @@ const foods = [
     regional_names: ["Murgh Makhani"],
     description:
       "Tender chicken in a rich creamy tomato-butter sauce mildly spiced with aromatic Indian spices. One of the most internationally recognised Indian dishes. Served with naan or rice.",
-    tags: ["high-protein", "creamy", "mild", "popular", "filling"],
+    tags: ["high-protein", "creamy", "mild", "popular", "filling", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["dairy"],
     region: "India",
@@ -1654,7 +1654,7 @@ const foods = [
     regional_names: [],
     description:
       "Grilled cubes of paneer cheese in a spiced tomato and cream sauce. A popular vegetarian Indian dish with a bold smoky flavour from the tandoor-style cooking.",
-    tags: ["vegetarian", "high-protein", "spiced", "filling", "popular"],
+    tags: ["vegetarian", "high-protein", "spiced", "filling", "popular", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["dairy"],
     region: "India",
@@ -1694,7 +1694,7 @@ const foods = [
     regional_names: ["Hamburger"],
     description:
       "Seasoned beef patty in a soft bun with lettuce, tomato, cheese, and condiments. A cultural staple of American cuisine widely popular around the world.",
-    tags: ["high-protein", "filling", "popular", "comfort-food", "fast-food"],
+    tags: ["high-protein", "filling", "popular", "comfort-food", "fast-food", "heavy"],
     meal_types: ["lunch", "dinner", "snack"],
     allergen_tags: ["gluten", "dairy", "eggs"],
     region: "America",
@@ -1712,7 +1712,7 @@ const foods = [
     regional_names: ["Macaroni and Cheese"],
     description:
       "Elbow macaroni in a rich creamy cheese sauce. An American comfort food classic eaten by all ages. Can be baked for a crispy top or served creamy straight from the pot.",
-    tags: ["high-carb", "comfort-food", "filling", "popular", "creamy"],
+    tags: ["high-carb", "comfort-food", "filling", "popular", "creamy", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["gluten", "dairy", "eggs"],
     region: "America",
@@ -1730,7 +1730,7 @@ const foods = [
     regional_names: ["Barbecue Ribs"],
     description:
       "Slow-cooked pork ribs slathered in a rich smoky barbecue sauce. A centrepiece of American barbecue culture. Tender, sticky, and deeply satisfying.",
-    tags: ["high-protein", "filling", "popular", "smoky", "party-food"],
+    tags: ["high-protein", "filling", "popular", "smoky", "party-food", "heavy"],
     meal_types: ["lunch", "dinner"],
     allergen_tags: ["gluten"],
     region: "America",
