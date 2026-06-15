@@ -45,6 +45,7 @@ export const updateHealthSchema = z.object({
     .enum([
       "weight_loss",
       "muscle_gain",
+      "weight_gain",
       "maintenance",
       "general_health",
     ])
