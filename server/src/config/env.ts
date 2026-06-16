@@ -20,6 +20,9 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().min(1),
   GOOGLE_CLIENT_SECRET: z.string().min(1),
   GOOGLE_REDIRECT_URI: z.string().url(),
+  VAPID_PUBLIC_KEY:  z.string().min(1),
+  VAPID_PRIVATE_KEY: z.string().min(1),
+  VAPID_EMAIL:       z.string().email(),
   // Controls whether email OTP verification is required on registration.
   // Set to "false" in development to test with non-existing emails freely.Set to "true" in production.
   REQUIRE_EMAIL_VERIFICATION: z

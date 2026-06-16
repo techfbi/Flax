@@ -14,6 +14,7 @@ import { chatRouter } from "./modules/chat/chat.routes.js";
 import { foodRouter } from "./modules/foods/food.routes.js";
 import { waterRouter } from "./modules/water/water.routes.js";
 import { streakRouter } from "./modules/streaks/streak.routes.js";
+import { notificationRouter } from "./modules/notifications/notification.routes.js";
 
 export const app = express();
 
@@ -70,6 +71,7 @@ app.use("/api/chat", chatRouter);
 app.use("/api/foods", foodRouter);
 app.use("/api/streaks", streakRouter);
 app.use("/api/water", waterRouter);
+app.use("/api/notifications", notificationRouter);
 
 app.use((_req, res) => {
   res.status(404).json({
