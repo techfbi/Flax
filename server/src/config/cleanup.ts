@@ -22,12 +22,30 @@ const cleanupPendingRegistrations = async (): Promise<void> => {
   }
 };
 
+// ---------------------------------------------------------------------------
+// Prunes spin_history older than 7 days.
+// We keep 7 days in the database for data quality and personalisation signals.
+// ---------------------------------------------------------------------------
+const cleanupSpinHistory = async (): Promise<void> => {
+  try {
+    await pgPool.query(
+      `DELETE FROM spin_history
+       WHERE spun_at < NOW() - INTERVAL '7 days'`
+    );
+  } catch (err) {
+    console.error("Spin history cleanup job failed.", err);
+  }
+};
+//------------------------------------------------------------------------------
+
 export const startCleanupJob = (): void => {
   // Run immediately on startup to catch anything that expired while server was down
   cleanupPendingRegistrations();
+  cleanupSpinHistory(); 
 
   // Then run every 24 hours
   setInterval(cleanupPendingRegistrations, 24 * 60 * 60 * 1000);
+  setInterval(cleanupSpinHistory, 24 * 60 * 60 * 1000); 
 
   console.log("Cleanup job started. runs every 24 hours.");
 };
