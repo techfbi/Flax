@@ -708,3 +708,24 @@ export const getValidatedFoodRefs = async (userId: string): Promise<Set<string>>
 
   return new Set(result.rows.map((r: { food_ref: string }) => r.food_ref));
 };
+
+// ---------------------------------------------------------------------------
+// getSpinHistory
+// Returns spin history for the user for display in the history UI section.
+// displayDays controls how many days back to show. default is 2.
+// We always store 7 days but the UI shows 2 by default. was_accepted: true means the user accepted this spin result.
+// was_accepted: false means they rejected and spun again.
+// ---------------------------------------------------------------------------
+export const getSpinHistory = async ( userId: string, displayDays: number = 2 ): Promise<object[]> => {
+  const result = await pgPool.query(
+    `SELECT
+       id, food_ref, result_name, filters_applied, was_accepted, rejection_reason, spun_at
+     FROM spin_history
+     WHERE user_id = $1
+       AND spun_at >= NOW() - ($2 || ' days')::INTERVAL
+     ORDER BY spun_at DESC`,
+    [userId, displayDays]
+  );
+
+  return result.rows;
+};
