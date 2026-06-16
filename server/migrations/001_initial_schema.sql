@@ -157,10 +157,10 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
 CREATE TABLE IF NOT EXISTS streaks (
   id                    SERIAL PRIMARY KEY,
   user_id               UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-  meal_streak           INTEGER NOT NULL DEFAULT 0, -- meal_streak. consecutive days with at least one meal logged.
-  meal_streak_best      INTEGER NOT NULL DEFAULT 0,
-  last_meal_log_date    DATE,
-  water_streak          INTEGER NOT NULL DEFAULT 0, -- water_streak. consecutive days where water logged >= 80% of water_target_ml.
+  goal_streak           INTEGER NOT NULL DEFAULT 0,
+  goal_streak_best      INTEGER NOT NULL DEFAULT 0,
+  last_goal_date        DATE,
+  water_streak          INTEGER NOT NULL DEFAULT 0,
   water_streak_best     INTEGER NOT NULL DEFAULT 0,
   last_water_log_date   DATE,
   updated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()

@@ -12,6 +12,8 @@ import { pantryRouter } from "./modules/pantry/pantry.routes.js";
 import { mealLogRouter } from "./modules/meal-log/meallog.routes.js";
 import { chatRouter } from "./modules/chat/chat.routes.js";
 import { foodRouter } from "./modules/foods/food.routes.js";
+import { waterRouter } from "./modules/water/water.routes.js";
+import { streakRouter } from "./modules/streaks/streak.routes.js";
 
 export const app = express();
 
@@ -66,6 +68,8 @@ app.use("/api/pantry", pantryRouter);
 app.use("/api/meal-logs", mealLogRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/foods", foodRouter);
+app.use("/api/streaks", streakRouter);
+app.use("/api/water", waterRouter);
 
 app.use((_req, res) => {
   res.status(404).json({

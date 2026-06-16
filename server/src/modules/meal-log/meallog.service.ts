@@ -3,7 +3,7 @@ import { FoodItem } from "../../models/food.model.js";
 import { AppError } from "../../shared/errors.js";
 import type { CatalogueMealLogInput, CustomMealLogInput, PatchMealLogInput } from "./meallog.schema.js";
 import mongoose from "mongoose";
-
+import { checkAndUpdateGoalStreak } from "../streaks/streak.service.js";
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -99,6 +99,9 @@ export const createCatalogueMealLog = async (
     ]
   );
 
+  // fire and forget update meal/goal streak, failure should never block a meal log response
+  void checkAndUpdateGoalStreak(userId, result.rows[0].logged_date);
+
   console.log(
     `[REMOVE LOG LATER] Catalogue meal logged. user. ${userId}. food. ${input.food_name}. ` +
     `quantity. ${input.quantity_grams}g. calories. ${calories}`
@@ -124,30 +127,33 @@ export const createCustomMealLog = async (
   const fat_g     = Math.round(input.fat_g * factor * 100) / 100;
 
   const result = await pgPool.query(
-  `INSERT INTO meal_logs
-     (user_id, food_ref, food_name, custom_name, quantity_grams,
-      meal_type, logged_date, calories, protein_g, carbs_g, fat_g,
-      source, calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g)
-   VALUES ($1, NULL, NULL, $2, $3, $4, $5, $6, $7, $8, $9, 'custom', $10, $11, $12, $13)
-   RETURNING
-     id, food_ref, food_name, custom_name, quantity_grams, meal_type,
-     logged_date, calories, protein_g, carbs_g, fat_g, source, created_at`,
-  [
-    userId,
-    input.custom_name,
-    input.quantity_grams,
-    input.meal_type,
-    input.logged_date,
-    calories,
-    protein_g,
-    carbs_g,
-    fat_g,
-    input.calories_per_100g,  // stored so PATCH can recalculate
-    input.protein_g, // stored per-100g value
-    input.carbs_g,  // stored per-100g value
-    input.fat_g,  // stored per-100g value
-  ]
-);
+    `INSERT INTO meal_logs
+      (user_id, food_ref, food_name, custom_name, quantity_grams,
+        meal_type, logged_date, calories, protein_g, carbs_g, fat_g,
+        source, calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g)
+    VALUES ($1, NULL, NULL, $2, $3, $4, $5, $6, $7, $8, $9, 'custom', $10, $11, $12, $13)
+    RETURNING
+      id, food_ref, food_name, custom_name, quantity_grams, meal_type,
+      logged_date, calories, protein_g, carbs_g, fat_g, source, created_at`,
+    [
+      userId,
+      input.custom_name,
+      input.quantity_grams,
+      input.meal_type,
+      input.logged_date,
+      calories,
+      protein_g,
+      carbs_g,
+      fat_g,
+      input.calories_per_100g,  // stored so PATCH can recalculate
+      input.protein_g, // stored per-100g value
+      input.carbs_g,  // stored per-100g value
+      input.fat_g,  // stored per-100g value
+    ]
+  );
+
+  // fire and forget update meal/goal streak, failure should never block a meal log response
+  void checkAndUpdateGoalStreak(userId, result.rows[0].logged_date);
 
   console.log(
     `[REMOVE LOG LATER] Custom meal logged. user. ${userId}. name. ${input.custom_name}. ` +
@@ -186,18 +192,28 @@ export const getMealLogs = async (
 // deleteMealLog
 // Deletes a log entry. user_id in WHERE clause prevents cross-user deletion.
 // ---------------------------------------------------------------------------
-export const deleteMealLog = async (
-  userId: string,
-  logId: string
-): Promise<void> => {
-  const result = await pgPool.query(
+export const deleteMealLog = async ( userId: string, logId: string ): Promise<void> => {
+  // Fetch logged_date before deleting so we can recheck goal streak.
+  const fetchResult = await pgPool.query(
+    "SELECT logged_date FROM meal_logs WHERE id = $1 AND user_id = $2",
+    [logId, userId]
+  );
+
+  if (fetchResult.rows.length === 0) {
+    throw new AppError("Meal log not found.", 404, "LOG_NOT_FOUND");
+  }
+
+  const loggedDate = fetchResult.rows[0].logged_date;
+
+  await pgPool.query(
     "DELETE FROM meal_logs WHERE id = $1 AND user_id = $2",
     [logId, userId]
   );
 
-  if (result.rowCount === 0) {
-    throw new AppError("Meal log not found", 404, "LOG_NOT_FOUND");
-  }
+  // Recheck goal streak for that date after deletion.
+  // Streak only moves forward so this will not decrement an existing streak,
+  // but it ensures the streak is not awarded for a day where goal was not hit.
+  void checkAndUpdateGoalStreak(userId, loggedDate);
 
   console.log(
     `[REMOVE LOG LATER] Meal log deleted. user. ${userId}. logId. ${logId}`
