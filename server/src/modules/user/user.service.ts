@@ -12,6 +12,7 @@ import {
   calculateWaterTarget,
   type BiologicalSex,
   type ActivityLevel,
+  type AgeRange,
 } from "../../shared/calculations.js";
 
 // ---------------------------------------------------------------------------
@@ -39,7 +40,8 @@ export interface FullProfile {
     activity_level: string | null;
     height_cm: number | null;
     weight_kg: number | null;
-    age: number | null;
+    age_range: string | null;
+    exact_age: number | null;
     water_target_ml: number | null;
   } | null;
 }
@@ -56,7 +58,7 @@ export const getFullProfile = async (userId: string): Promise<FullProfile> => {
        u.role, u.is_verified, u.provider,u.created_at, u.last_login_at,
        hp.region, hp.dietary_style, hp.health_goal,
        hp.allergies, hp.health_conditions, hp.calorie_target,
-       hp.biological_sex, hp.activity_level, hp.height_cm, hp.weight_kg, hp.age, hp.water_target_ml
+       hp.biological_sex, hp.activity_level, hp.height_cm, hp.weight_kg, hp.age_range, hp.exact_age, hp.water_target_ml
      FROM users u
      LEFT JOIN health_profiles hp ON hp.user_id = u.id
      WHERE u.id = $1 AND u.deleted_at IS NULL`,
@@ -93,7 +95,8 @@ export const getFullProfile = async (userId: string): Promise<FullProfile> => {
           activity_level: row.activity_level,
           height_cm: row.height_cm,
           weight_kg: row.weight_kg,
-          age: row.age,
+          age_range: row.age_range,
+          exact_age: row.exact_age,
           water_target_ml: row.water_target_ml,
         }
       : null,
@@ -209,12 +212,13 @@ export const updateHealthProfile = async (
     input.activity_level !== undefined ||
     input.height_cm      !== undefined ||
     input.weight_kg      !== undefined ||
-    input.age            !== undefined ||
+    input.age_range      !== undefined ||
+    input.exact_age      !== undefined ||
     input.health_goal    !== undefined;
 
   if (shouldRecalculate) {
     const currentResult = await pgPool.query(
-      `SELECT biological_sex, activity_level, height_cm, weight_kg, age,
+      `SELECT biological_sex, activity_level, height_cm, weight_kg, age_range, exact_age,
               health_goal, water_target_ml
        FROM health_profiles WHERE user_id = $1`,
       [userId]
@@ -227,23 +231,40 @@ export const updateHealthProfile = async (
     const activity = (input.activity_level ?? current.activity_level) as ActivityLevel | null;
     const height   = input.height_cm  ?? current.height_cm;
     const weight   = input.weight_kg  ?? current.weight_kg;
-    const age      = input.age        ?? current.age;
     const goal     = input.health_goal ?? current.health_goal;
+    // Exact age takes priority over age range for better formula accuracy.
+    const ageForCalc: number | AgeRange | null =
+      input.exact_age      ?? current.exact_age ??
+      input.age_range      ?? current.age_range  ??
+      null;
 
     // Only auto-calculate calorie target if all required fields are present
     // and the user did not manually provide a calorie_target in this request.
-    if (sex && activity && height && weight && age && input.calorie_target === undefined) {
-      const autoCalorie = calculateCaloricTarget(sex, weight, height, age, activity, goal);
+    if (sex && activity && height && weight && ageForCalc && input.calorie_target === undefined) {
+      const autoCalorie = calculateCaloricTarget(sex, weight, height, ageForCalc, activity, goal);
       fields.push(`calorie_target = $${paramIndex++}`);
       values.push(autoCalorie);
     }
 
-    // Auto-calculate water target if sex and activity are available. Only override if the user has not set a manual water_target_ml.
-    // We check the current stored value. null means no manual override set.
-    if (sex && activity && input.water_target_ml === undefined && current.water_target_ml === null) {
-      const autoWater = calculateWaterTarget(sex, activity);
-      fields.push(`water_target_ml = $${paramIndex++}`);
-      values.push(autoWater);
+    // ---------------------------------------------------------------------------
+    // Water target auto-calculation.
+    // Three scenarios:
+    // 1. User has never set water_target_ml (null in DB) and is not sending it now.
+    //    Auto-calculate if sex and activity available.
+    // 2. User is sending water_target_ml: null explicitly.
+    //    This means "reset to auto-calculation". recalculate and store the result.
+    // 3. User is sending a specific water_target_ml value.
+    //    Respect their manual override. do not auto-calculate.
+    // ---------------------------------------------------------------------------
+    const isResettingWaterTarget = input.water_target_ml === null;
+    const isManualWaterTarget    = input.water_target_ml !== undefined && input.water_target_ml !== null;
+
+    if (sex && activity && !isManualWaterTarget) {
+      if (isResettingWaterTarget || current.water_target_ml === null) {
+        const autoWater = calculateWaterTarget(sex, activity);
+        fields.push(`water_target_ml = $${paramIndex++}`);
+        values.push(autoWater);
+      }
     }
   }
 
@@ -264,9 +285,13 @@ export const updateHealthProfile = async (
     fields.push(`weight_kg = $${paramIndex++}`);
     values.push(input.weight_kg);
   }
-  if (input.age !== undefined) {
-    fields.push(`age = $${paramIndex++}`);
-    values.push(input.age);
+  if (input.age_range !== undefined) {
+    fields.push(`age_range = $${paramIndex++}`);
+    values.push(input.age_range);
+  }
+  if (input.exact_age !== undefined) {
+    fields.push(`exact_age = $${paramIndex++}`);
+    values.push(input.exact_age);
   }
   if (input.water_target_ml !== undefined) {
     fields.push(`water_target_ml = $${paramIndex++}`);
