@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { passwordSchema } from "../auth/auth.schema.js";
-import type { BiologicalSex, ActivityLevel } from "../../shared/calculations.js";
 //---------------------------------------------------------------------------
 // Update basic profile fields.
 // All fields optional. user can update one or all at once.
