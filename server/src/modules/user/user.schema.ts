@@ -87,10 +87,13 @@ export const updateHealthSchema = z.object({
     .min(10,  "Weight must be at least 10kg")
     .max(500, "Weight seems incorrect")
     .optional(),
-  age: z
+  age_range: z
+    .enum(["18-24", "25-34", "35-44", "45-54", "55-64", "65+"])
+    .optional(),
+  exact_age: z
     .number()
     .int()
-    .min(10,  "Age must be at least 10")
+    .min(16,  "Age must be at least 16")
     .max(120, "Age seems incorrect")
     .optional(),
 
