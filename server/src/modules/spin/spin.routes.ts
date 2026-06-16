@@ -13,6 +13,7 @@ import {
   rejectSpin,
   validateMealHandler, 
   unvalidateMealHandler,
+  getSpinHistoryHandler,
 } from "./spin.controller.js";
 
 export const spinRouter = Router();
@@ -39,6 +40,9 @@ spinRouter.get("/filters", getFilters); //GET /api/spin/filters
 // Spin system
 spinRouter.post("/", spinLimiter, validate(spinRequestSchema), spin); // POST /api/spin
 spinRouter.post("/reject", validate(rejectSpinSchema), rejectSpin);   // POST /api/spin/reject
+
+// History
+spinRouter.get("/history", getSpinHistoryHandler); // GET /api/spin/history?days=2
 
 // Flagging system
 spinRouter.post("/flag", validate(flagMealSchema), flagMealHandler); // POST /api/spin/flag

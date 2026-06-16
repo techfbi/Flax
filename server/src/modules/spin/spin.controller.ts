@@ -3,7 +3,7 @@ import { pgPool } from "../../config/db.postgres.js";
 import { sendSuccess } from "../../shared/response.js";
 import { AppError } from "../../shared/errors.js";
 import { getExcludedFoodRefs, getFoodsForSpin, generateSpinReasoning, SpinFilters, pickFoodByHealthGoal, getValidatedFoodRefs } from "./spin.service.js";
-import { validateMeal, unvalidateMeal } from "./spin.service.js";
+import { validateMeal, unvalidateMeal, getSpinHistory } from "./spin.service.js";
 import {
   getAvailableFilters,
   flagMeal,
@@ -309,6 +309,25 @@ export const unvalidateMealHandler = async ( req: Request, res: Response, next: 
 
     await unvalidateMeal(req.user!.id, foodRef);
     sendSuccess({ res, message: "Liked meal removed." });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ---------------------------------------------------------------------------
+// GET /api/spin/history
+// Returns spin history for the last N days. default 2 days for UI display.
+// Frontend uses this to render the spin history section and enable logging a previously spun meal directly from history.
+// ---------------------------------------------------------------------------
+export const getSpinHistoryHandler = async ( req: Request, res: Response, next: NextFunction ): Promise<void> => {
+  try {
+    const daysRaw = parseInt(req.query.days as string, 10);
+    // Clamp between 1 and 7. 7 is our max retention window.
+    const days = isNaN(daysRaw) ? 2 : Math.min(Math.max(daysRaw, 1), 7);
+
+    const history = await getSpinHistory(req.user!.id, days);
+
+    sendSuccess({ res, data: { history, days } });
   } catch (err) {
     next(err);
   }
