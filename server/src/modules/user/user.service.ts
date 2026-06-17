@@ -185,27 +185,17 @@ export const updateHealthProfile = async (
     values.push(JSON.stringify(input.health_conditions));
   }
 
-  if (input.calorie_target !== undefined) {
-    fields.push(`calorie_target = $${paramIndex++}`);
-    values.push(input.calorie_target);
-  }
-
-  if (fields.length === 0) {
-    throw new AppError(
-      "No fields provided to update",
-      400,
-      "NO_UPDATE_FIELDS"
-    );
-  }
-
-  // Always update the updated_at timestamp
-  fields.push(`updated_at = NOW()`);
-  values.push(userId);
-
-  // ---------------------------------------------------------------------------
-  // Auto-calculate calorie target and water target when the relevant fields are being updated. We fetch the current profile first so we have all
-  // required values even if the user only changed one of them (e.g. updated weight but not height or sex).
-  // We only auto-calculate if calorie_target was NOT explicitly provided in this request, users might want to manually overide the calculation and input their target
+// ---------------------------------------------------------------------------
+  // Auto-calculate calorie target and water target when relevant fields change.
+  // We fetch current profile values first so partial updates (e.g. only
+  // weight changing) still have everything needed for the formulas.
+  //
+  // calorie_target and water_target_ml each have exactly ONE of three states
+  // per request, and each pushes to `fields` AT MOST ONCE to avoid the
+  // "multiple assignments to same column" Postgres error.
+  //   undefined  -> field not touched this request. leave database value as is.
+  //   null       -> explicit reset. recalculate and store the auto value.
+  //   a number   -> manual override. store exactly what was provided.
   // ---------------------------------------------------------------------------
   const shouldRecalculate =
     input.biological_sex !== undefined ||
@@ -214,58 +204,84 @@ export const updateHealthProfile = async (
     input.weight_kg      !== undefined ||
     input.age_range      !== undefined ||
     input.exact_age      !== undefined ||
-    input.health_goal    !== undefined;
+    input.health_goal    !== undefined ||
+    input.calorie_target === null ||
+    input.water_target_ml === null;
 
+  let current: any = {};
   if (shouldRecalculate) {
     const currentResult = await pgPool.query(
-      `SELECT biological_sex, activity_level, height_cm, weight_kg, age_range, exact_age,
-              health_goal, water_target_ml
+      `SELECT biological_sex, activity_level, height_cm, weight_kg,
+              age_range, exact_age, health_goal,
+              calorie_target, water_target_ml
        FROM health_profiles WHERE user_id = $1`,
       [userId]
     );
+    current = currentResult.rows[0] ?? {};
+  }
 
-    const current = currentResult.rows[0] ?? {};
+  const sex = (input.biological_sex ?? current.biological_sex) as BiologicalSex | null;
+  const activity = (input.activity_level ?? current.activity_level) as ActivityLevel | null;
+  const height = input.height_cm   ?? current.height_cm;
+  const weight = input.weight_kg   ?? current.weight_kg;
+  const goal = input.health_goal ?? current.health_goal;
+  const ageForCalc: number | AgeRange | null =
+    input.exact_age ?? current.exact_age ??
+    input.age_range ?? current.age_range ??
+    null;
 
-    // Merge current values with incoming values so we always have a complete set.
-    const sex      = (input.biological_sex ?? current.biological_sex) as BiologicalSex | null;
-    const activity = (input.activity_level ?? current.activity_level) as ActivityLevel | null;
-    const height   = input.height_cm  ?? current.height_cm;
-    const weight   = input.weight_kg  ?? current.weight_kg;
-    const goal     = input.health_goal ?? current.health_goal;
-    // Exact age takes priority over age range for better formula accuracy.
-    const ageForCalc: number | AgeRange | null =
-      input.exact_age      ?? current.exact_age ??
-      input.age_range      ?? current.age_range  ??
-      null;
-
-    // Only auto-calculate calorie target if all required fields are present
-    // and the user did not manually provide a calorie_target in this request.
-    if (sex && activity && height && weight && ageForCalc && input.calorie_target === undefined) {
+  // ---------------------------------------------------------------------------
+  // calorie_target. exactly one path runs.
+  // ---------------------------------------------------------------------------
+  if (input.calorie_target === null) {
+    // Explicit reset requested. recalculate if we have everything needed.
+    if (sex && activity && height && weight && ageForCalc) {
       const autoCalorie = calculateCaloricTarget(sex, weight, height, ageForCalc, activity, goal);
       fields.push(`calorie_target = $${paramIndex++}`);
       values.push(autoCalorie);
+    } else {
+      // Not enough data to calculate. store null as requested. frontend
+      // should prompt the user to complete their profile for auto calculation.
+      fields.push(`calorie_target = $${paramIndex++}`);
+      values.push(null);
     }
+  } else if (input.calorie_target !== undefined) {
+    // Manual numeric override provided.
+    fields.push(`calorie_target = $${paramIndex++}`);
+    values.push(input.calorie_target);
+  } else if (
+    current.calorie_target === null && // not fetched above, meaning shouldRecalculate path for OTHER fields changed
+    sex && activity && height && weight && ageForCalc
+  ) {
+    // calorie_target was not mentioned in this request at all, but other
+    // formula inputs changed and no calorie_target has ever been set.
+    // Auto-calculate for the first time.
+    const autoCalorie = calculateCaloricTarget(sex, weight, height, ageForCalc, activity, goal);
+    fields.push(`calorie_target = $${paramIndex++}`);
+    values.push(autoCalorie);
+  }
 
-    // ---------------------------------------------------------------------------
-    // Water target auto-calculation.
-    // Three scenarios:
-    // 1. User has never set water_target_ml (null in DB) and is not sending it now.
-    //    Auto-calculate if sex and activity available.
-    // 2. User is sending water_target_ml: null explicitly.
-    //    This means "reset to auto-calculation". recalculate and store the result.
-    // 3. User is sending a specific water_target_ml value.
-    //    Respect their manual override. do not auto-calculate.
-    // ---------------------------------------------------------------------------
-    const isResettingWaterTarget = input.water_target_ml === null;
-    const isManualWaterTarget    = input.water_target_ml !== undefined && input.water_target_ml !== null;
-
-    if (sex && activity && !isManualWaterTarget) {
-      if (isResettingWaterTarget || current.water_target_ml === null) {
-        const autoWater = calculateWaterTarget(sex, activity);
-        fields.push(`water_target_ml = $${paramIndex++}`);
-        values.push(autoWater);
-      }
+  // ---------------------------------------------------------------------------
+  // water_target_ml. exactly one path runs. same three-state pattern.
+  // ---------------------------------------------------------------------------
+  if (input.water_target_ml === null) {
+    if (sex && activity) {
+      const autoWater = calculateWaterTarget(sex, activity);
+      fields.push(`water_target_ml = $${paramIndex++}`);
+      values.push(autoWater);
+    } else {
+      fields.push(`water_target_ml = $${paramIndex++}`);
+      values.push(null);
     }
+  } else if (input.water_target_ml !== undefined) {
+    fields.push(`water_target_ml = $${paramIndex++}`);
+    values.push(input.water_target_ml);
+  } else if (shouldRecalculate && sex && activity && current.water_target_ml === null) {
+    // water_target_ml not mentioned this request, but other fields changed
+    // and no water target has ever been set. auto-calculate for first time.
+    const autoWater = calculateWaterTarget(sex, activity);
+    fields.push(`water_target_ml = $${paramIndex++}`);
+    values.push(autoWater);
   }
 
   // Handle the new fields in the dynamic SET builder
@@ -293,10 +309,18 @@ export const updateHealthProfile = async (
     fields.push(`exact_age = $${paramIndex++}`);
     values.push(input.exact_age);
   }
-  if (input.water_target_ml !== undefined) {
-    fields.push(`water_target_ml = $${paramIndex++}`);
-    values.push(input.water_target_ml);
+
+  if (fields.length === 0) {
+    throw new AppError(
+      "No fields provided to update",
+      400,
+      "NO_UPDATE_FIELDS"
+    );
   }
+
+  // Always update the updated_at timestamp
+  fields.push(`updated_at = NOW()`);
+  values.push(userId);
 
   await pgPool.query(
     `UPDATE health_profiles SET ${fields.join(", ")} WHERE user_id = $${paramIndex}`,
