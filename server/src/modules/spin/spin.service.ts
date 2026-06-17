@@ -521,6 +521,9 @@ export const generateSpinReasoning = async (
   "provide energy"
   "support muscle growth"
   "balanced meal"
+  "Nigerian meal"
+  "Nigerian taste"
+  "regional names"
   "good source of protein"
   Vary sentence structure and wording across responses.
   Be warm and encouraging but not over the top.
