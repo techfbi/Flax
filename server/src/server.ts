@@ -8,7 +8,7 @@ import { startCleanupJob } from "./config/cleanup.js";
 
 async function startServer(): Promise<void> {
   try {
-    console.log(`Starting Nutridec server in [${env.NODE_ENV}] mode...`);
+    console.log(`Starting Flax server in [${env.NODE_ENV}] mode...`);
 
     await pgPool.query("SELECT 1");
     console.log("PostgreSQL connected and responsive");

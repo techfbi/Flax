@@ -11,9 +11,9 @@ export const sendPasswordResetEmail = async (toEmail: string, displayName: strin
   const resetLink = `${env.CLIENT_URL}/reset-password?token=${rawToken}`;
 
   const { error } = await resend.emails.send({
-    from: "Nutridec <onboarding@resend.dev>", // Mail for testing with Resend, change to real email later
+    from: "Flax <onboarding@resend.dev>", // Mail for testing with Resend, change to real email later
     to: toEmail,
-    subject: "Reset your Nutridec password",
+    subject: "Reset your Flax password",
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
         <h2>Password reset request</h2>
@@ -44,9 +44,9 @@ export const sendPasswordResetEmail = async (toEmail: string, displayName: strin
 export const sendOtpEmail = async ( toEmail: string, displayName: string, otp: string): Promise<void> => {
 
   const { error } = await resend.emails.send({
-    from: "Nutridec <onboarding@resend.dev>", // Mail for testing with Resend, change to real email later
+    from: "Flax <onboarding@resend.dev>", // Mail for testing with Resend, change to real email later
     to: toEmail,
-    subject: "Your Nutridec verification code",
+    subject: "Your Flax verification code",
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
         <h2>Verify your email address</h2>
@@ -58,7 +58,7 @@ export const sendOtpEmail = async ( toEmail: string, displayName: string, otp: s
           ${otp}
         </div>
         <p>This code expires in 10 minutes.</p>
-        <p>If you did not create a Nutridec account, ignore this email.</p>
+        <p>If you did not create a Flax account, ignore this email.</p>
       </div>
     `,
   });
@@ -74,12 +74,12 @@ export const sendOtpEmail = async ( toEmail: string, displayName: string, otp: s
 // ---------------------------------------------------------------------------
 export const sendWelcomeEmail = async (toEmail: string, displayName: string): Promise<void> => {
   const { error } = await resend.emails.send({
-    from: "Nutridec <onboarding@resend.dev>", // change to real domain email later
+    from: "Flax <onboarding@resend.dev>", // change to real domain email later
     to: toEmail,
-    subject: "Welcome to Nutridec",
+    subject: "Welcome to Flax",
     html: `
       <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-        <h2>Welcome to Nutridec, ${displayName}</h2>
+        <h2>Welcome to Flax, ${displayName}</h2>
         <p>Your account is ready. Here is what you can do next.</p>
         <ul>
           <li>Set up your health profile so spins and Noura can personalise suggestions for you</li>
