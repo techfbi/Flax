@@ -1,0 +1,132 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------ Removes chrome/browser autofil for forms------*/
+
+/* Light mode autofill fix */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #F6F6F6 inset !important;
+  -webkit-text-fill-color: #2F2A25 !important;
+  caret-color: #2F2A25 !important;
+  background-color: #F6F6F6 !important;
+  background-clip: text !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Dark mode autofill fix */
+html.dark input:-webkit-autofill,
+html.dark input:-webkit-autofill:hover,
+html.dark input:-webkit-autofill:focus,
+html.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #121212 inset !important;
+  -webkit-text-fill-color: #EAEAEA !important;
+  caret-color: #EAEAEA !important;
+  background-color: #121212 !important;
+  background-clip: text !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Focus state override */
+input:-webkit-autofill:focus {
+  border-color: #7FB096 !important;
+  box-shadow: 0 0 0 1px rgba(139, 157, 131, 0.5) !important;
+}
+
+html.dark input:-webkit-autofill:focus {
+  border-color: #7fb096 !important;
+  box-shadow: 0 0 0 1px rgba(139, 157, 131, 0.5) !important;
+}
+
+/*---------------------------------------------------------------------------*/
+
+/* ── Base resets ────────────────────────────────────────────── */
+@layer base {
+  html {
+    /* Smooth scroll for landing page anchor links */
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-body text-cocoa bg-off-white;
+    @apply dark:text-dark-white dark:bg-dark-bg;
+  }
+
+  /* Headings use Montserrat */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+/* ── Custom utilities ───────────────────────────────────────── */
+@layer utilities {
+  /* Faded/secondary text — cocoa at 50% (light) or #9CA3AF (dark) */
+  .text-cocoa-faded {
+    color: rgba(28, 26, 23, 0.5);
+  }
+  .dark .text-cocoa-faded {
+    color: #9CA3AF;
+  }
+
+  /* Moringa-faded background at 50% opacity (landing page cards) */
+  .bg-moringa-card {
+    background-color: rgba(127, 176, 150, 0.5);
+  }
+
+  /* Glass nav: semi-transparent surface with backdrop blur */
+  .glass-nav {
+    @apply backdrop-blur-md;
+    background-color: rgba(246, 241, 231, 0.8);
+  }
+  .dark .glass-nav {
+    background-color: rgba(23, 20, 16, 0.8);
+  }
+}
+
+/* ── iOS zoom prevention on mobile form inputs ──────────────── */
+/* Minimum 16px prevents iOS from zooming on focus. Drop on desktop. */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ── Respect prefers-reduced-motion ────────────────────────── */
+/* Kills all CSS transitions and animations for accessibility.
+   Framer Motion checks this separately via useReducedMotion(). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Conveyor belt animation stagger (auth left panel) ──────── */
+/* Each of 6 items in the list gets a staggered delay so they
+   flow one by one. Deferred to animation phase — stub in now. */
+.conveyor-item:nth-child(1) { animation-delay: 0s;    }
+.conveyor-item:nth-child(2) { animation-delay: 1.2s;  }
+.conveyor-item:nth-child(3) { animation-delay: 2.4s;  }
+.conveyor-item:nth-child(4) { animation-delay: 3.6s;  }
+.conveyor-item:nth-child(5) { animation-delay: 4.8s;  }
+.conveyor-item:nth-child(6) { animation-delay: 6.0s;  }
+
+/* ── Typing animation cursor ────────────────────────────────── */
+.typing-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background-color: currentColor;
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 1s step-end infinite;
+}
+

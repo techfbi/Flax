@@ -1,0 +1,22 @@
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { ThemeProvider } from "@/context/ThemeContext";
+import { queryClient } from "@/lib/queryClient";
+import AppRouter from "@/router/index";
+import "@/styles/globals.css";
+
+const root = document.getElementById("root");
+if (!root) throw new Error("Root element not found");
+
+createRoot(root).render(
+  <StrictMode>
+    {/* QueryClientProvider: server state and caching */}
+    <QueryClientProvider client={queryClient}>
+      {/* ThemeProvider: light/dark/system theme via <html class="dark"> */}
+      <ThemeProvider>
+        <AppRouter />
+      </ThemeProvider>
+    </QueryClientProvider>
+  </StrictMode>,
+);
