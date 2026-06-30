@@ -10,6 +10,7 @@
  */
 
 const GENERIC = 'Something went wrong, please try again.'
+const SESSION_SENTINEL = '__SESSION_EXPIRED__'
 
 interface ApiErrorShape {
   response?: {
@@ -18,7 +19,6 @@ interface ApiErrorShape {
       message?: string
     }
   }
-  message?: string
 }
 
 export const handleApiError = (err: unknown): string => {
@@ -26,18 +26,23 @@ export const handleApiError = (err: unknown): string => {
   const status = error?.response?.status
   const backendMessage = error?.response?.data?.message
 
-  // No response at all — network failure
   if (!status) return GENERIC
-
-  // 5xx — server error, never expose internals
   if (status >= 500) return GENERIC
 
-  // 4xx — use backend message if present and it's a non-empty string
+  // Swallow session expiry silently. The interceptor already redirected
+  // to /login. Nothing should appear in the UI as an inline error.
+  if (backendMessage === SESSION_SENTINEL) return ''
+
+  if (status === 401) {
+    // Any 401 that reaches here without the sentinel means the interceptor
+    // could not refresh. Treat it as session expired, redirect handled elsewhere.
+    return ''
+  }
+
   if (status >= 400 && status < 500) {
     if (backendMessage && typeof backendMessage === 'string' && backendMessage.trim()) {
       return backendMessage.trim()
     }
-    // 4xx with no message — generic fallback
     return GENERIC
   }
 

@@ -3,24 +3,22 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import type { ApiResponse, GoogleAuthData } from "@/types/apiTypes";
+import { resolvePostAuthRoute } from "@/utils/resolvePostAuthRoute";
 
 /**
- * AuthCallback — Google OAuth Pattern B.
- * Google redirects to /auth/callback?code=xxx after user consent.
- * This page extracts the code from the URL and POSTs it to the backend.
+ * AuthCallback
+ * Google redirects to /auth/callback?code=xxx after user consent. This page extracts the code from the URL and POSTs it to the backend.
  * Backend exchanges code for tokens, returns user + accessToken.
  *
- * On success: if isNewUser or !hasCompletedOnboarding → /onboarding
- *             else → /dashboard
- * On error: → /login with error message in state
+ * On success: if isNewUser or !hasCompletedOnboarding /onboarding else /dashboard
+ * On error: /login with error message in state
  *
- * TRACK: the redirect URI registered in Google Cloud Console must be
- *        updated to the production domain before launch.
+ * TRACK: the redirect URI registered in Google Cloud Console must be updated to the production domain before launch.
  */
 const AuthCallbackPage = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { setAuth } = useAuthStore();
+  const { setAuth, setPendingNavigation } = useAuthStore();
   const didRun = useRef(false); // prevent double-fire in React strict mode
 
   useEffect(() => {
@@ -42,13 +40,12 @@ const AuthCallbackPage = () => {
           "/api/auth/google",
           { code },
         );
+        setPendingNavigation(true);
+        const route = data.data.isNewUser
+          ? "/onboarding"
+          : await resolvePostAuthRoute(data.data.accessToken);
         setAuth(data.data.user, data.data.accessToken);
-
-        if (data.data.isNewUser || !data.data.user.hasCompletedOnboarding) {
-          navigate("/onboarding", { replace: true });
-        } else {
-          navigate("/dashboard", { replace: true });
-        }
+        navigate(route, { replace: true });
       } catch {
         navigate("/login", {
           state: { error: "Google sign-in failed. Try again." },
@@ -60,7 +57,7 @@ const AuthCallbackPage = () => {
     exchange();
   }, [params, navigate, setAuth]);
 
-  // Minimal loading UI — user sees this briefly
+  // Minimal loading UI user sees this briefly
   return (
     <div className="min-h-screen bg-off-white dark:bg-dark-bg flex items-center justify-center">
       <div className="flex flex-col items-center gap-3">

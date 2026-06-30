@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { forgotPasswordSchema, type ForgotPasswordSchema } from "./authSchema";
 import api from "@/lib/api";
 import type { InternalAxiosRequestConfig } from "axios";
+import { handleApiError } from "@/utils/handleApiError";
 
 /**
  * Forgot password screen.
@@ -45,8 +46,9 @@ const ForgotPasswordForm = () => {
       await sendLink(values.email);
       setLastEmail(values.email);
       setSubmitted(true);
-    } catch {
-      setApiError("Something went wrong, please try again.");
+      localStorage.removeItem("emailforforgot");
+    } catch (err) {
+      setApiError(handleApiError(err));
     }
   };
 
@@ -55,8 +57,8 @@ const ForgotPasswordForm = () => {
     setApiError("");
     try {
       await sendLink(lastEmail || getValues("email"));
-    } catch {
-      setApiError("Something went wrong, please try again.");
+    } catch (err) {
+      setApiError(handleApiError(err));
     } finally {
       setResending(false);
     }
@@ -85,7 +87,7 @@ const ForgotPasswordForm = () => {
             id="email"
             type="email"
             label="Email"
-            placeholder="ada@gmail.com"
+            placeholder="you@email.com"
             autoComplete="email"
             error={errors.email?.message}
             {...register("email")}
@@ -100,18 +102,25 @@ const ForgotPasswordForm = () => {
           >
             Send Reset-link
           </Button>
-
-          <p className="text-sm text-cocoa dark:text-dark-white text-center mt-2">
-            Didn't get link?{" "}
-            <button
-              type="button"
-              onClick={handleResend}
-              disabled={resending}
-              className="font-semibold hover:opacity-70 transition-opacity disabled:opacity-40"
+          <div className="mt-2 flex justify-between px-1">
+            <p className="text-sm text-cocoa dark:text-dark-white">
+              Didn't get link?{" "}
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resending}
+                className="font-semibold hover:opacity-70 transition-opacity disabled:opacity-40"
+              >
+                {resending ? "Resending..." : "Resend"}
+              </button>
+            </p>
+            <Link
+              to="/login"
+              className="font-bold hover:opacity-70 transition-opacity underline"
             >
-              {resending ? "Sending..." : "Resend"}
-            </button>
-          </p>
+              Cancel
+            </Link>
+          </div>
         </form>
       ) : (
         /* ── Success state ── */
@@ -137,20 +146,10 @@ const ForgotPasswordForm = () => {
             disabled={resending}
             className="text-sm font-semibold text-cocoa dark:text-dark-white hover:opacity-70 transition-opacity disabled:opacity-40"
           >
-            {resending ? "Sending..." : "Didn't get it? Resend"}
+            {resending ? "Resending..." : "Didn't get it? Resend"}
           </button>
         </div>
       )}
-
-      <p className="text-sm text-cocoa dark:text-dark-white text-center mt-6">
-        Remembered it?{" "}
-        <Link
-          to="/login"
-          className="font-semibold hover:opacity-70 transition-opacity"
-        >
-          Log in
-        </Link>
-      </p>
     </AuthLayout>
   );
 };

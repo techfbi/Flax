@@ -12,8 +12,33 @@ export interface AuthUser {
   displayName: string
   avatarUrl: string | null
   isVerified: boolean
-  hasCompletedOnboarding: boolean
   createdAt: string
+}
+
+export interface FullProfile {
+  id: string
+  email: string
+  display_name: string
+  avatar_url: string | null
+  role: string
+  is_verified: boolean
+  created_at: string
+  last_login_at: string | null
+  health: {
+    region: string | null
+    dietary_style: string | null
+    health_goal: string | null
+    allergies: string[]
+    health_conditions: string[]
+    calorie_target: number | null
+    biological_sex: string | null
+    activity_level: string | null
+    height_cm: number | null
+    weight_kg: number | null
+    age_range: string | null
+    exact_age: number | null
+    water_target_ml: number | null
+  } | null
 }
 
 export interface LoginData {

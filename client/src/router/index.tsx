@@ -5,28 +5,31 @@ import api from "@/lib/api";
 import type { ApiResponse, AuthUser } from "@/types/apiTypes";
 import type { InternalAxiosRequestConfig } from "axios";
 
-/* ── Lazy pages ─────────────────────────────────────────────── */
 const LandingPage = lazy(() => import("@/features/landing/LandingPage"));
 const RegisterForm = lazy(() => import("@/features/auth/RegisterForm"));
 const LoginForm = lazy(() => import("@/features/auth/LoginForm"));
 const OtpForm = lazy(() => import("@/features/auth/OtpForm"));
 const AuthCallbackPage = lazy(() => import("@/features/auth/AuthCallbackPage"));
-const PlaceholderPage = lazy(() => import("@/pages/PlaceholderPage"));
 const ForgotPasswordForm = lazy(
   () => import("@/features/auth/ForgotPasswordForm"),
 );
 const ResetPasswordForm = lazy(
   () => import("@/features/auth/ResetPasswordForm"),
 );
+const OnboardingFlow = lazy(
+  () => import("@/features/onboarding/OnboardingFlow"),
+);
+const PlaceholderPage = lazy(() => import("@/pages/PlaceholderPage"));
 
-/* ── Page loader ────────────────────────────────────────────── */
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-off-white dark:bg-dark-bg">
-    <div className="w-8 h-8 border-2 border-moringa dark:border-moringa-faded border-t-transparent rounded-full animate-spin" />
+    <div
+      className="w-8 h-8 border-2 border-moringa dark:border-moringa-faded
+      border-t-transparent rounded-full animate-spin"
+    />
   </div>
 );
 
-/* ── Route guards ────────────────────────────────────────────── */
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuthStore();
   if (isLoading) return <PageLoader />;
@@ -34,8 +37,14 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, isLoading, pendingNavigation } = useAuthStore();
   if (isLoading) return <PageLoader />;
+  /*
+    If a post-auth navigation is pending (resolvePostAuthRoute is in flight),
+    hold here instead of redirecting to /dashboard.
+    The form component will navigate to the correct route once resolved.
+  */
+  if (pendingNavigation) return <PageLoader />;
   return !isAuthenticated ? (
     <>{children}</>
   ) : (
@@ -43,14 +52,20 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-/* ── Session check — runs once on app load ───────────────────
-   Uses _skipRefresh so a 401 from /me does NOT trigger the
-   interceptor's refresh attempt. We just treat it as "no session"
-   and clear auth. No redirect happens here — guards handle it.
-────────────────────────────────────────────────────────────── */
+/*
+  SessionGate runs once on app load to check if a session exists.
+  It calls GET /api/auth/me silently.
+
+  Critical race condition fix:
+  If the user registers or logs in while the /me check is in flight,
+  isAuthenticated becomes true via setAuth before clearAuth is called.
+  We must NOT call clearAuth if the user is already authenticated by
+  the time the /me response comes back.
+  We check isAuthenticated from the store at response time, not at call time.
+*/
 const SessionGate = ({ children }: { children: React.ReactNode }) => {
-  const { setAuth, clearAuth } = useAuthStore();
-  const checked = useRef(false); // prevent double-fire in React StrictMode
+  const { setUser, clearAuth } = useAuthStore();
+  const checked = useRef(false);
 
   useEffect(() => {
     if (checked.current) return;
@@ -58,39 +73,45 @@ const SessionGate = ({ children }: { children: React.ReactNode }) => {
 
     const verify = async () => {
       try {
-        const { data } = await api.get<
-          ApiResponse<{ user: AuthUser; accessToken: string }>
-        >(
+        const { data } = await api.get<ApiResponse<{ user: AuthUser }>>(
           "/api/auth/me",
-          // _skipRefresh prevents the 401 from this call triggering
-          // the refresh interceptor and creating a loop
           { _skipRefresh: true } as InternalAxiosRequestConfig,
         );
-        setAuth(data.data.user, data.data.accessToken);
+        setUser(data.data.user);
       } catch {
-        // No valid session — clear state, guards will redirect if needed
-        clearAuth();
+        /*
+          Only clear auth if the user is not already authenticated.
+          If register or login set auth while this request was in flight,
+          we must not wipe that state.
+        */
+        const currentState = useAuthStore.getState();
+        if (!currentState.isAuthenticated) {
+          clearAuth();
+        } else {
+          /*
+            Auth was set by a login or register action after this check started.
+            Just mark loading as done without clearing anything.
+          */
+          useAuthStore.getState().setLoading(false);
+        }
       }
     };
 
     verify();
-  }, [setAuth, clearAuth]);
+  }, [setUser, clearAuth]);
 
   return <>{children}</>;
 };
 
-/* ── App router ─────────────────────────────────────────────── */
 const AppRouter = () => {
   return (
     <BrowserRouter>
       <SessionGate>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            {/* Public — accessible always */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
-            {/* Public-only — redirect to dashboard if logged in */}
             <Route
               path="/register"
               element={
@@ -132,12 +153,11 @@ const AppRouter = () => {
               }
             />
 
-            {/* Protected — redirect to login if not authenticated */}
             <Route
               path="/onboarding"
               element={
                 <ProtectedRoute>
-                  <PlaceholderPage />
+                  <OnboardingFlow />
                 </ProtectedRoute>
               }
             />
@@ -190,7 +210,6 @@ const AppRouter = () => {
               }
             />
 
-            {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>

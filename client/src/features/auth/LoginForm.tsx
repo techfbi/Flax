@@ -11,6 +11,7 @@ import api from "@/lib/api";
 import type { ApiResponse, LoginData } from "@/types/apiTypes";
 import { SecondAuthLayout } from "@/components/layout/SecondAuthLayout";
 import { handleApiError } from "@/utils/handleApiError";
+import { resolvePostAuthRoute } from "@/utils/resolvePostAuthRoute";
 
 /**
  * Login page.
@@ -33,9 +34,8 @@ const PANEL_ITEMS = [
 
 const LoginForm = () => {
   const navigate = useNavigate();
-  const { setAuth } = useAuthStore();
+  const { setAuth, setPendingNavigation } = useAuthStore();
   const [apiError, setApiError] = useState("");
-  const [googleLoading, setGoogleLoading] = useState(false);
 
   const {
     register,
@@ -55,23 +55,13 @@ const LoginForm = () => {
           password: values.password,
         },
       );
+      setPendingNavigation(true);
+      const route = await resolvePostAuthRoute(data.data.accessToken);
       setAuth(data.data.user, data.data.accessToken);
-
-      // Redirect based on onboarding status
-      if (!data.data.user.hasCompletedOnboarding) {
-        navigate("/onboarding");
-      } else {
-        navigate("/dashboard");
-      }
+      navigate(route, { replace: true });
     } catch (err: unknown) {
       setApiError(handleApiError(err));
     }
-  };
-
-  const handleGoogle = () => {
-    setGoogleLoading(true);
-    const base = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
-    window.location.href = `${base}/api/auth/google/redirect`;
   };
 
   return (
@@ -88,7 +78,7 @@ const LoginForm = () => {
         Log in
       </h2>
 
-      <GoogleButton onClick={handleGoogle} loading={googleLoading} />
+      <GoogleButton />
 
       <div className="relative my-5 flex items-center">
         <div className="flex-1 h-px bg-cocoa/10 dark:bg-dark-white/10" />

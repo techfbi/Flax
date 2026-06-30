@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { resetPasswordSchema, type ResetPasswordSchema } from "./authSchema";
 import api from "@/lib/api";
 import type { InternalAxiosRequestConfig } from "axios";
+import { handleApiError } from "@/utils/handleApiError";
 
 /**
  * Reset password screen — user arrives here from the email link.
@@ -64,13 +65,7 @@ const ResetPasswordForm = () => {
       // On success go to login with a success flag
       navigate("/login", { state: { resetSuccess: true } });
     } catch (err: unknown) {
-      const status = (err as { response?: { status?: number } })?.response
-        ?.status;
-      if (status === 400) {
-        setApiError("This reset link has expired. Please request a new one.");
-      } else {
-        setApiError("Something went wrong, please try again.");
-      }
+      setApiError(handleApiError(err));
     }
   };
 

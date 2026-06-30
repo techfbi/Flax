@@ -4,7 +4,7 @@ import { tokenStore } from './tokenStore'
 /**
  * Single Axios instance for all API calls.
  * - Attaches in-memory access token to every request. On 401: attempts one silent token refresh, then retries original request.
- * - On refresh failure: clears token. Does NOT redirect — the router handles that.
+ * - On refresh failure: clears token. Does NOT redirect, the router handles that.
  * - Requests marked with _skipRefresh bypass the interceptor entirely.  Used for the app-load /me check and the refresh call itself.
  */
 
@@ -93,12 +93,20 @@ api.interceptors.response.use(
       original.headers.Authorization = `Bearer ${newToken}`
       return api(original)
     } catch {
-      // Refresh failed — clear everything.
-      // Do NOT redirect here. The router's auth guard handles redirect.
       tokenStore.clear()
       clearQueue()
+      // Replace the error message so handleApiError never surfaces
+      // backend session/token messages. The UI shows "session expired" only
+      // via the login page state, not as an inline form error.
+      if (error.response) {
+        error.response.data = {
+          success: false,
+          message: '__SESSION_EXPIRED__',
+        }
+      }
       return Promise.reject(error)
-    } finally {
+    } 
+    finally {
       isRefreshing = false
     }
   }

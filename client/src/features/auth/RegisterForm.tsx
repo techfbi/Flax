@@ -11,6 +11,7 @@ import api from "@/lib/api";
 import type { ApiResponse, RegisterData } from "@/types/apiTypes";
 import { SecondAuthLayout } from "@/components/layout/SecondAuthLayout";
 import { handleApiError } from "@/utils/handleApiError";
+import { resolvePostAuthRoute } from "@/utils/resolvePostAuthRoute";
 
 /**
  * Register page.
@@ -34,9 +35,8 @@ const PANEL_ITEMS = [
 
 const RegisterForm = () => {
   const navigate = useNavigate();
-  const { setAuth } = useAuthStore();
+  const { setAuth, setPendingNavigation } = useAuthStore();
   const [apiError, setApiError] = useState("");
-  const [googleLoading, setGoogleLoading] = useState(false);
 
   const {
     register,
@@ -66,21 +66,14 @@ const RegisterForm = () => {
           state: { pendingId: data.data.pendingId, email: values.email },
         });
       } else if (data.data.accessToken && data.data.user) {
-        // Verified immediately (dev env or OTP disabled)
+        setPendingNavigation(true);
+        const route = await resolvePostAuthRoute(data.data.accessToken);
         setAuth(data.data.user, data.data.accessToken);
-        navigate("/onboarding");
+        navigate(route, { replace: true });
       }
     } catch (err: unknown) {
       setApiError(handleApiError(err));
     }
-  };
-
-  const handleGoogle = () => {
-    setGoogleLoading(true);
-    // Redirect to Google consent. Backend handles the OAuth exchange.
-    // TRACK: update GOOGLE_REDIRECT_URI in Google Cloud Console for production.
-    const base = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
-    window.location.href = `${base}/api/auth/google/redirect`;
   };
 
   return (
@@ -107,7 +100,7 @@ const RegisterForm = () => {
       </h2>
 
       {/* Google OAuth */}
-      <GoogleButton onClick={handleGoogle} loading={googleLoading} />
+      <GoogleButton />
 
       {/* Divider */}
       <div className="relative my-5 flex items-center">
