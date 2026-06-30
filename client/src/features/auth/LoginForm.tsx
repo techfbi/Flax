@@ -1,5 +1,10 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import {
+  Link,
+  useNavigate,
+  useLocation,
+  useSearchParams,
+} from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { GoogleButton } from "./GoogleButton";
@@ -12,6 +17,7 @@ import type { ApiResponse, LoginData } from "@/types/apiTypes";
 import { SecondAuthLayout } from "@/components/layout/SecondAuthLayout";
 import { handleApiError } from "@/utils/handleApiError";
 import { resolvePostAuthRoute } from "@/utils/resolvePostAuthRoute";
+import type { InternalAxiosRequestConfig } from "axios";
 
 /**
  * Login page.
@@ -36,6 +42,79 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const { setAuth, setPendingNavigation } = useAuthStore();
   const [apiError, setApiError] = useState("");
+  const location = useLocation();
+  const locationError =
+    (location.state as { error?: string } | null)?.error ?? "";
+  const [displayLocationError, setDisplayLocationError] =
+    useState(locationError);
+  const [searchParams] = useSearchParams();
+  const sessionExpired = searchParams.get("session") === "expired";
+  const passwordReset = searchParams.get("resetPassword") === "true";
+
+  // useeffect to clean up error on fresh load
+  useEffect(() => {
+    if (sessionExpired || passwordReset) {
+      // Remove the query param from URL without re-render
+      window.history.replaceState({}, "", "/login");
+    }
+  }, [sessionExpired, passwordReset]);
+
+  // display error from google sign in if there is one and dissapear after 5 sec
+  useEffect(() => {
+    if (!locationError) return;
+
+    // set error in local state
+    setDisplayLocationError(locationError);
+
+    // Remove it from the history entry
+    navigate(location.pathname, {
+      replace: true,
+      state: null,
+    });
+  }, [locationError, navigate, location.pathname]);
+
+  // useeffect to reset the displaylocation error i.e error from google so it wont persist
+  useEffect(() => {
+    if (!locationError) return;
+
+    const timer = setTimeout(() => {
+      setDisplayLocationError("");
+    }, 10000); // 10 seconds
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Afunction to handle all error messages
+  const message = (() => {
+    if (apiError) {
+      return {
+        text: apiError,
+        type: "error",
+      };
+    }
+
+    if (sessionExpired) {
+      return {
+        text: "Your session has expired. Please log in again.",
+        type: "error",
+      };
+    }
+
+    if (displayLocationError) {
+      return {
+        text: displayLocationError,
+        type: "error",
+      };
+    }
+
+    if (passwordReset) {
+      return {
+        text: "Your password has been reset. Please log in!",
+        type: "success",
+      };
+    }
+
+    return null;
+  })();
 
   const {
     register,
@@ -54,6 +133,7 @@ const LoginForm = () => {
           email: values.email,
           password: values.password,
         },
+        { _skipRefresh: true } as InternalAxiosRequestConfig,
       );
       setPendingNavigation(true);
       const route = await resolvePostAuthRoute(data.data.accessToken);
@@ -88,12 +168,17 @@ const LoginForm = () => {
         <div className="flex-1 h-px bg-cocoa/15 dark:bg-dark-white/15" />
       </div>
 
-      {apiError && (
+      {/*Show normal API error*/}
+      {message && (
         <p
-          className="text-sm text-rose-500 dark:text-rose-700 text-center mb-4"
           role="alert"
+          className={`text-sm text-center mb-4 ${
+            message.type === "error"
+              ? "text-rose-500 dark:text-rose-700"
+              : "text-moringa-faded"
+          }`}
         >
-          {apiError}
+          {message.text}
         </p>
       )}
 

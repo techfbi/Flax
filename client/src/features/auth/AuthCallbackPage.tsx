@@ -5,21 +5,11 @@ import api from "@/lib/api";
 import type { ApiResponse, GoogleAuthData } from "@/types/apiTypes";
 import { resolvePostAuthRoute } from "@/utils/resolvePostAuthRoute";
 
-/**
- * AuthCallback
- * Google redirects to /auth/callback?code=xxx after user consent. This page extracts the code from the URL and POSTs it to the backend.
- * Backend exchanges code for tokens, returns user + accessToken.
- *
- * On success: if isNewUser or !hasCompletedOnboarding /onboarding else /dashboard
- * On error: /login with error message in state
- *
- * TRACK: the redirect URI registered in Google Cloud Console must be updated to the production domain before launch.
- */
 const AuthCallbackPage = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { setAuth, setPendingNavigation } = useAuthStore();
-  const didRun = useRef(false); // prevent double-fire in React strict mode
+  const didRun = useRef(false);
 
   useEffect(() => {
     if (didRun.current) return;
@@ -36,32 +26,53 @@ const AuthCallbackPage = () => {
 
     const exchange = async () => {
       try {
+        /*
+          Set pendingNavigation before the exchange so if SessionGate
+          clears auth between now and when we call setAuth,
+          no stray redirect fires.
+        */
+        setPendingNavigation(true);
+
         const { data } = await api.post<ApiResponse<GoogleAuthData>>(
           "/api/auth/google",
           { code },
         );
-        setPendingNavigation(true);
+
         const route = data.data.isNewUser
           ? "/onboarding"
           : await resolvePostAuthRoute(data.data.accessToken);
+
         setAuth(data.data.user, data.data.accessToken);
         navigate(route, { replace: true });
-      } catch {
+        /*
+          Do not call setPendingNavigation(false).
+          It stays true until clearAuth on logout.
+        */
+      } catch (err: unknown) {
+        setPendingNavigation(false);
+        const status = (err as { response?: { status?: number } })?.response
+          ?.status;
+        const message =
+          status === 409
+            ? "This Google account is linked to an existing email. Please log in with your password instead."
+            : "Google sign-in failed. Try again.";
         navigate("/login", {
-          state: { error: "Google sign-in failed. Try again." },
+          state: { error: message },
           replace: true,
         });
       }
     };
 
     exchange();
-  }, [params, navigate, setAuth]);
+  }, [params, navigate, setAuth, setPendingNavigation]);
 
-  // Minimal loading UI user sees this briefly
   return (
     <div className="min-h-screen bg-off-white dark:bg-dark-bg flex items-center justify-center">
       <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 border-2 border-moringa dark:border-moringa-faded border-t-transparent rounded-full animate-spin" />
+        <div
+          className="w-8 h-8 border-2 border-moringa dark:border-moringa-faded
+          border-t-transparent rounded-full animate-spin"
+        />
         <p className="text-sm text-cocoa-faded">Signing you in...</p>
       </div>
     </div>

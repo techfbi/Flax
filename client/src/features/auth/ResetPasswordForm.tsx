@@ -11,7 +11,7 @@ import type { InternalAxiosRequestConfig } from "axios";
 import { handleApiError } from "@/utils/handleApiError";
 
 /**
- * Reset password screen — user arrives here from the email link.
+ * Reset password screen. user arrives here from the email link.
  * URL: /reset-password?token=xyz
  *
  * Token is read silently from URL via useSearchParams().
@@ -34,7 +34,7 @@ const ResetPasswordForm = () => {
     resolver: zodResolver(resetPasswordSchema),
   });
 
-  // If no token in URL, show an error — link is invalid or expired
+  // If no token in URL, show an error. link is invalid or expired
   if (!token) {
     return (
       <AuthLayout panelHeading="Reset Password" panelItems={[]}>
@@ -58,12 +58,12 @@ const ResetPasswordForm = () => {
     try {
       await api.post(
         "/api/auth/reset-password",
-        // confirm_password never sent — frontend only
-        { token, password: values.password },
+        // confirm_password never sent, frontend only
+        { token, password: values.password, confirm_password: values.password },
         { _skipRefresh: true } as InternalAxiosRequestConfig,
       );
       // On success go to login with a success flag
-      navigate("/login", { state: { resetSuccess: true } });
+      navigate("/login?resetPassword=true", { state: { resetSuccess: true } });
     } catch (err: unknown) {
       setApiError(handleApiError(err));
     }
@@ -71,7 +71,7 @@ const ResetPasswordForm = () => {
 
   return (
     <AuthLayout panelHeading="Reset Password" panelItems={[]}>
-      {/* Top-level error — matches design (error at top, not field level) */}
+      {/* Top-level error , matches design (error at top, not field level) */}
       {(apiError ||
         errors.password?.message ||
         errors.confirmPassword?.message) && (
@@ -96,7 +96,7 @@ const ResetPasswordForm = () => {
           label="New password"
           placeholder=""
           autoComplete="new-password"
-          // No field-level error shown — surfaced at top instead
+          // No field-level error shown, surfaced at top instead
           {...register("password")}
         />
 

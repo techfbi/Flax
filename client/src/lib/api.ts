@@ -95,17 +95,11 @@ api.interceptors.response.use(
     } catch {
       tokenStore.clear()
       clearQueue()
-      // Replace the error message so handleApiError never surfaces
-      // backend session/token messages. The UI shows "session expired" only
-      // via the login page state, not as an inline form error.
-      if (error.response) {
-        error.response.data = {
-          success: false,
-          message: '__SESSION_EXPIRED__',
-        }
-      }
+      // Redirect to login with a session expired flag in router state.
+      // Using window.location replaces the full history so the user cannot go back to the protected page.
+      window.location.replace('/login?session=expired')
       return Promise.reject(error)
-    } 
+}
     finally {
       isRefreshing = false
     }

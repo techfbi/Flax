@@ -12,6 +12,7 @@ import type { ApiResponse, RegisterData } from "@/types/apiTypes";
 import { SecondAuthLayout } from "@/components/layout/SecondAuthLayout";
 import { handleApiError } from "@/utils/handleApiError";
 import { resolvePostAuthRoute } from "@/utils/resolvePostAuthRoute";
+import type { InternalAxiosRequestConfig } from "axios";
 
 /**
  * Register page.
@@ -58,6 +59,7 @@ const RegisterForm = () => {
           password: values.password,
           confirm_password: values.confirmPassword,
         },
+        { _skipRefresh: true } as InternalAxiosRequestConfig,
       );
 
       if (data.data.requiresVerification) {

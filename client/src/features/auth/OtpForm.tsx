@@ -6,6 +6,8 @@ import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import type { ApiResponse, LoginData } from "@/types/apiTypes";
 import { handleApiError } from "@/utils/handleApiError";
+import { InternalAxiosRequestConfig } from "axios";
+import { resolvePostAuthRoute } from "@/utils/resolvePostAuthRoute";
 
 /**
  * OTP verification screen.
@@ -24,7 +26,7 @@ import { handleApiError } from "@/utils/handleApiError";
 const OtpForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setAuth } = useAuthStore();
+  const { setAuth, setPendingNavigation } = useAuthStore();
 
   // pendingId and email are passed via router state from RegisterForm
   const { pendingId, email } = (location.state ?? {}) as {
@@ -95,9 +97,12 @@ const OtpForm = () => {
           pendingId,
           otp,
         },
+        { _skipRefresh: true } as InternalAxiosRequestConfig,
       );
+      setPendingNavigation(true);
+      const route = await resolvePostAuthRoute(data.data.accessToken);
       setAuth(data.data.user, data.data.accessToken);
-      navigate("/onboarding");
+      navigate(route, { replace: true });
     } catch (err: unknown) {
       setApiError(handleApiError(err));
     } finally {
@@ -111,7 +116,10 @@ const OtpForm = () => {
     setResendSuccess(false);
     setApiError("");
     try {
-      await api.post("/api/auth/resend-otp", { pendingId });
+      await api.post("/api/auth/resend-otp", { pendingId }, {
+        _skipRefresh: true,
+      } as InternalAxiosRequestConfig);
+
       setDigits(Array(6).fill(""));
       inputRefs.current[0]?.focus();
       setResendSuccess(true);

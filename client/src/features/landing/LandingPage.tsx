@@ -224,7 +224,7 @@ const LandingPage = () => {
           The navbar floats above so we add pt to clear it (fixed nav = 56px + 12px gap).
       ══════════════════════════════════════════════════════════ */}
       <section
-        className="relative overflow-hidden min-h-[100vh] md:min-h-[70vh] lg:min-h-[88vh] flex items-center"
+        className="relative overflow-hidden min-h-[100vh] md:min-h-[70vh] lg:min-h-[90vh] flex items-center"
         style={{
           background:
             resolvedTheme === "dark"
@@ -234,7 +234,7 @@ const LandingPage = () => {
                 "linear-gradient(170deg, #9DAFA1 15%, #EAE8DE 45%, #EAE8DE 30%, #F6F1E7 100%)",
         }}
       >
-        <div className="w-full max-w-7xl mx-auto px-6 pt-20 md:pt-10 lg:pt-24 pb-0 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+        <div className="w-full max-w-7xl mx-auto px-6 pt-20 md:pt-24 pb-0 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
           {/* Left: text + CTA */}
           <div className=" w-full md:max-w-[520px] flex flex-col items-center text-center md:items-start md:text-left">
             {/* Line 1: animated phrase in pawpaw */}
@@ -255,7 +255,7 @@ const LandingPage = () => {
               <strong>Flax</strong> learns your goal and suggests meals that
               fits it. It keeps you honest about water, calories, and
               consistency. And when you have questions,
-              <strong>Noura</strong>, your AI nutrition assistant is there to
+              <strong> Noura</strong>, your AI nutrition assistant is there to
               answer them.
             </p>
 
@@ -294,16 +294,16 @@ const LandingPage = () => {
       ══════════════════════════════════════════════════════════ */}
       <section className="bg-surface dark:bg-black-surface py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <p className="text-center text-xs md:text-sm font-bold text-cocoa-faded mb-4">
-            Why the basics matter
-          </p>
-          <h2 className="font-heading text-1xl md:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-12 max-w-80 md:max-w-2xl mx-auto">
+          <h2 className="font-heading text-1xl md:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-4 max-w-80 md:max-w-2xl mx-auto">
             Most nutrition advice{" "}
             <span className="text-pawpaw dark:text-black-pawpaw">fails</span>{" "}
             because it ignores the{" "}
             <span className="text-pawpaw dark:text-black-pawpaw">habits</span>{" "}
             people struggle with every day.
           </h2>
+          <p className="text-center text-xs md:text-sm font-bold text-cocoa-faded mb-12">
+            Why the basics matter
+          </p>
 
           {/* Two moringa-filled cards */}
           <div className="grid md:grid-cols-2 gap-6">
@@ -358,10 +358,7 @@ const LandingPage = () => {
       ══════════════════════════════════════════════════════════ */}
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto text-center">
-          <p className="text-xs md:text-sm font-bold text-cocoa-faded mb-4">
-            How flax actually helps
-          </p>
-          <h2 className="font-heading text-1xl md:text-3xl max-w-80 md:max-w-xl font-bold mb-8 mx-auto">
+          <h2 className="font-heading text-1xl md:text-3xl max-w-80 md:max-w-xl font-bold mb-4 mx-auto">
             <span className="text-pawpaw dark:text-black-pawpaw">
               It connects what you eat
             </span>{" "}
@@ -369,6 +366,10 @@ const LandingPage = () => {
               to where you're headed
             </span>
           </h2>
+          <p className="text-xs md:text-sm font-bold text-cocoa-faded mb-8">
+            This is how flax actually helps
+          </p>
+
           {/* Content box */}
           <div className="bg-surface dark:bg-black-surface rounded-2xl p-8 max-w-2xl mx-auto text-left">
             <p className="text-sm md:text-base text-cocoa dark:text-dark-white leading-relaxed text-center">
@@ -388,12 +389,12 @@ const LandingPage = () => {
       ══════════════════════════════════════════════════════════ */}
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <p className="text-center text-xs md:text-sm font-bold text-cocoa-faded mb-3">
-            Built to keep you going
-          </p>
-          <h2 className="font-heading text-1xl md:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-12">
+          <h2 className="font-heading text-1xl md:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-3">
             Two streaks, two reasons to come back
           </h2>
+          <p className="text-center text-xs md:text-sm font-bold text-cocoa-faded mb-12">
+            Built to keep you going
+          </p>
 
           <div className="grid md:grid-cols-2 gap-6">
             {/* ── Goal streak card ── */}
@@ -423,8 +424,7 @@ const LandingPage = () => {
                   </div>
                 </div>
                 {/* Badge — moringa-faded border, moringa-deep dot */}
-                <div className="flex items-center gap-1.5 border bg-moringa-faded rounded-full px-3">
-                  <span className="w-2 h-2 rounded-full bg-moringa shrink-0" />
+                <div className="flex items-center gap-1.5 bg-moringa-faded rounded-full px-3">
                   <span className="text-xs font-medium text-cocoa dark:text-dark-white">
                     Healthy
                   </span>
@@ -518,7 +518,7 @@ const LandingPage = () => {
                 </div>
               </div>
 
-              <p className="text-xs text-cocoa-faded leading-relaxed mt-4">
+              <p className="text-xs md:text-sm text-cocoa-faded leading-relaxed mt-4">
                 Hit 80% of your calorie goal, for days running. Not perfect,
                 just consistent, which is what actually works.
               </p>
@@ -542,8 +542,7 @@ const LandingPage = () => {
                   </div>
                 </div>
                 {/* Badge */}
-                <div className="flex items-center gap-1.5 border bg-moringa-faded rounded-full px-3">
-                  <span className="w-2 h-2 rounded-full bg-moringa shrink-0" />
+                <div className="flex items-center gap-1.5 bg-moringa-faded rounded-full px-3">
                   <span className="text-xs font-medium text-cocoa dark:text-dark-white">
                     Hydrated
                   </span>
@@ -601,7 +600,7 @@ const LandingPage = () => {
                 </div>
               </div>
 
-              <p className="text-xs text-cocoa-faded leading-relaxed mt-4">
+              <p className="text-xs md:text-sm text-cocoa-faded leading-relaxed mt-4">
                 Hydration tracked separately, because staying full isn't the
                 same as staying hydrated.
               </p>
@@ -679,12 +678,12 @@ const LandingPage = () => {
       ══════════════════════════════════════════════════════════ */}
       <section id="how-it-works" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <p className="text-center text-xs md:text-sm font-bold text-cocoa-faded mb-3">
-            From sign up to your first streak
-          </p>
-          <h2 className="font-heading text-1xl md:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-12">
+          <h2 className="font-heading text-1xl md:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-3">
             How it works
           </h2>
+          <p className="text-center text-xs md:text-sm font-bold text-cocoa-faded mb-12">
+            From sign up to your first streak
+          </p>
 
           <div className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
             {/* Card 1 — Set your goal, moringa circle */}
@@ -787,9 +786,6 @@ const LandingPage = () => {
           Button: pawpaw filled (light) / black-pawpaw filled (dark)
       ══════════════════════════════════════════════════════════ */}
       <section className="bg-surface dark:bg-black-surface py-20 px-6 text-center">
-        <p className="text-xs md:text-sm font-bold text-cocoa-faded mb-4">
-          Your first suggestion is one spin away
-        </p>
         <h2 className="font-heading text-1xl md:text-3xl font-bold text-cocoa dark:text-dark-white mb-3">
           Your first{" "}
           <span className="text-pawpaw dark:text-black-pawpaw">suggestion</span>{" "}

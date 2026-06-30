@@ -110,7 +110,7 @@ const AppRouter = () => {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
-            <Route path="/auth/callback" element={<AuthCallbackPage />} />
+            <Route path="/api/auth/callback" element={<AuthCallbackPage />} />
 
             <Route
               path="/register"
