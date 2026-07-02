@@ -1,5 +1,6 @@
 import api from '@/lib/api'
 import { tokenStore } from '@/lib/tokenStore'
+import { useAuthStore } from '@/store/authStore'
 import type { ApiResponse, FullProfile } from '@/types/apiTypes'
 
 /**
@@ -8,21 +9,25 @@ import type { ApiResponse, FullProfile } from '@/types/apiTypes'
   but the store has not set isAuthenticated yet, preventing any route render.
 
   Returns '/onboarding' if health profile is incomplete.
-  Returns '/dashboard' if health profile exists and has a goal set.
+  Returns '/' (homepage)if health profile exists and has a goal set.
 */
 export const resolvePostAuthRoute = async (
   accessToken: string
-): Promise<'/onboarding' | '/dashboard'> => {
+): Promise<'/' | '/onboarding'> => {
   tokenStore.set(accessToken)
   try {
     const { data } = await api.get<ApiResponse<{ profile: FullProfile }>>(
       '/api/users/profile'
     )
-    const health = data.data.profile.health
-    if (!health || !health.health_goal) {
+    const profile = data.data.profile
+
+    /* Store avatar while we have the profile */
+    useAuthStore.getState().setAvatarUrl(profile.avatar_url)
+
+    if (!profile.health || !profile.health.health_goal) {
       return '/onboarding'
     }
-    return '/dashboard'
+    return '/'
   } catch {
     return '/onboarding'
   }

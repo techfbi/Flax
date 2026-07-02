@@ -4,6 +4,7 @@ import type { AuthUser } from '@/types/apiTypes'
 
 interface AuthState {
   user: AuthUser | null
+  avatarUrl: string | null
   isAuthenticated: boolean
   isLoading: boolean
   /*
@@ -15,6 +16,7 @@ interface AuthState {
 
   setAuth: (user: AuthUser, accessToken: string) => void
   setUser: (user: AuthUser) => void
+  setAvatarUrl: (url: string | null) => void
   clearAuth: () => void
   setLoading: (loading: boolean) => void
   setPendingNavigation: (pending: boolean) => void
@@ -22,6 +24,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
+  avatarUrl: null,
   isAuthenticated: false,
   isLoading: true,
   pendingNavigation: false,
@@ -34,6 +37,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUser: (user) => {
     set({ user, isAuthenticated: true, isLoading: false })
   },
+
+  setAvatarUrl: (url) => set({ avatarUrl: url }),
 
   clearAuth: () => {
     tokenStore.clear()

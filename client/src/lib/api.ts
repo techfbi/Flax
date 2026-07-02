@@ -1,14 +1,6 @@
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
 import { tokenStore } from './tokenStore'
 
-/**
- * Single Axios instance for all API calls.
- * - Attaches in-memory access token to every request. On 401: attempts one silent token refresh, then retries original request.
- * - On refresh failure: clears token. Does NOT redirect, the router handles that.
- * - Requests marked with _skipRefresh bypass the interceptor entirely.  Used for the app-load /me check and the refresh call itself.
- */
-
-// Extend AxiosRequestConfig to support our custom flags
 declare module 'axios' {
   export interface InternalAxiosRequestConfig {
     _retried?: boolean
@@ -16,16 +8,44 @@ declare module 'axios' {
   }
 }
 
+/*
+  Backend error codes that require navigation action.
+  These come in the response body as { code: string }.
+
+  Codes that send to /login?session=expired:
+    TOKEN_EXPIRED  - access token expired (normal session end)
+    TOKEN_REUSED   - refresh token reuse detected (security event)
+
+  Codes that send to / (unauthenticated landing):
+    NO_TOKEN       - no token sent, user is not logged in
+    INVALID_TOKEN  - malformed token, treat as unauthenticated
+
+  Everything else (network errors, 5xx, etc.) does NOT navigate.
+  Those fail silently per-request and the user sees a toast/error.
+*/
+const NAVIGATE_TO_EXPIRED = new Set(['TOKEN_EXPIRED', 'TOKEN_REUSED'])
+
 let isRefreshing = false
 let refreshQueue: Array<(token: string) => void> = []
+let rejectQueue:  Array<(err: unknown) => void>  = []
 
 const processQueue = (token: string) => {
   refreshQueue.forEach(cb => cb(token))
   refreshQueue = []
+  rejectQueue  = []
 }
 
-const clearQueue = () => {
+const rejectAllQueued = (err: unknown) => {
+  rejectQueue.forEach(cb => cb(err))
   refreshQueue = []
+  rejectQueue  = []
+}
+
+const getErrorCode = (err: unknown): string | null => {
+  return (
+    (err as { response?: { data?: { code?: string } } })
+      ?.response?.data?.code ?? null
+  )
 }
 
 const api: AxiosInstance = axios.create({
@@ -34,7 +54,7 @@ const api: AxiosInstance = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// ── Request interceptor: attach access token ─────────────────
+/* Attach access token to every request */
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = tokenStore.get()
   if (token && config.headers) {
@@ -43,67 +63,114 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config
 })
 
-// ── Response interceptor: handle 401 with one silent retry ───
 api.interceptors.response.use(
-  response => response,
-  async error => {
-    const original = error.config as InternalAxiosRequestConfig
+  (response) => response,
+  async (error) => {
+    const original = error.config as InternalAxiosRequestConfig;
 
-    // Skip refresh logic entirely for:
-    // 1. Non-401 errors
-    // 2. Requests already retried
-    // 3. Requests explicitly marked to skip (app-load /me check)
-    if (
-      error.response?.status !== 401 ||
-      original._retried ||
-      original._skipRefresh
-    ) {
-      return Promise.reject(error)
+    // ============================================================
+    // 1. NETWORK ERROR. no response from server at all.
+    //    Do NOT navigate. Do NOT refresh. Just reject silently.
+    //    The calling component shows "Something went wrong".
+    // ============================================================
+    if (!error.response) {
+      return Promise.reject(error);
     }
 
-    original._retried = true
+    // ============================================================
+    // 2. Skip refresh if:
+    //    - Already retried
+    //    - _skipRefresh flag is set
+    //    - The failed request is the refresh endpoint itself
+    // ============================================================
+    if (
+      original._retried ||
+      original._skipRefresh ||
+      original.url === '/api/auth/refresh'
+    ) {
+      return Promise.reject(error);
+    }
 
+    // ============================================================
+    // 3. Only handle 401 Unauthorized
+    //    Any 401 → attempt refresh silently.
+    //    NO_TOKEN, INVALID_TOKEN, TOKEN_EXPIRED, TOKEN_REUSED all
+    //    go through the same flow, try refresh first.
+    // ============================================================
+    if (error.response.status !== 401) {
+      return Promise.reject(error);
+    }
+
+    // ============================================================
+    // 4. Queue mechanism — if refresh is already in flight
+    // ============================================================
     if (isRefreshing) {
-      // Queue this request until in-flight refresh completes
       return new Promise((resolve, reject) => {
         refreshQueue.push((token: string) => {
-          original.headers = original.headers ?? {}
-          original.headers.Authorization = `Bearer ${token}`
-          resolve(api(original))
-        })
-        // If refresh fails, reject queued requests too
-        setTimeout(() => reject(error), 10000)
-      })
+          original.headers = original.headers ?? {};
+          original.headers.Authorization = `Bearer ${token}`;
+          resolve(api(original));
+        });
+        rejectQueue.push(reject);
+      });
     }
 
-    isRefreshing = true
+    // ============================================================
+    // 5. Attempt refresh
+    // ============================================================
+    original._retried = true;
+    isRefreshing = true;
 
     try {
-      // Mark the refresh call itself to skip this interceptor
       const { data } = await api.post<{ data: { accessToken: string } }>(
         '/api/auth/refresh',
         {},
         { _skipRefresh: true } as InternalAxiosRequestConfig
-      )
-      const newToken = data.data.accessToken
-      tokenStore.set(newToken)
-      processQueue(newToken)
+      );
 
-      original.headers = original.headers ?? {}
-      original.headers.Authorization = `Bearer ${newToken}`
-      return api(original)
-    } catch {
-      tokenStore.clear()
-      clearQueue()
-      // Redirect to login with a session expired flag in router state.
-      // Using window.location replaces the full history so the user cannot go back to the protected page.
-      window.location.replace('/login?session=expired')
-      return Promise.reject(error)
-}
-    finally {
-      isRefreshing = false
+      const newToken = data.data.accessToken;
+      tokenStore.set(newToken);
+      processQueue(newToken);
+      isRefreshing = false;
+
+      // Retry the original request with the new token
+      original.headers = original.headers ?? {};
+      original.headers.Authorization = `Bearer ${newToken}`;
+      return api(original);
+
+    } catch (refreshError: unknown) {
+      // ============================================================
+      // 6. Refresh FAILED, clean up and decide what to do
+      // ============================================================
+      isRefreshing = false;
+      tokenStore.clear();
+      rejectAllQueued(refreshError);
+
+      // 6a. Network error during refresh, DO NOT NAVIGATE.
+      //     Stay on current page, reject silently.
+      if (!(refreshError as { response?: unknown })?.response) {
+        return Promise.reject(refreshError);
+      }
+
+      // 6b. Server responded to the refresh request.
+      //     Now we check the error code and navigate ONLY if it's an auth failure.
+      const refreshCode = getErrorCode(refreshError);
+      console.log("The refresh code is ", refreshCode);
+
+      // TOKEN_REUSED or TOKEN_EXPIRED → session expired → go to login
+      if (refreshCode && NAVIGATE_TO_EXPIRED.has(refreshCode)) {
+        window.location.replace('/login?session=expired');
+        return Promise.reject(refreshError);
+      }
+
+      // All other codes (INVALID_TOKEN, NO_TOKEN, or any other) → go to landing
+      // This covers cases where the refresh token cookie is missing or invalid.
+      if (window.location.pathname !== '/') {
+        window.location.replace('/');
+      }
+      return Promise.reject(refreshError);
     }
   }
-)
+);
 
 export default api

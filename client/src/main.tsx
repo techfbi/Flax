@@ -17,6 +17,8 @@ createRoot(root).render(
       {/* ThemeProvider: light/dark/system theme via <html class="dark"> */}
       <ThemeProvider>
         <AppRouter />
+        {/*
+          Toaster renders the floating top-center success/error pill.*/}
         <Toaster
           position="top-center"
           richColors

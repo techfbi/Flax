@@ -109,15 +109,15 @@ const AGE_OPTIONS = [
 ];
 
 const REGION_OPTIONS = [
-  { value: "nigeria", label: "Nigeria" },
-  { value: "ghana", label: "Ghana" },
-  { value: "kenya", label: "Kenya" },
-  { value: "south_africa", label: "South Africa" },
-  { value: "uk", label: "United Kingdom" },
-  { value: "usa", label: "United States" },
-  { value: "canada", label: "Canada" },
-  { value: "india", label: "India" },
-  { value: "other", label: "Other" },
+  { value: "Nigeria", label: "Nigeria" },
+  { value: "Ghana", label: "Ghana" },
+  { value: "Kenya", label: "Kenya" },
+  { value: "South Africa", label: "South Africa" },
+  { value: "United Kingdom", label: "United Kingdom" },
+  { value: "United States", label: "United States" },
+  { value: "Canada", label: "Canada" },
+  { value: "India", label: "India" },
+  { value: "Other", label: "Other" },
 ];
 
 /* ── Types ───────────────────────────────────────────────────── */
@@ -703,7 +703,7 @@ const OnboardingFlow = () => {
       localStorage.removeItem(STEP_STORAGE_KEY);
       // No flag to update, onboarding completion is determined by
       // whether health profile exists (checked via resolvePostAuthRoute on login)
-      navigate("/dashboard", { replace: true });
+      navigate("/", { replace: true });
     } catch (err) {
       setApiError(handleApiError(err));
     } finally {

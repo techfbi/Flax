@@ -1,26 +1,54 @@
-/* ── Standard API envelope ──────────────────────────────────── */
+/* Standard API envelope */
 export interface ApiResponse<T = unknown> {
   success: boolean
   message: string
   data: T
 }
 
-/* ── Auth ───────────────────────────────────────────────────── */
+/* Auth */
 export interface AuthUser {
   id: string
   email: string
-  displayName: string
-  avatarUrl: string | null
-  isVerified: boolean
-  createdAt: string
+  display_name: string
+  role: string
+  is_verified: boolean
+  created_at: string
 }
 
+export interface LoginData {
+  accessToken: string
+  user: AuthUser
+}
+
+export interface RegisterData {
+  accessToken?: string
+  user?: AuthUser
+  requiresVerification?: boolean
+  pendingId?: number
+  message?: string
+}
+
+export interface GoogleAuthData {
+  accessToken: string
+  user: AuthUser
+  isNewUser: boolean
+}
+
+export interface RefreshData {
+  accessToken: string
+}
+
+/*
+  FullProfile matches exactly what GET /api/users/profile returns.
+  Backend wraps it as: { data: { profile: FullProfile } }
+*/
 export interface FullProfile {
   id: string
   email: string
   display_name: string
   avatar_url: string | null
   role: string
+  provider: string
   is_verified: boolean
   created_at: string
   last_login_at: string | null
@@ -41,29 +69,7 @@ export interface FullProfile {
   } | null
 }
 
-export interface LoginData {
-  accessToken: string
-  user: AuthUser
-}
-
-export interface RegisterData {
-  accessToken?: string
-  user?: AuthUser
-  /** Present when email verification is required */
-  requiresVerification?: boolean
-  pendingId?: number
-  message?: string
-}
-
-export interface GoogleAuthData extends LoginData {
-  isNewUser: boolean
-}
-
-export interface RefreshData {
-  accessToken: string
-}
-
-/* ── Health profile enums ────────────────────────────────────── */
+/* Enums matching backend schema values exactly */
 export type DietaryStyle =
   | 'omnivore' | 'vegetarian' | 'vegan' | 'pescatarian'
   | 'keto' | 'paleo' | 'halal' | 'kosher'
@@ -78,152 +84,184 @@ export type ActivityLevel =
   | 'sedentary' | 'lightly_active' | 'moderately_active'
   | 'very_active' | 'extremely_active'
 
-export type AgeRange =
-  | '18-24' | '25-34' | '35-44' | '45-54' | '55-64' | '65+'
+export type AgeRange = '18-24' | '25-34' | '35-44' | '45-54' | '55-64' | '65+'
 
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'brunch'
 
-/* ── User profile ────────────────────────────────────────────── */
-export interface HealthProfile {
-  region: string
-  dietaryStyle: DietaryStyle
-  healthGoal: HealthGoal
-  allergies: string[]
-  biologicalSex: BiologicalSex
-  activityLevel: ActivityLevel
-  heightCm: number
-  weightKg: number
-  ageRange: AgeRange
-  exactAge: number | null
-  calorieTarget: number | null
-  waterTargetMl: number | null
-}
-
-export interface UserProfile extends AuthUser {
-  healthProfile: HealthProfile | null
-}
-
-/* ── Food & Spin ─────────────────────────────────────────────── */
+/*
+  Food matches FoodResult from spin.service.ts exactly.
+  Backend returns snake_case. _id is the MongoDB ObjectId as string.
+  image_url is fully qualified CDN URL, use directly.
+*/
 export interface Food {
-  id: string
+  _id: string
   name: string
-  imageUrl: string
-  caloriesPer100g: number
-  proteinG: number
-  carbsG: number
-  fatG: number
-  region: string
+  description: string
+  image_url: string
+  image_path: string
   tags: string[]
+  meal_types: string[]
+  allergen_tags: string[]
+  ingredients: string[]
+  calories_per_100g: number
+  protein_g: number
+  carbs_g: number
+  fat_g: number
 }
 
+/*
+  SpinResult: backend returns { data: { food, reasoning, pantry_match } }
+  pantry_match (not pantryMatchUsed) is the exact key.
+*/
 export interface SpinResult {
   food: Food
   reasoning: string
-  pantryMatchUsed: boolean
+  pantry_match: boolean
 }
 
+/*
+  SpinFilters: backend returns { data: { region, filters } }
+  where filters has { meal_types, tags }
+*/
 export interface SpinFilters {
+  meal_types: string[]
   tags: string[]
-  mealTypes: MealType[]
 }
 
 export interface SpinHistoryEntry {
   id: string
-  food: Food
-  mealType: MealType
-  spunAt: string
+  food_ref: string
+  result_name: string
+  filters_applied: Record<string, unknown>
+  was_accepted: boolean
+  created_at: string
 }
 
 export interface FlaggedMeal {
   id: string
-  food: Food
-  flaggedAt: string
+  food_ref: string
+  food_name: string
+  created_at: string
 }
 
-/* ── Meal logs ───────────────────────────────────────────────── */
-export interface MealLog {
+/*
+  MealLogEntry matches MealLogEntry from meallog.service.ts exactly.
+  Backend returns snake_case. All nutrition values are numbers.
+  Backend wraps GET /api/meal-logs as { data: { logs, date } }
+*/
+export interface MealLogEntry {
   id: string
-  foodRef: string | null
-  foodName: string
-  customName: string | null
-  quantityGrams: number
-  mealType: MealType
+  food_ref: string | null
+  food_name: string | null
+  custom_name: string | null
+  quantity_grams: number
+  meal_type: MealType
+  logged_date: string
   calories: number
-  proteinG: number
-  carbsG: number
-  fatG: number
-  loggedDate: string
-  createdAt: string
+  protein_g: number
+  carbs_g: number
+  fat_g: number
+  source: string
+  created_at: string
 }
 
-export interface MealTypeBreakdown {
-  breakfast: number
-  lunch: number
-  dinner: number
-  snack: number
-  brunch: number
-}
-
-export interface WeeklyTrendEntry {
-  date: string
-  calorieTotal: number
-}
-
+/*
+  DashboardData matches DashboardData from meallog.service.ts exactly.
+  Backend wraps as { data: { dashboard } }
+*/
 export interface DashboardData {
   date: string
-  calorieTotal: number
-  calorieTarget: number
-  proteinTotal: number
-  carbsTotal: number
-  fatTotal: number
-  mealTypeBreakdown: MealTypeBreakdown
-  weeklyTrend: WeeklyTrendEntry[] // always 7 items
+  daily_totals: {
+    calories: number
+    protein_g: number
+    carbs_g: number
+    fat_g: number
+  }
+  by_meal_type: Record<string, {
+    calories: number
+    protein_g: number
+    carbs_g: number
+    fat_g: number
+  }>
+  calorie_target: number | null
+  weekly_trend: Array<{ date: string; calories: number }>
+  log_count: number
 }
 
-/* ── Water ───────────────────────────────────────────────────── */
-export interface WaterLog {
+/*
+  Water: GET /api/water returns { data: { date, logs, daily_total, target_ml } }
+  Individual log entry has id, amount_ml, logged_date, logged_at (not created_at).
+*/
+export interface WaterLogEntry {
   id: string
-  amountMl: number
-  loggedDate: string
-  createdAt: string
+  amount_ml: number
+  logged_date: string
+  logged_at: string
 }
 
 export interface WaterData {
-  entries: WaterLog[]
-  dailyTotal: number
-  targetMl: number
+  date: string
+  logs: WaterLogEntry[]
+  daily_total: number
+  target_ml: number | null
 }
 
-/* ── Streaks ─────────────────────────────────────────────────── */
+/*
+  Streaks: GET /api/streaks returns { data: { streaks } }
+  where streaks has snake_case keys from the DB RETURNING clause.
+*/
 export interface StreakData {
-  goalStreak: number
-  goalStreakBest: number
-  waterStreak: number
-  waterStreakBest: number
-  lastGoalDate: string | null
+  goal_streak: number
+  goal_streak_best: number
+  last_goal_date: string | null
+  water_streak: number
+  water_streak_best: number
+  last_water_log_date: string | null
 }
 
-/* ── Pantry ──────────────────────────────────────────────────── */
+/*
+  PantryItem: GET /api/pantry returns { data: { pantry_items: PantryItem[] } }
+  POST /api/pantry returns { data: { item: PantryItem } }
+*/
 export interface PantryItem {
   id: string
   name: string
-  createdAt: string
+  created_at: string
 }
 
-/* ── Chat ────────────────────────────────────────────────────── */
+/*
+  Chat: GET /api/chat/history returns { data: { messages } }
+  POST /api/chat returns { data: { reply, modelUsed, isFallback } }
+  Each message has role, content, createdAt (camelCase from MongoDB).
+*/
 export interface ChatMessage {
-  id: string
   role: 'user' | 'assistant'
   content: string
   createdAt: string
 }
 
-export interface ChatResponse {
-  message: ChatMessage
-  reply: ChatMessage
+export interface ChatHistoryData {
+  messages: ChatMessage[]
 }
 
-/* ── Notifications ───────────────────────────────────────────── */
+export interface ChatReplyData {
+  reply: string
+  modelUsed: string
+  isFallback: boolean
+}
+
+/*
+  Food search: GET /api/foods/search returns { data: { results, count, query, region } }
+  Each result is the same Food shape (FoodResult from MongoDB with image_url added).
+*/
+export interface FoodSearchData {
+  results: Food[]
+  count: number
+  query: string
+  region: string
+}
+
+/* Notifications */
 export interface VapidKeyData {
   publicKey: string
 }
