@@ -91,7 +91,7 @@ export const PantryTab = () => {
           placeholder="Add an ingredient..."
           maxLength={50}
           className="flex-1 bg-transparent border border-cocoa/20
-            dark:border-dark-white/20 rounded-xl px-4 py-2.5 text-sm
+            dark:border-dark-white/20 rounded-xl px-4 py-2.5 text-base lg:text-sm
             text-cocoa dark:text-dark-white outline-none
             focus:border-pawpaw focus:ring-1 focus:ring-pawpaw
             dark:focus:border-black-pawpaw dark:focus:ring-black-pawpaw"

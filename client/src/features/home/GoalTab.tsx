@@ -48,7 +48,7 @@ export const GoalTab = ({
       : 0;
 
   return (
-    <div className="p-5 space-y-6">
+    <div className="p-5 space-y-1 lg:space-y-6">
       {/* TODAY label */}
       <p
         className="text-xs lg:text-sm font-semibold uppercase tracking-wide
@@ -60,7 +60,7 @@ export const GoalTab = ({
       {/* Calorie header */}
       <div>
         <div className="flex items-center justify-between mb-2 lg:justify-start lg:gap-10">
-          <h2 className="font-heading text-[1rem] lg:text-xl font-bold text-cocoa dark:text-dark-white">
+          <h2 className="font-heading text-[16px] md:text-[1rem] lg:text-xl font-bold text-cocoa dark:text-dark-white">
             Calorie
           </h2>
           <button
@@ -80,7 +80,7 @@ export const GoalTab = ({
             </span>
           </p>
 
-          <p className=" w-fit shrink-0 font-heading text-xs lg:text-sm text-cocoa/60 dark:text-dark-white/60">
+          <p className=" w-fit flex gap-1 shrink-1 font-heading text-xs lg:text-sm text-cocoa/60 dark:text-dark-white/60">
             Remaining:{" "}
             <span className="font-body font-semibold text-cocoa dark:text-dark-white">
               {remaining.toLocaleString()} kcal
@@ -88,7 +88,7 @@ export const GoalTab = ({
           </p>
           {excess > 0 && (
             <span
-              className=" w-fit shrink-0 font-heading inline-block mt-1 text-xs font-semibold text-rose-500
+              className=" w-fit shrink-0 font-heading inline-block mt-1 text-xs font-medium text-rose-500
             bg-rose-500/10 px-2 py-0.5 rounded-md"
             >
               Excess: {excess} kcal

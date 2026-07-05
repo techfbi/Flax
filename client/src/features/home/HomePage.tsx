@@ -12,7 +12,10 @@ import { NotificationDropdown } from "./NotificationDropdown";
 import { FoodSearch } from "./FoodSearch";
 import { useAuthStore } from "@/store/authStore";
 import { useTheme } from "@/context/ThemeContext";
+import { MobileTopNav } from "@/components/layout/MobileTopNav";
 import api from "@/lib/api";
+import { useSessionState } from "@/hooks/useSessionState";
+import { UserAvatar } from "@/components/layout/Sidebar";
 import type {
   ApiResponse,
   DashboardData,
@@ -34,9 +37,12 @@ type Tab = "goal" | "spin" | "pantry" | "logmeal" | "flaggedmeal";
     Right panel: streak cards + Noura chat
 */
 const HomePage = () => {
-  const { user } = useAuthStore();
+  const { user, avatarUrl } = useAuthStore();
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState<Tab>("goal");
+  const [activeTab, setActiveTab] = useSessionState<Tab>(
+    "homepage-active-tab",
+    "goal",
+  );
   const [notifOpen, setNotifOpen] = useState(false);
 
   const firstName = user?.display_name?.split(" ")[0] ?? "User";
@@ -98,7 +104,7 @@ const HomePage = () => {
   return (
     <AppLayout>
       <div
-        className="h-full flex flex-col overflow-hidden"
+        className="flex flex-col lg:h-full lg:overflow-hidden"
         style={{
           background:
             resolvedTheme === "dark"
@@ -106,186 +112,199 @@ const HomePage = () => {
               : "linear-gradient(170deg, #9DAFA1 15%, #EAE8DE 45%, #EAE8DE 30%, #F6F1E7 100%)",
         }}
       >
-        {/* Desktop top header */}
-        <div className="hidden md:flex items-start justify-between px-8 pt-7 pb-4 shrink-0">
-          {/* Greeting */}
-          <div>
-            <h1
-              className="font-heading md:text-[20px] lg:text-2xl font-bold text-cocoa dark:text-dark-white
-              flex items-center gap-2"
-            >
-              Hello, {firstName}!
-              {hasStreak && (
-                <span>
-                  <img
-                    src="/images/fire.png"
-                    alt="fire"
-                    className="object-contain md:w-[17px] lg:w-[25px] flex"
-                  />
-                </span>
-              )}
-            </h1>
-            <p className="text-xs lg:text-sm text-cocoa/60 dark:text-dark-white/60 mt-0.5">
-              {hasStreak
-                ? "You're on fire. Let's see what we've got here, today."
-                : "Let's see what we've got here, today."}
-            </p>
-          </div>
-
-          {/* Search + icons */}
-          <div className="flex items-center md:gap-5 lg:gap-10 md:mr-0 lg:mr-2">
-            <FoodSearch
-              onSelectFood={(_food) => {
-                setActiveTab("logmeal");
-                /* Pre-fill is handled inside LogMealTab via store */
-              }}
-            />
-
-            {/* Theme toggle */}
-            <button
-              onClick={cycleTheme}
-              aria-label={`Theme: ${theme}`}
-              className="text-cocoa dark:text-dark-white hover:opacity-70 transition-opacity"
-            >
-              <ThemeIcon
-                size={20}
-                fill={theme === "dark" ? "dark-white" : "cocoa"}
-              />
-            </button>
-
-            {/* Notification bell */}
-            <div className="relative">
-              <button
-                onClick={() => setNotifOpen((v) => !v)}
-                aria-label="Notifications"
-                className="relative text-cocoa dark:text-dark-white hover:opacity-70 mt-2
-                  transition-opacity"
-              >
-                <Bell size={20} fill="cocoa" className="" />
-                {/* Unread badge */}
-                <span
-                  className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full
-                  bg-pawpaw text-surface text-[10px] font-bold
-                  flex items-center justify-center"
-                >
-                  1
-                </span>
-              </button>
-              {notifOpen && (
-                <NotificationDropdown onClose={() => setNotifOpen(false)} />
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Main content: left panel + right panel */}
-        <div className="flex-1 flex gap-5 px-4 md:px-5 pb-4 min-h-0">
-          {/* Left: tabs + content */}
-          <div className="flex-1 flex flex-col min-w-0 min-h-0">
-            {/* Mobile greeting */}
-            <div className="md:hidden mb-3 shrink-0">
+        {/* CENTERING WRAPPER */}
+        <div
+          className="flex-1 flex flex-col min-h-0 w-full
+          max-w-[1600px] mx-auto overflow-hidden"
+        >
+          {/* Desktop top header */}
+          <div className="hidden md:flex items-start justify-between px-8 pt-2 lg:pt-8 pb-5 shrink-0">
+            {/* Greeting */}
+            <div>
               <h1
-                className="font-heading text-[1.2rem] font-semibold text-cocoa dark:text-dark-white mt-2
-                flex items-center gap-2"
+                className="font-heading md:text-[20px] lg:text-2xl font-bold text-cocoa dark:text-dark-white
+              flex items-center gap-2"
               >
-                Hello, Ojayy{/*firstName*/}!
+                Hello, {firstName}!
                 {hasStreak && (
                   <span>
                     <img
                       src="/images/fire.png"
                       alt="fire"
-                      className="object-contain w-[17px] flex"
+                      className="object-contain md:w-[17px] lg:w-[25px] flex"
                     />
                   </span>
                 )}
               </h1>
-              <p className="text-[10px] text-cocoa/60 dark:text-dark-white/60 mb-3">
+              <p className="text-xs lg:text-sm text-cocoa/60 dark:text-dark-white/60 mt-0.5">
                 {hasStreak
                   ? "You're on fire. Let's see what we've got here, today."
                   : "Let's see what we've got here, today."}
               </p>
             </div>
 
-            {/* Mobile streak cards */}
-            <div className="md:hidden grid grid-cols-2 gap-3 mb-3 shrink-0">
-              <MobileStreakCard
-                icon={
-                  <img
-                    src="/images/fire.png"
-                    alt="fire"
-                    className="object-contain w-[22px] flex"
-                  />
-                }
-                label="Streaks"
-                days={streakData?.goal_streak ?? 0}
-                level={dashData?.daily_totals.calories ?? 0}
-                target={dashData?.calorie_target ?? 0}
-                type="calorie"
+            {/* Search + icons */}
+            <div className="flex items-center md:gap-5 lg:gap-10 md:mr-0 lg:mr-2">
+              <FoodSearch
+                onSelectFood={(_food) => {
+                  setActiveTab("logmeal");
+                  /* Pre-fill is handled inside LogMealTab via store */
+                }}
               />
-              <MobileStreakCard
-                icon="💧"
-                label="Water"
-                days={streakData?.water_streak ?? 0}
-                level={waterData?.daily_total ?? 0}
-                target={waterData?.target_ml ?? 0}
-                type="water"
-              />
-            </div>
 
-            {/* Tab bar */}
-            <div className="relative flex bg-cocoa/4 dark:bg-dark-white/4 rounded-t-2xl shrink-0 md:mt-5">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`font-heading
-        relative px-4 md:px-5 py-2 text-[9px] md:text-xs lg:text-sm md:font-medium transition-colors duration-150 z-10
-        ${
-          activeTab === tab.key
-            ? "text-cocoa dark:text-dark-white font-bold"
-            : "text-cocoa/50 dark:text-dark-white/60 hover:text-cocoa dark:hover:text-dark-white"
-        }
-      `}
-                >
-                  {/* Sliding background pill */}
-                  {activeTab === tab.key && (
-                    <span
-                      className="absolute inset-0 bg-surface dark:bg-black-surface
-            rounded-t-xl shadow-sm z-[-1] transition-all duration-200"
-                    />
-                  )}
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Tab content */}
-            <div
-              className="flex-1 min-h-0 bg-surface dark:bg-black-surface
-              rounded-b-2xl rounded-tr-2xl overflow-y-auto overflow-x-hidden"
-            >
-              {activeTab === "goal" && (
-                <GoalTab
-                  dashData={dashData}
-                  waterData={waterData}
-                  onRefetchWater={refetchWater}
-                  onLogMealClick={() => setActiveTab("logmeal")}
+              {/* Theme toggle */}
+              <button
+                onClick={cycleTheme}
+                aria-label={`Theme: ${theme}`}
+                className="text-cocoa dark:text-dark-white hover:opacity-70 transition-opacity"
+              >
+                <ThemeIcon
+                  size={20}
+                  fill={theme === "dark" ? "dark-white" : "cocoa"}
                 />
-              )}
-              {activeTab === "spin" && <SpinTab />}
-              {activeTab === "pantry" && <PantryTab />}
-              {activeTab === "logmeal" && <LogMealTab />}
+              </button>
+
+              {/* Notification bell */}
+              <div className="relative">
+                <button
+                  onClick={() => setNotifOpen((v) => !v)}
+                  aria-label="Notifications"
+                  className="relative text-cocoa dark:text-dark-white hover:opacity-70 mt-2
+                  transition-opacity"
+                >
+                  <Bell size={20} fill="cocoa" className="" />
+                  {/* Unread badge */}
+                  <span
+                    className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full
+                  bg-pawpaw text-surface text-[10px] font-bold
+                  flex items-center justify-center"
+                  >
+                    1
+                  </span>
+                </button>
+                {notifOpen && (
+                  <NotificationDropdown onClose={() => setNotifOpen(false)} />
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Right panel: streaks + Noura — desktop only */}
-          <div className="hidden md:flex flex-col gap-4 w-[300px] shrink-0 overflow-y-auto">
-            <StreakPanel
-              streakData={streakData}
-              dashData={dashData}
-              waterData={waterData}
-            />
-            <NouraChat />
+          {/* Main content: left panel + right panel */}
+          <div className=" flex gap-5 px-4 md:px-5 pb-4  overflow-x-hidden w-full lg:min-h-0 lg:flex-1">
+            {/* Left: tabs + content */}
+
+            <div className="flex-1 flex flex-col min-w-0 lg:min-h-0 ">
+              {/* Mobile top nav — sticky */}
+              <div className="md:hidden">
+                <MobileTopNav />
+              </div>
+              <div className="md:hidden mt-20 mb-7 shrink-0 flex items-center gap-2 ">
+                {/* Mobile greeting + Avatar */}
+                <UserAvatar avatarUrl={avatarUrl} name={firstName} size={35} />
+                <div className="space-y-[-2px]">
+                  <h1
+                    className="font-heading text-[16px] font-bold text-cocoa dark:text-dark-white
+                flex items-center gap-2"
+                  >
+                    Hello, {firstName}!
+                    {hasStreak && (
+                      <span>
+                        <img
+                          src="/images/fire.png"
+                          alt="fire"
+                          className="object-contain w-[17px] flex"
+                        />
+                      </span>
+                    )}
+                  </h1>
+                  <p className="text-[12px] text-cocoa/50 dark:text-dark-white/50">
+                    {hasStreak
+                      ? "You're on fire. Let's see what we've got here, today."
+                      : "Let's see what we've got here, today."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Mobile streak cards */}
+              <div className="md:hidden grid grid-cols-2 gap-3 mb-3 shrink-0">
+                <MobileStreakCard
+                  icon={
+                    <img
+                      src="/images/fire.png"
+                      alt="fire"
+                      className="object-contain w-[22px] flex"
+                    />
+                  }
+                  label="Streaks"
+                  days={streakData?.goal_streak ?? 0}
+                  level={dashData?.daily_totals.calories ?? 0}
+                  target={dashData?.calorie_target ?? 0}
+                  type="calorie"
+                />
+                <MobileStreakCard
+                  icon="💧"
+                  label="Water"
+                  days={streakData?.water_streak ?? 0}
+                  level={waterData?.daily_total ?? 0}
+                  target={waterData?.target_ml ?? 0}
+                  type="water"
+                />
+              </div>
+
+              {/* Tab bar */}
+              <div className="relative mt-4  flex bg-cocoa/4 dark:bg-dark-white/4 rounded-t-2xl shrink-0 md:mt-0 lg:mt-5">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`font-heading relative px-2 md:px-3 lg:px-5 py-2 text-xs lg:text-sm  transition-colors duration-150 z-10
+                        ${
+                          activeTab === tab.key
+                            ? "text-cocoa dark:text-dark-white font-bold"
+                            : "text-cocoa/90 dark:text-dark-white/60 hover:text-cocoa dark:hover:text-dark-white font-medium md:font-normal"
+                        }
+                    `}
+                  >
+                    {/* Sliding background pill */}
+                    {activeTab === tab.key && (
+                      <span
+                        className="absolute inset-0 bg-surface-two dark:bg-black-surface
+                        rounded-t-xl shadow-sm z-[-1] transition-all duration-200"
+                      />
+                    )}
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Tab content */}
+              <div
+                className="bg-surface-two dark:bg-black-surface
+                    rounded-b-2xl rounded-tr-2xl lg:flex-1 lg:min-h-0 lg:overflow-y-auto min-h-[calc(100vh-330px)] md:min-h-[calc(100vh-150px)]"
+              >
+                {activeTab === "goal" && (
+                  <GoalTab
+                    dashData={dashData}
+                    waterData={waterData}
+                    onRefetchWater={refetchWater}
+                    onLogMealClick={() => setActiveTab("logmeal")}
+                  />
+                )}
+                {activeTab === "spin" && <SpinTab />}
+                {activeTab === "pantry" && <PantryTab />}
+                {activeTab === "logmeal" && <LogMealTab />}
+              </div>
+            </div>
+
+            {/* Right panel: streaks + Noura — desktop only */}
+            <div className="hidden md:flex md:flex-1 flex-col gap-4 md:max-w-[300px] lg:max-w-[380px] shrink-1 overflow-y-auto md:mt-1 lg:mt-6">
+              <StreakPanel
+                streakData={streakData}
+                dashData={dashData}
+                waterData={waterData}
+              />
+              <NouraChat />
+            </div>
           </div>
         </div>
       </div>
@@ -315,11 +334,11 @@ const MobileStreakCard = ({
     target > 0 ? Math.min(100, Math.round((level / target) * 100)) : 0;
 
   return (
-    <div className="bg-surface dark:bg-black-surface rounded-2xl px-4 py-3 shadow-md">
+    <div className="bg-surface-two dark:bg-black-surface rounded-2xl px-4 py-3 shadow-md">
       <div className="flex items-center gap-2 mb-2">
         <span className="text-xl">{icon}</span>
-        <div className="space-y-[-3px]">
-          <p className="text-[10px] font-semibold text-cocoa/40 dark:text-dark-white/45">
+        <div className="space-y-[-1px]">
+          <p className="text-xs font-semibold text-cocoa/40 dark:text-dark-white/45">
             {label}
           </p>
           <p className="font-heading font-bold text-sm text-cocoa dark:text-dark-white">
@@ -327,11 +346,11 @@ const MobileStreakCard = ({
           </p>
         </div>
       </div>
-      <div className="mb-1 flex w-full justify-between align-middle shrink-0">
-        <p className="text-[10px] text-cocoa-faded ">
-          {type === "calorie" ? "Today's calorie progress" : "Hydration level"}
+      <div className="mb-1 flex w-full justify-between items-center shrink-0">
+        <p className="text-[12px] text-cocoa-faded font-medium">
+          {type === "calorie" ? "Today's calorie" : "Hydration level"}
         </p>
-        <p className="text-[10px] text-cocoa-faded font-bold">{pct}%</p>
+        <p className="text-[12px] text-cocoa-faded font-bold">{pct}%</p>
       </div>
       {type === "calorie" ? (
         <div className="h-1.5 rounded-full bg-cocoa/10 dark:bg-dark-white/10">
@@ -341,9 +360,9 @@ const MobileStreakCard = ({
           />
         </div>
       ) : (
-        <p className="text-xs font-semibold text-cocoa dark:text-dark-white">
+        <p className="text-xs font-bold text-cocoa dark:text-dark-white">
           {level}
-          <span className="text-cocoa-faded font-normal">/{target}ml</span>
+          <span className="text-cocoa-faded font-normal"> / {target}ml</span>
         </p>
       )}
     </div>

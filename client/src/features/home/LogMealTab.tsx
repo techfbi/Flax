@@ -143,7 +143,7 @@ export const LogMealTab = () => {
             value={searchQ}
             onChange={(e) => setSearchQ(e.target.value)}
             placeholder="Search food catalogue..."
-            className="flex-1 bg-transparent outline-none text-sm
+            className="flex-1 bg-transparent outline-none text-base lg:text-sm
               text-cocoa dark:text-dark-white placeholder:text-cocoa-faded"
           />
         </div>
@@ -225,7 +225,7 @@ export const LogMealTab = () => {
                 max={3000}
                 className="w-full bg-surface dark:bg-black-surface
                   border border-cocoa/20 dark:border-dark-white/20
-                  rounded-lg px-3 py-2 text-sm outline-none
+                  rounded-lg px-3 py-2 text-base lg:text-sm outline-none
                   text-cocoa dark:text-dark-white
                   focus:border-pawpaw dark:focus:border-black-pawpaw"
               />
@@ -318,7 +318,7 @@ export const LogMealTab = () => {
                     }))
                   }
                   className="w-20 bg-surface dark:bg-black-surface
-                    border border-cocoa/20 rounded-lg px-2 py-1 text-xs outline-none
+                    border border-cocoa/20 rounded-lg px-2 py-1 text-base lg:text-xs outline-none
                     text-cocoa dark:text-dark-white"
                 />
                 <span className="text-xs text-cocoa-faded">g</span>

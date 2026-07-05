@@ -48,11 +48,11 @@ export const FoodSearch = ({ onSelectFood }: FoodSearchProps) => {
   return (
     <div className="relative md:w-64 lg:w-[324px]">
       <div
-        className="flex items-center gap-2 bg-surface dark:bg-black-surface
+        className="flex items-center gap-2 bg-surface-two dark:bg-black-surface
         border border-cocoa/15 dark:border-dark-white/10
-        rounded-full px-4 py-2.5 shadow-sm"
+        rounded-full px-4 py-2 lg:py-2.5 shadow-sm "
       >
-        <Search size={15} className="text-cocoa-faded shrink-0" />
+        <Search size={14} className="text-cocoa-faded shrink-0 " />
         <input
           type="text"
           value={query}
@@ -62,7 +62,7 @@ export const FoodSearch = ({ onSelectFood }: FoodSearchProps) => {
           }}
           onFocus={() => setOpen(true)}
           placeholder="Search catalogue"
-          className="flex-1 bg-transparent outline-none text-sm
+          className="flex-1 bg-transparent outline-none text-base lg:text-sm 
             text-cocoa dark:text-dark-white
             placeholder:text-cocoa-faded"
         />
@@ -72,7 +72,7 @@ export const FoodSearch = ({ onSelectFood }: FoodSearchProps) => {
       {open && debouncedQuery.length >= 2 && (
         <div
           className="absolute top-full mt-2 left-0 right-0 z-50
-          bg-surface dark:bg-black-surface rounded-2xl shadow-xl
+          bg-surface-two dark:bg-black-surface rounded-2xl shadow-xl
           border border-cocoa/10 dark:border-dark-white/10 overflow-hidden"
         >
           {isFetching && (

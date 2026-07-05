@@ -31,7 +31,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const inputBase =
       "w-full bg-[#F6F6F6] dark:bg-[#121212] " +
       "border border-cocoa/20 dark:border-dark-white/20 " +
-      "rounded-lg px-4 py-3 text-sm text-cocoa dark:text-dark-white " +
+      "rounded-lg px-4 py-3 text-base lg:text-sm text-cocoa dark:text-dark-white " +
       "placeholder:text-cocoa/40 dark:placeholder:text-dark-white/30 " +
       "transition-colors duration-150 outline-none " +
       "focus:border-moringa-faded focus:ring-1 focus:ring-moringa-faded/50 " +

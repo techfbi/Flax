@@ -1,106 +1,205 @@
 import type { MealLogEntry } from "@/types/apiTypes";
+import { useMemo } from "react";
 
 interface CalorieProgressBarProps {
   logs: MealLogEntry[];
   calorieTarget: number;
-  calorieTotal: number;
 }
 
-/*
-  Segmented calorie progress bar.
-  Each meal type that has been logged gets a segment.
-  Segments are sized proportionally to their calorie contribution.
-  They appear in the order the meal types were first logged.
-  A visual gap separates each segment.
-  Meal type label shown below each segment.
-  Percentage shown top right.
+const MEAL_ORDER: Record<string, number> = {
+  breakfast: 0,
+  brunch: 1,
+  lunch: 2,
+  dinner: 3,
+  snack: 4,
+};
 
-  Logic:
-  1. Group logs by meal_type in order of first occurrence.
-  2. Sum calories per meal_type.
-  3. Each segment width = (mealTypeCalories / calorieTarget) * 100%.
-  4. Cap total at 100%.
-*/
-const SEGMENT_COLORS = [
-  "#E8623C", // pawpaw
-  "#D4522E", // black-pawpaw
-  "#2F5D4B", // moringa
-  "#7FB096", // moringa-faded
-  "#F59E0B", // amber
-];
+const MEAL_COLORS: Record<string, string> = {
+  breakfast: "#E8623C",
+  brunch: "#2F5D4B",
+  lunch: "#D4522E",
+  dinner: "#7FB096",
+  snack: "#F59E0B",
+};
+
+const MEAL_LABELS: Record<string, string> = {
+  breakfast: "Breakfast",
+  brunch: "Brunch",
+  lunch: "Lunch",
+  dinner: "Dinner",
+  snack: "Snack",
+};
 
 export const CalorieProgressBar = ({
   logs,
   calorieTarget,
-  calorieTotal,
 }: CalorieProgressBarProps) => {
-  if (!calorieTarget) return null;
+  const { segments, totalPct, hasData } = useMemo(() => {
+    // DEBUG: Log what we received
+    // console.log("=== CalorieProgressBar useMemo ===");
+    // console.log("logs received:", logs);
+    // console.log("logs length:", logs?.length);
+    // console.log("calorieTarget:", calorieTarget);
 
-  /* Group by meal type, preserving order of first occurrence */
-  const ordered: string[] = [];
-  const grouped: Record<string, number> = {};
-
-  logs.forEach((log) => {
-    if (!grouped[log.meal_type]) {
-      ordered.push(log.meal_type);
-      grouped[log.meal_type] = 0;
+    // Guard: no target
+    if (!calorieTarget || calorieTarget <= 0) {
+      //console.log("Guard: no valid target");
+      return { segments: [], totalPct: 0, hasData: false };
     }
-    grouped[log.meal_type] += log.calories;
-  });
 
-  const pct = Math.min(100, Math.round((calorieTotal / calorieTarget) * 100));
+    // Guard: no logs (safely handle null/undefined)
+    if (!logs || !Array.isArray(logs) || logs.length === 0) {
+      //console.log("Guard: no logs");
+      return { segments: [], totalPct: 0, hasData: false };
+    }
+
+    // 1. Compute calorieTotal from logs
+    //    DEFENSIVE: ensure calories are numbers
+    let calorieTotal = 0;
+    const validLogs: MealLogEntry[] = [];
+
+    logs.forEach((log) => {
+      const cal = Number(log.calories);
+      if (!isNaN(cal) && cal > 0 && log.meal_type) {
+        calorieTotal += cal;
+        validLogs.push(log);
+      } else {
+        console.warn("Invalid log entry:", log);
+      }
+    });
+
+    // console.log("validLogs count:", validLogs.length);
+    // console.log("calorieTotal:", calorieTotal);
+
+    if (calorieTotal === 0) {
+      //console.log("Guard: calorieTotal is 0");
+      return { segments: [], totalPct: 0, hasData: false };
+    }
+
+    // 2. Group calories by meal type
+    const mealCalories: Record<string, number> = {};
+    validLogs.forEach((log) => {
+      const type = log.meal_type;
+      if (MEAL_ORDER[type] !== undefined) {
+        mealCalories[type] = (mealCalories[type] ?? 0) + Number(log.calories);
+      }
+    });
+
+    //console.log("mealCalories:", mealCalories);
+
+    // 3. Get all meal types with calories > 0
+    const mealTypes = Object.keys(mealCalories).filter(
+      (type) => mealCalories[type] > 0,
+    );
+
+    //console.log("mealTypes:", mealTypes);
+
+    if (mealTypes.length === 0) {
+      //console.log("Guard: no meal types");
+      return { segments: [], totalPct: 0, hasData: false };
+    }
+
+    // 4. Sort by natural meal order
+    mealTypes.sort((a, b) => (MEAL_ORDER[a] ?? 99) - (MEAL_ORDER[b] ?? 99));
+
+    // 5. Calculate total percentage (capped at 100%)
+    const totalPct = Math.min(100, (calorieTotal / calorieTarget) * 100);
+    //console.log("totalPct:", totalPct);
+
+    // 6. Calculate each segment's width
+    //    Each segment = (mealCal / calorieTotal) * totalPct
+    const segments = mealTypes.map((mealType) => {
+      const cal = mealCalories[mealType] ?? 0;
+      const widthPct = (cal / calorieTotal) * totalPct;
+      return {
+        mealType,
+        widthPct: Math.max(0.5, widthPct),
+        color: MEAL_COLORS[mealType] ?? "#CCCCCC",
+        label: MEAL_LABELS[mealType] ?? mealType,
+        calories: cal,
+      };
+    });
+
+    // console.log(
+    //   "segments:",
+    //   segments.map((s) => `${s.mealType}: ${s.widthPct.toFixed(2)}%`),
+    // );
+
+    // 7. Fix floating-point drift
+    let sum = segments.reduce((s, seg) => s + seg.widthPct, 0);
+    if (Math.abs(sum - totalPct) > 0.001 && segments.length > 0) {
+      const diff = totalPct - sum;
+      const last = segments[segments.length - 1];
+      last.widthPct = Math.max(0.5, last.widthPct + diff);
+    }
+
+    return {
+      segments,
+      totalPct,
+      hasData: true,
+    };
+  }, [logs, calorieTarget]);
+
+  // ----- RENDER -----
+  if (!hasData) {
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-xs md:font-medium lg:font-semibold text-cocoa dark:text-dark-white">
+            Calorie progress
+          </span>
+          <span className="text-xs font-bold text-cocoa dark:text-dark-white">
+            0%
+          </span>
+        </div>
+        <div className="h-2 w-full rounded-full bg-cocoa/10 dark:bg-dark-white/10" />
+      </div>
+    );
+  }
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold text-cocoa dark:text-dark-white">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs md:font-medium lg:font-semibold text-cocoa dark:text-dark-white">
           Calorie progress
         </span>
         <span className="text-xs font-bold text-cocoa dark:text-dark-white">
-          {pct}%
+          {Math.round(totalPct)}%
         </span>
       </div>
 
-      {/* Segmented bar */}
-      <div
-        className="flex gap-0.5 h-2 rounded-full overflow-hidden
-        bg-cocoa/10 dark:bg-dark-white/10"
-      >
-        {ordered.map((mealType, i) => {
-          const segPct = Math.min(
-            100,
-            ((grouped[mealType] ?? 0) / calorieTarget) * 100,
-          );
-          return (
+      <div className="relative h-2 w-full rounded-full overflow-hidden bg-cocoa/10 dark:bg-dark-white/10">
+        <div className="flex h-full w-full">
+          {segments.map((seg) => (
             <div
-              key={mealType}
+              key={seg.mealType}
               style={{
-                width: `${segPct}%`,
-                backgroundColor: SEGMENT_COLORS[i % SEGMENT_COLORS.length],
+                width: `${seg.widthPct}%`,
+                backgroundColor: seg.color,
+                transition: "width 0.6s cubic-bezier(0.22, 1, 0.36, 1)",
               }}
-              className="h-full transition-all duration-500"
+              className="h-full shrink-0"
+              title={`${seg.label}: ${Math.round(seg.calories)} kcal`}
             />
-          );
-        })}
+          ))}
+          <div className="flex-1 h-full" />
+        </div>
       </div>
 
-      {/* Labels below */}
-      <div className="flex gap-0.5 mt-1">
-        {ordered.map((mealType) => {
-          const segPct = Math.min(
-            100,
-            ((grouped[mealType] ?? 0) / calorieTarget) * 100,
-          );
-          return (
-            <div
-              key={mealType}
-              style={{ width: `${segPct}%` }}
-              className="text-[9px] text-cocoa-faded truncate"
-            >
-              {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
-            </div>
-          );
-        })}
+      <div className="flex mt-1 w-full">
+        {segments.map((seg) => (
+          <div
+            key={seg.mealType}
+            style={{
+              width: `${seg.widthPct}%`,
+              minWidth: "12px",
+            }}
+            className="text-[9px] text-cocoa/60 dark:text-dark-white/50 truncate shrink-0 px-0.5 text-center"
+          >
+            {seg.label}
+          </div>
+        ))}
+        <div className="flex-1" />
       </div>
     </div>
   );

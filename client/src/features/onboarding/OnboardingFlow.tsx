@@ -270,7 +270,7 @@ const HeightInput = ({
 
   const inputClass = `
     flex-1 min-w-0
-    px-3 py-3 text-sm font-semibold
+    px-3 py-3 text-base lg:text-sm font-semibold
     text-cocoa dark:text-dark-white bg-[#F6F6F6] dark:bg-[#121212] outline-none
     [appearance:textfield]
     [&::-webkit-inner-spin-button]:appearance-none
@@ -433,8 +433,8 @@ const WeightInput = ({
           onChange={(e) => handleChange(e.target.value)}
           className="
             flex-1 min-w-0
-  px-3 py-3 text-sm font-semibold
-  text-cocoa dark:text-dark-white bg-[#F6F6F6] dark:bg-[#121212] outline-none
+            px-3 py-3 text-base lg:text-sm font-semibold
+            text-cocoa dark:text-dark-white bg-[#F6F6F6] dark:bg-[#121212] outline-none
             [appearance:textfield]
             [&::-webkit-inner-spin-button]:appearance-none
             [&::-webkit-outer-spin-button]:appearance-none

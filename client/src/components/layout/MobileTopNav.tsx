@@ -9,11 +9,13 @@ import {
   Home,
   BarChart2,
   History,
+  Sun,
+  Moon,
+  Monitor,
   MessageCircle,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuthStore } from "@/store/authStore";
-import { UserAvatar } from "./Sidebar";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import api from "@/lib/api";
 import type { InternalAxiosRequestConfig } from "axios";
@@ -24,13 +26,21 @@ import type { InternalAxiosRequestConfig } from "axios";
   Hamburger opens a drawer with nav links.
 */
 export const MobileTopNav = () => {
-  const { resolvedTheme } = useTheme();
-  const { user, avatarUrl, clearAuth } = useAuthStore();
+  const { resolvedTheme, theme, setTheme } = useTheme();
+  const { clearAuth } = useAuthStore();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
 
-  const firstName = user?.display_name?.split(" ")[0] ?? "User";
+  const cycleTheme = () => {
+    const next: Record<string, "light" | "dark" | "system"> = {
+      light: "dark",
+      dark: "system",
+      system: "light",
+    };
+    setTheme(next[theme]);
+  };
+  const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
 
   const handleLogout = async () => {
     try {
@@ -46,10 +56,14 @@ export const MobileTopNav = () => {
 
   return (
     <>
-      <div className="px-4 pt-3 pb-2">
+      <div className="px-0 fixed top-1 left-4 right-4 z-50">
         <div
-          className="bg-surface dark:bg-black-surface rounded-2xl shadow-md
-          px-4 h-14 flex items-center justify-between"
+          className="bg-white/70 dark:bg-cocoa/70
+          backdrop-blur-md
+          rounded-2xl shadow-lg
+          border border-white/20 dark:border-white/10
+          px-5 py-5 h-14 flex items-center justify-between
+          max-w-7xl mx-auto"
         >
           {/* Logo */}
           <Link to="/" aria-label="Home">
@@ -60,28 +74,33 @@ export const MobileTopNav = () => {
                   : "/images/logoLight.png"
               }
               alt="Flax"
-              className="h-[35px] w-auto object-contain"
+              className="h-[32px] mt-1 w-auto object-contain"
             />
           </Link>
 
           {/* Right: bell + avatar + menu */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-5">
+            {/* Theme toggle */}
+            <button
+              onClick={cycleTheme}
+              aria-label={`Theme: ${theme}`}
+              className=" text-cocoa dark:text-dark-white"
+            >
+              <ThemeIcon size={20} />
+            </button>
             {/* Notification bell */}
             <Link to="/notifications" className="relative">
               <Bell size={20} className="text-cocoa dark:text-dark-white" />
               {/* Unread badge - shown only when count > 0 */}
               {/* TODO: wire to real notification count from web push */}
               <span
-                className="absolute -top-1 -right-1 w-4 h-4 rounded-full
-                bg-pawpaw text-surface text-[10px] font-bold
+                className="absolute -top-1 -right-1 w-3 h-3 rounded-full
+                bg-pawpaw text-surface text-[9px] font-bold
                 flex items-center justify-center"
               >
                 1
               </span>
             </Link>
-
-            {/* Avatar */}
-            <UserAvatar avatarUrl={avatarUrl} name={firstName} size={32} />
 
             {/* Hamburger */}
             <button

@@ -16,6 +16,7 @@ export default {
         cocoa: '#1C1A17',           // body text, input borders
         'off-white': '#F6F1E7',     // left card bg, page bg base
         surface: '#FFFFFF',         // right form card bg
+        'surface-two': "#F9FAFB",   // Another surface color for cards, etc.
         pawpaw: '#E8623C',          // accents, focus ring, CTA fill
         moringa: '#2F5D4B',         // primary button fill, bold heading text on left panel
         'moringa-faded': '#7FB096', // dark mode button + landing cards at 50% opacity

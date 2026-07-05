@@ -17,7 +17,7 @@ declare module 'axios' {
     TOKEN_REUSED   - refresh token reuse detected (security event)
 
   Codes that send to / (unauthenticated landing):
-    NO_TOKEN       - no token sent, user is not logged in
+    NO_TOKEN       - no token sent after first refresh, user is not logged in
     INVALID_TOKEN  - malformed token, treat as unauthenticated
 
   Everything else (network errors, 5xx, etc.) does NOT navigate.
@@ -102,7 +102,7 @@ api.interceptors.response.use(
     }
 
     // ============================================================
-    // 4. Queue mechanism — if refresh is already in flight
+    // 4. Queue mechanism if refresh is already in flight
     // ============================================================
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
@@ -157,9 +157,23 @@ api.interceptors.response.use(
       const refreshCode = getErrorCode(refreshError);
       console.log("The refresh code is ", refreshCode);
 
+      // SMART REDIRECT: Only redirect if NOT already on a login page
+      const isOnLoginPage = [
+        '/',
+        '/login',
+        '/register',
+        '/verify-otp',
+        '/forgot-password',
+        '/reset-password',
+        '/auth/callback',
+      ].includes(window.location.pathname);
+
       // TOKEN_REUSED or TOKEN_EXPIRED → session expired → go to login
       if (refreshCode && NAVIGATE_TO_EXPIRED.has(refreshCode)) {
-        window.location.replace('/login?session=expired');
+        if (!isOnLoginPage) {
+          window.location.replace('/login?session=expired');
+        }
+        // If already on a login page, stay there – no loop
         return Promise.reject(refreshError);
       }
 

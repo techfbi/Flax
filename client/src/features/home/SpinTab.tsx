@@ -122,7 +122,10 @@ export const SpinTab = () => {
   const thumbsUp = useMutation({
     mutationFn: async () => {
       if (!result) return;
-      await api.post("/api/spin/validate", { food_ref: result.food._id });
+      await api.post("/api/spin/validate", {
+        food_ref: result.food._id,
+        food_name: result.food.name,
+      });
     },
     onSuccess: () => toast.success("Added to your preferences"),
     onError: () => toast.error("Something went wrong, please try again."),
@@ -181,17 +184,17 @@ export const SpinTab = () => {
           />
 
           {/* Action buttons */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between w-full">
             <button
               onClick={() => thumbsUp.mutate()}
               disabled={!result || thumbsUp.isPending}
               aria-label="Like this meal"
-              className="w-10 h-10 rounded-full flex items-center justify-center
-                bg-surface dark:bg-black-surface
+              className="w-16 h-8 rounded-2xl flex items-center justify-center
+                bg-off-white dark:bg-dark-bg
                 border border-cocoa/15 dark:border-dark-white/15
                 text-cocoa dark:text-dark-white
-                hover:bg-cocoa/5 dark:hover:bg-dark-white/5
-                disabled:opacity-40 transition-colors"
+                hover:bg-suface dark:hover:bg-black-surface
+                disabled:opacity-50 transition-colors"
             >
               <ThumbsUp size={16} />
             </button>
@@ -199,12 +202,12 @@ export const SpinTab = () => {
               onClick={() => flagMeal.mutate()}
               disabled={!result || flagMeal.isPending}
               aria-label="Flag this meal"
-              className="w-10 h-10 rounded-full flex items-center justify-center
-                bg-surface dark:bg-black-surface
+              className="w-16 h-8 rounded-2xl flex items-center justify-center
+                bg-off-white dark:bg-dark-bg
                 border border-cocoa/15 dark:border-dark-white/15
-                text-pawpaw dark:text-black-pawpaw
-                hover:bg-pawpaw/5 transition-colors
-                disabled:opacity-40"
+                text-cocoa dark:text-dark-white
+                hover:bg-suface dark:hover:bg-black-surface
+                disabled:opacity-50 transition-colors"
             >
               <Flag size={16} />
             </button>
@@ -270,7 +273,6 @@ export const SpinTab = () => {
               </div>
             </div>
           )}
-
           {/* Nutrition bars */}
           <div className="space-y-3">
             {NUTRITION_BARS.map((bar) => {
@@ -279,44 +281,58 @@ export const SpinTab = () => {
                     bar.key
                   ] ?? 0)
                 : 0;
-              const pct = Math.min(100, (value / maxNutrition) * 100);
+              const pct =
+                maxNutrition > 0
+                  ? Math.min(100, (value / maxNutrition) * 100)
+                  : 0;
+
               return (
                 <div key={bar.key}>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
                       <span
                         className="w-2.5 h-2.5 rounded-full shrink-0"
                         style={{ backgroundColor: bar.color }}
                       />
+                      {/* Label never skeletons — only the bar and value do */}
                       <span className="text-sm text-cocoa dark:text-dark-white">
                         {bar.label}
                       </span>
                     </div>
-                    <span className="text-sm font-semibold text-cocoa dark:text-dark-white">
-                      {isSpinning ? (
-                        <span
-                          className="inline-block w-8 h-3 rounded
-                          bg-cocoa/10 dark:bg-dark-white/10 animate-pulse"
-                        />
-                      ) : (
-                        `${value}g`
-                      )}
-                    </span>
+                    {/* Value skeletons while spinning */}
+                    {isSpinning ? (
+                      <span
+                        className="inline-block w-8 h-3.5 rounded
+              bg-cocoa/10 dark:bg-dark-white/10 animate-pulse"
+                      />
+                    ) : (
+                      <span className="text-sm font-semibold text-cocoa dark:text-dark-white">
+                        {value}g
+                      </span>
+                    )}
                   </div>
-                  <div className="h-1.5 rounded-full bg-cocoa/10 dark:bg-dark-white/10">
+
+                  {/* Bar skeletons while spinning, animates in on land */}
+                  {isSpinning ? (
                     <div
-                      className="h-full rounded-full transition-all duration-700"
-                      style={{
-                        width: `${pct}%`,
-                        backgroundColor: bar.color,
-                      }}
+                      className="h-1.5 rounded-full
+            bg-cocoa/10 dark:bg-dark-white/10 animate-pulse"
                     />
-                  </div>
+                  ) : (
+                    <div className="h-1.5 rounded-full bg-cocoa/10 dark:bg-dark-white/10">
+                      <div
+                        className="h-full rounded-full transition-all duration-700 ease-out"
+                        style={{
+                          width: result ? `${pct}%` : "0%",
+                          backgroundColor: bar.color,
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
-
           {/* Spin button */}
           <button
             onClick={() => spinMutation.mutate()}

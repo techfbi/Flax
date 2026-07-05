@@ -40,9 +40,8 @@ const StatusBadge = ({
     return (
       <span
         className="text-[10px] font-semibold text-surface
-        bg-moringa-faded px-2 py-0.5 rounded-full flex items-center gap-1"
+        bg-moringa-faded px-2 py-0.5 rounded-md flex items-center gap-1"
       >
-        <span className="w-1.5 h-1.5 rounded-full bg-surface" />
         On-going
       </span>
     );
@@ -92,33 +91,35 @@ export const StreakPanel = ({
   const waterStatus = getWaterStatus(streakData);
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Today's intake label — desktop right panel */}
-      <p className="text-xs text-cocoa-faded">
-        Today's intake{" "}
-        <span className="text-[10px]">
-          (80% progress will activate streak for the day)
-        </span>
+    <div className="flex flex-col gap-2">
+      {/* Today's intake label, desktop right panel */}
+      <p className="font-heading md:text-[12px] lg:text-[14px] pl-2 text-cocoa-faded">
+        80% progress will activate streak for the day
       </p>
 
       {/* Fire streak card */}
-      <div className="bg-surface dark:bg-black-surface rounded-2xl p-5">
+      <div className="bg-surface-two dark:bg-black-surface rounded-2xl p-5">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            {/* Fire icon or dimmed circle */}
-            <div
-              className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30
-              flex items-center justify-center"
-            >
-              {goalStatus === "ongoing" ? (
-                <span className="text-xl">🔥</span>
-              ) : (
-                <span className="text-xl grayscale opacity-40">🔥</span>
-              )}
-            </div>
+            {/* Fire icon */}
+
+            {goalStatus === "ongoing" ? (
+              <span className="text-xl">
+                <img
+                  src="/images/fire.png"
+                  alt="fire"
+                  className="object-contain w-[30px] flex"
+                />
+              </span>
+            ) : (
+              <span className="text-xl grayscale opacity-30">🔥</span>
+            )}
+
             <div>
-              <p className="text-xs text-cocoa-faded">Streaks</p>
-              <p className="font-heading font-bold text-lg text-cocoa dark:text-dark-white">
+              <p className="font-heading md:font-medium lg:font-semibold text-xs text-cocoa-faded">
+                Streaks
+              </p>
+              <p className="font-heading font-bold md:text-[0.9rem] lg:text-lg text-cocoa dark:text-dark-white">
                 {goalStatus !== "not_started"
                   ? `${(() => {
                       const n = streakData?.goal_streak ?? 0;
@@ -134,27 +135,25 @@ export const StreakPanel = ({
         <CalorieProgressBar
           logs={logs ?? []}
           calorieTarget={dashData?.calorie_target ?? 0}
-          calorieTotal={dashData?.daily_totals.calories ?? 0}
+          //calorieTotal={dashData?.daily_totals.calories ?? 0}
         />
       </div>
 
       {/* Water streak card */}
-      <div className="bg-surface dark:bg-black-surface rounded-2xl p-5">
+      <div className="bg-surface-two dark:bg-black-surface rounded-2xl p-5">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30
-              flex items-center justify-center"
-            >
-              {waterStatus === "ongoing" ? (
-                <span className="text-xl">💧</span>
-              ) : (
-                <span className="text-xl grayscale opacity-40">💧</span>
-              )}
-            </div>
+            {waterStatus === "ongoing" ? (
+              <span className="text-[1.3rem]">💧</span>
+            ) : (
+              <span className="text-xl grayscale opacity-30">💧</span>
+            )}
+
             <div>
-              <p className="text-xs text-cocoa-faded">Water</p>
-              <p className="font-heading font-bold text-lg text-cocoa dark:text-dark-white">
+              <p className="font-heading md:font-medium lg:font-semibold  text-xs text-cocoa-faded">
+                Water
+              </p>
+              <p className="font-heading font-bold md:text-[0.9rem] lg:text-lg text-cocoa dark:text-dark-white">
                 {waterStatus !== "not_started"
                   ? `${(() => {
                       const n = streakData?.water_streak ?? 0;
@@ -169,13 +168,13 @@ export const StreakPanel = ({
 
         <div>
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-semibold text-cocoa dark:text-dark-white">
+            <span className="text-xs md:font-medium lg:font-semibold text-cocoa dark:text-dark-white">
               Hydration level
             </span>
             <span className="text-xs font-semibold text-cocoa dark:text-dark-white">
-              {waterData?.daily_total ?? 0}
-              <span className="text-cocoa-faded font-normal">
-                /{waterData?.target_ml ?? 0}ml
+              {waterData?.daily_total ?? 0}{" "}
+              <span className="text-cocoa-faded text-xs font-normal">
+                / {waterData?.target_ml ?? 0}ml
               </span>
             </span>
           </div>

@@ -86,7 +86,7 @@ export type ActivityLevel =
 
 export type AgeRange = '18-24' | '25-34' | '35-44' | '45-54' | '55-64' | '65+'
 
-export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'brunch'
+export type MealType = 'breakfast' | 'brunch' | 'lunch' | 'dinner' | 'snack'  
 
 /*
   Food matches FoodResult from spin.service.ts exactly.

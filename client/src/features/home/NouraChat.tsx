@@ -44,9 +44,11 @@ const ThinkingIndicator = () => (
 /* Types text in character by character for AI streaming feel */
 const StreamingMessage = ({
   text,
+  onChar,
   onDone,
 }: {
   text: string;
+  onChar: () => void;
   onDone: () => void;
 }) => {
   const [displayed, setDisplayed] = useState("");
@@ -60,14 +62,15 @@ const StreamingMessage = ({
       if (indexRef.current < text.length) {
         setDisplayed(text.slice(0, indexRef.current + 1));
         indexRef.current++;
+        onChar(); /* notify parent to scroll on every character */
       } else {
         clearInterval(interval);
         onDone();
       }
-    }, 18); /* 18ms per char gives a fast natural feel */
+    }, 18);
 
     return () => clearInterval(interval);
-  }, [text, onDone]);
+  }, [text, onChar, onDone]);
 
   return (
     <div
@@ -124,7 +127,24 @@ export const NouraChat = () => {
     }
   }, [history]);
 
-  const scrollToBottom = () => {
+  /*
+  isAtBottom tracks whether the user is currently near the bottom.
+  If yes: auto-scroll as new content arrives (streaming, new messages).
+  If no: user has scrolled up to read history. Do not force scroll.
+  When streaming finishes and user scrolls back down, behavior resumes.
+*/
+  const isAtBottom = useRef(true);
+
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    /* Consider "at bottom" if within 60px of the bottom */
+    isAtBottom.current = scrollHeight - scrollTop - clientHeight < 60;
+  };
+
+  const scrollToBottom = (force = false) => {
+    if (!scrollRef.current) return;
+    if (!force && !isAtBottom.current) return;
     requestAnimationFrame(() => {
       if (scrollRef.current) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -132,9 +152,22 @@ export const NouraChat = () => {
     });
   };
 
+  /* Scroll to bottom when new committed messages arrive */
   useEffect(() => {
     scrollToBottom();
-  }, [localMessages, isThinking, streamingText]);
+  }, [localMessages, isThinking]);
+
+  /*
+  During streaming, scroll on every character render.
+  This keeps the cursor visible as text types in —
+  same behavior as ChatGPT and Claude's own interface.
+  Respects isAtBottom so user can scroll up without being forced back.
+*/
+  useEffect(() => {
+    if (streamingText !== null) {
+      scrollToBottom();
+    }
+  }, [streamingText]);
 
   const sendMutation = useMutation({
     mutationFn: async (msg: string) => {
@@ -204,8 +237,8 @@ export const NouraChat = () => {
 
   return (
     <div
-      className="flex-1 min-h-0 bg-surface dark:bg-black-surface rounded-2xl
-      flex flex-col overflow-hidden"
+      className="bg-surface-two dark:bg-black-surface rounded-2xl flex flex-col overflow-hidden 
+    lg:flex-1 lg:min-h-0 max-h-[500px] lg:max-h-none"
     >
       {/* Keyframes injected once */}
       <style>{`
@@ -225,7 +258,7 @@ export const NouraChat = () => {
         aria-label="Open Noura full chat"
       >
         <div
-          className="w-10 h-10 rounded-full bg-surface border-2
+          className="w-10 h-10 rounded-full bg-surface-two border-2
           border-cocoa/10 dark:border-dark-white/10
           flex items-center justify-center shrink-0"
         >
@@ -234,7 +267,7 @@ export const NouraChat = () => {
           </svg>
         </div>
         <div>
-          <p className="font-semibold text-sm text-cocoa dark:text-dark-white">
+          <p className="font-semibold font-heading text-sm text-cocoa dark:text-dark-white">
             Noura
           </p>
           <p className="text-xs text-cocoa-faded">Your nutrition assistant</p>
@@ -245,17 +278,18 @@ export const NouraChat = () => {
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 min-h-0"
+        onScroll={handleScroll}
       >
         {/* Default greeting shown before any messages */}
         {showDefault && (
           <div className="flex justify-start">
             <div
-              className="rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] text-sm
+              className="rounded-2xl rounded-tl-sm px-3 py-2 max-w-[85%] text-xs
               bg-[rgba(47,93,75,0.14)] dark:bg-[#4d4d4d]
               text-cocoa dark:text-dark-white leading-relaxed"
             >
               Good day! I am Noura, your nutrition assistant. How can I help you
-              today?
+              today? 😊
             </div>
           </div>
         )}
@@ -268,7 +302,7 @@ export const NouraChat = () => {
           >
             <div
               className={`
-              rounded-2xl px-4 py-3 max-w-[85%] text-sm leading-relaxed
+              rounded-2xl px-4 py-3 max-w-[85%] text-xs lg:text-sm leading-relaxed
               ${
                 msg.role === "user"
                   ? "rounded-tr-sm bg-off-white dark:bg-dark-bg text-cocoa dark:text-dark-white"
@@ -287,14 +321,18 @@ export const NouraChat = () => {
         {/* Streaming Noura response */}
         {streamingText !== null && (
           <div className="flex justify-start">
-            <StreamingMessage text={streamingText} onDone={handleStreamDone} />
+            <StreamingMessage
+              text={streamingText}
+              onChar={() => scrollToBottom()}
+              onDone={handleStreamDone}
+            />
           </div>
         )}
       </div>
 
       {/* Input */}
       <div
-        className="p-4 border-t border-cocoa/5 dark:border-dark-white/5
+        className="p-2.5 border-t border-cocoa/5 dark:border-dark-white/5
         flex gap-2 shrink-0"
       >
         <input
@@ -306,10 +344,10 @@ export const NouraChat = () => {
           placeholder="Ask Noura..."
           disabled={isThinking || streamingText !== null}
           className="flex-1 bg-cocoa/5 dark:bg-dark-white/5
-            rounded-xl px-4 py-2.5 text-sm outline-none
-            text-cocoa dark:text-dark-white
+            rounded-xl px-4 py-1.5 text-base lg:text-sm outline-none
+            text-cocoa dark:text-dark-white shink-1
             placeholder:text-cocoa-faded
-            focus:ring-1 focus:ring-pawpaw dark:focus:ring-black-pawpaw
+            focus:border-moringa-faded focus:ring-1 focus:ring-moringa-faded/50
             disabled:opacity-50"
         />
         <button

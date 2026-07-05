@@ -56,7 +56,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
 
   const activeClass = `
     bg-off-white dark:bg-dark-bg
-    border-l-2 border-pawpaw dark:border-black-pawpaw
+    border-l-[3px] border-pawpaw dark:border-black-pawpaw
     text-cocoa dark:text-dark-white
   `;
   const inactiveClass = `
@@ -70,14 +70,14 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
       <aside
         className={`
           h-screen flex flex-col
-          bg-surface dark:bg-black-surface
+          bg-surface-two dark:bg-black-surface
           transition-all duration-200
           ${collapsed ? "w-16" : "w-[220px]"}
         `}
       >
         {/* Logo + collapse toggle */}
         <div
-          className={`flex items-center pt-5 pb-6 px-3 ${collapsed ? "flex-col gap-4" : "justify-between"}`}
+          className={`flex items-center md:pt-5 lg:pt-9 pb-6 px-3 ${collapsed ? "flex-col gap-4" : "justify-between"}`}
         >
           {!collapsed && (
             <img
@@ -96,7 +96,11 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
               Place at public/images/logoIcon.png (40x36px).
             */
             <img
-              src="/images/logoIcon.png"
+              src={
+                resolvedTheme === "dark"
+                  ? "/images/logoIconDark.png"
+                  : "/images/logoIcon.png"
+              }
               alt="Flax"
               className="w-8 h-8 object-contain mx-auto"
             />
@@ -153,14 +157,14 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         </div>
 
         {/* Nav items */}
-        <nav className="flex-1 flex flex-col gap-0.5 px-2">
+        <nav className="flex-1 flex flex-col gap-0.5 px-2 lg:mt-5 lg:gap-4">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.to === "/"}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg
+                `flex items-center gap-3 px-3 py-2.5 
                 transition-colors duration-150 relative
                 ${isActive ? activeClass : inactiveClass}`
               }
@@ -170,10 +174,14 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                 <span className="text-sm font-medium flex items-center gap-1.5">
                   {item.label}
                   {item.dot && (
-                    <span
-                      className="w-1.5 h-1.5 rounded-full bg-pawpaw
-                      dark:bg-black-pawpaw shrink-0"
-                    />
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill={resolvedTheme === "dark" ? "#9CA3AF" : "#E8623C"}
+                    >
+                      <path d="M12 2L13.5 10.5L22 12L13.5 13.5L12 22L10.5 13.5L2 12L10.5 10.5L12 2Z" />
+                    </svg>
                   )}
                 </span>
               )}
@@ -182,7 +190,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         </nav>
 
         {/* Bottom section */}
-        <div className="flex flex-col gap-0.5 px-2 pb-4">
+        <div className="flex flex-col gap-0.5 px-2 pb-4 lg:mt-5 lg:gap-4">
           {/* Logout */}
           <button
             onClick={() => setShowLogout(true)}
