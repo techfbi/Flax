@@ -85,109 +85,146 @@ const applyPantryLogic = async (
   userAllergens: string[],
   excludeIds: string[],
   userId: string
-): Promise<{ foods: FoodResult[]; pantryMatchUsed: boolean }> => {
+): Promise<{
+  foods: FoodResult[];
+  pantryMatchUsed: boolean;
+  recencyRelaxed: boolean;
+}> => {
 
-  // Fetch user pantry items for matching
+  // User pantry
   const userPantry = await getUserPantryNames(userId);
 
-  // Apply allergen and exclusion filters first
-  const baseFiltered = filterResults(foodsWithUrls, userAllergens, excludeIds);
+  // Apply the normal filters.
+  const baseFiltered = filterResults(
+    foodsWithUrls,
+    userAllergens,
+    excludeIds
+  );
 
-  // If user has no pantry items, skip pantry filtering entirely.
-  // Return the base filtered list as-is.
-  if (userPantry.length === 0) {
-    if (baseFiltered.length === 0) {
-      // Both pantry and base are empty. determine best error message.
-      const withoutExclusions = filterResults(foodsWithUrls, userAllergens, []);
-
-      if (withoutExclusions.length === 0) {
-        throw new AppError(
-          "No meals match your current filters without triggering your allergens. " +
-          "Try changing your filters.",
-          404,
-          "NO_FOODS_AFTER_ALLERGENS"
-        );
-      }
-
-      throw new AppError(
-        "You have seen all available meals matching these filters recently. " +
-        "Try different filters or come back later.",
-        404,
-        "NO_FOODS_AFTER_EXCLUSIONS"
-      );
-    }
-    return { foods: baseFiltered, pantryMatchUsed: false };
-  }
-
-  // Apply pantry filter on top of allergen and exclusion filtered list.
-  // A food matches if its ingredients array contains at least one item from the user's pantry using partial case-insensitive matching.
-  const pantryFiltered = filterByPantry(baseFiltered, userPantry);
-
-  // If pantry filter produces results, use them.
-  if (pantryFiltered.length > 0) {
-    return { foods: pantryFiltered, pantryMatchUsed: true };
-  }
-
-  // ---------------------------------------------------------------------------
-  // Graceful fallback.
-  // Pantry filter produced zero results but we have base filtered items.
-  // Return the base filtered list with pantryMatchUsed: false so the frontend knows to show the subtle fallback note to the user.
-  // ---------------------------------------------------------------------------
+  // Normal path.
+  // We still have foods after exclusions.
   if (baseFiltered.length > 0) {
+
+    // No pantry → just return normally.
+    if (userPantry.length === 0) {
+      return {
+        foods: baseFiltered,
+        pantryMatchUsed: false,
+        recencyRelaxed: false,
+      };
+    }
+
+    // Pantry exists.
+    const pantryFiltered = filterByPantry(baseFiltered, userPantry);
+
+    if (pantryFiltered.length > 0) {
+      return {
+        foods: pantryFiltered,
+        pantryMatchUsed: true,
+        recencyRelaxed: false,
+      };
+    }
+
+    // Pantry produced no matches.
     console.log(
-      `[REMOVE LOG LATER] Pantry filter produced no results for user. ${userId}. ` +
-      "Falling back to full filtered list."
+      `[REMOVE LOG LATER] Pantry fallback used for user ${userId}`
     );
-    return { foods: baseFiltered, pantryMatchUsed: false };
+
+    return {
+      foods: baseFiltered,
+      pantryMatchUsed: false,
+      recencyRelaxed: false,
+    };
   }
 
-  // Both pantry filter and base filter are empty.
-  // Before throwing an error, we try relaxing the 48-hour recency window.
-  // We never relax allergens (health safety) or flagged meals (user preference).
-  // We only relax recently seen foods because that restriction is temporary.
+  // No foods remain.
+  // Before failing, relax ONLY the 48-hour exclusion.
+  //
+  // We continue respecting:
+  //   ✓ allergens
+  //   ✓ flagged meals
+  console.log(
+    `[REMOVE LOG LATER] No foods after exclusions. Relaxing recency for ${userId}`
+  );
 
-  // Get flagged refs only. no time filter.
   const flaggedResult = await pgPool.query(
-    "SELECT food_ref FROM flagged_meals WHERE user_id = $1",
+    `SELECT food_ref
+       FROM flagged_meals
+      WHERE user_id = $1`,
     [userId]
   );
+
   const flaggedOnly = new Set(
-    flaggedResult.rows.map((r: { food_ref: string }) => r.food_ref)
+    flaggedResult.rows.map(
+      (row: { food_ref: string }) => row.food_ref
+    )
   );
 
-  // Filter using only allergens and permanent flags. ignore 48hr window.
-  const withRelaxedRecency = foodsWithUrls.filter((food) => {
-    // Always respect flags
-    if (flaggedOnly.has(food._id)) return false;
+  const lowerAllergens = new Set(
+    userAllergens.map((a) => a.toLowerCase())
+  );
 
-    // Always respect allergens
-    if (userAllergens.length > 0) {
-      const foodAllergens = food.allergen_tags.map((a: string) => a.toLowerCase());
-      const lowerAllergens = new Set(userAllergens.map((a) => a.toLowerCase()));
-      if (foodAllergens.some((a: string) => lowerAllergens.has(a))) return false;
+  const relaxedFoods = foodsWithUrls.filter((food) => {
+
+    // Always respect permanent flags.
+    if (flaggedOnly.has(food._id)) {
+      return false;
     }
 
+    // Always respect allergens.
+    if (lowerAllergens.size > 0) {
+      const foodAllergens = food.allergen_tags.map((a) =>
+        a.toLowerCase()
+      );
+
+      if (foodAllergens.some((a) => lowerAllergens.has(a))) {
+        return false;
+      }
+    }
+
+    // Ignore excludeIds.
     return true;
   });
 
-  if (withRelaxedRecency.length === 0) {
-    // Even with recency relaxed, nothing available.
-    // Allergens plus flags are causing the block.
+  // Still nothing?
+  // Allergens and/or flagged meals are blocking everything.
+  if (relaxedFoods.length === 0) {
     throw new AppError(
-      "No meals match your current filters without triggering your allergens. " +
-      "Try changing your filters.",
+      "No meals match your current filters without triggering your allergens. Try changing your filters.",
       404,
       "NO_FOODS_AFTER_ALLERGENS"
     );
   }
 
-  // Recency relaxed fallback succeeded.
-  console.log(
-    `[REMOVE LOG LATER] All recent meals seen. showing previously seen meals for user. ${userId}`
-  );
-  return { foods: withRelaxedRecency, pantryMatchUsed: false };
-};
+  // We successfully relaxed the recency rule.
+  // Optionally reapply pantry.
 
+  if (userPantry.length > 0) {
+    const pantryRelaxed = filterByPantry(relaxedFoods, userPantry);
+
+    if (pantryRelaxed.length > 0) {
+      console.log(
+        `[REMOVE LOG LATER] Returning previously seen pantry meals for ${userId}`
+      );
+
+      return {
+        foods: pantryRelaxed,
+        pantryMatchUsed: true,
+        recencyRelaxed: true,
+      };
+    }
+  }
+
+  console.log(
+    `[REMOVE LOG LATER] Returning previously seen meals for ${userId}`
+  );
+
+  return {
+    foods: relaxedFoods,
+    pantryMatchUsed: false,
+    recencyRelaxed: true,
+  };
+};
 // ---------------------------------------------------------------------------
 // Get foods for the spin wheel. Returns a filtered list of foods for the user's region.
 // Results are cached in Redis for 1 hour to avoid hitting MongoDB on every spin.
@@ -199,7 +236,7 @@ export const getFoodsForSpin = async (
   userAllergens: string[],
   excludeIds: string[] = [],
   userId: string
-): Promise<{ foods: FoodResult[]; pantryMatchUsed: boolean }> => {
+): Promise<{ foods: FoodResult[]; pantryMatchUsed: boolean; recencyRelaxed: boolean }> => {
   const cacheKey = buildCacheKey(region, filters);
 
   // Check Redis cache first

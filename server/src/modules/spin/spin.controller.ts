@@ -11,6 +11,7 @@ import {
   unflagMeal,
 } from "./spin.service.js";
 import { type FlagMealInput } from "./spin.schema.js";
+import { equal } from "assert";
 
 // ---------------------------------------------------------------------------
 // GET /api/spin/filters
@@ -125,6 +126,7 @@ export const unflagMealHandler = async (
 export const spin = async ( req: Request, res: Response, next: NextFunction ): Promise<void> => {
   try {
     const userId = req.user!.id;
+    console.log("[REMOVE LOG LATER: The spin req body: ", req.body)
 
     // ---------------------------------------------------------------------------
     // Step 1. Get user profile data needed for filtering and Groq context
@@ -166,7 +168,7 @@ export const spin = async ( req: Request, res: Response, next: NextFunction ): P
     // ---------------------------------------------------------------------------
     // Step 3. Get filtered food list
     // ---------------------------------------------------------------------------
-    const { foods, pantryMatchUsed } = await getFoodsForSpin(
+    const { foods, pantryMatchUsed, recencyRelaxed } = await getFoodsForSpin(
       profile.region,
       filters,
       profile.allergies ?? [],
@@ -228,6 +230,7 @@ export const spin = async ( req: Request, res: Response, next: NextFunction ): P
         food: selectedFood,
         reasoning,
         pantry_match: pantryMatchUsed,
+        recencyRelaxed: recencyRelaxed,
         // pantry_match: false tells the frontend to optionally show
         // "showing all options, not just pantry matches"
       },
