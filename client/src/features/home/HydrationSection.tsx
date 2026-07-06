@@ -162,7 +162,7 @@ export const HydrationSection = ({
           bg-off-white dark:bg-dark-bg"
           >
             <p className="font-heading text-sm lg:text-base font-bold text-cocoa dark:text-dark-white mb-3">
-              Log water intake
+              Quick add
             </p>
             <div className=" md:flex-none mb-3">
               <p className="font-heading text-[14px] md:text-xs font-semibold text-cocoa dark:text-dark-white mb-1">
@@ -179,11 +179,6 @@ export const HydrationSection = ({
                 </li>
               </ul>
             </div>
-
-            {/* Quick add */}
-            <p className="text-[14px] md:text-xs lg:text-sm font-semibold text-cocoa dark:text-dark-white lg:mt-7 mb-2">
-              Quick add
-            </p>
             <div className="flex flex-wrap gap-2 mb-4">
               {[
                 { label: "+ 500ml", ml: 500 },

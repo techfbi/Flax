@@ -2,9 +2,9 @@ import { NavLink, useNavigate } from "react-router-dom";
 import {
   Home,
   BarChart2,
-  History,
   MessageCircle,
   LogOut,
+  RefreshCw,
   Settings,
 } from "lucide-react";
 import { useState } from "react";
@@ -37,8 +37,8 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
 
   const navItems = [
     { to: "/", icon: Home, label: "Homepage" },
+    { to: "/spin", icon: RefreshCw, label: "Spin" },
     { to: "/dashboard", icon: BarChart2, label: "Dashboard" },
-    { to: "/spin-history", icon: History, label: "Spin history" },
     { to: "/ask-noura", icon: MessageCircle, label: "Ask Noura", dot: true },
   ];
 

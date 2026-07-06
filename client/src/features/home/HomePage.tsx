@@ -3,9 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Bell, Sun, Moon, Monitor } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { GoalTab } from "./GoalTab";
-import { SpinTab } from "./SpinTab";
-import { PantryTab } from "./PantryTab";
-import { LogMealTab } from "./LogMealTab";
+import { LogIntakeTab } from "./LogIntakeTab";
+import { HistoryTab } from "./HistoryTab";
 import { StreakPanel } from "./StreakPanel";
 import { NouraChat } from "./NouraChat";
 import { NotificationDropdown } from "./NotificationDropdown";
@@ -23,7 +22,7 @@ import type {
   StreakData,
 } from "@/types/apiTypes";
 
-type Tab = "goal" | "spin" | "pantry" | "logmeal" | "flaggedmeal";
+type Tab = "goal" | "log intake" | "history";
 
 /*
   HomePage: the main authenticated page at "/".
@@ -32,7 +31,7 @@ type Tab = "goal" | "spin" | "pantry" | "logmeal" | "flaggedmeal";
 
   Layout:
     Top: greeting + search + theme toggle + notifications (desktop)
-    Tabs: Goal, Spin, Pantry items, Log meal
+    Tabs: Goal, Log intake, History
     Left panel (large): active tab content
     Right panel: streak cards + Noura chat
 */
@@ -95,10 +94,8 @@ const HomePage = () => {
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "goal", label: "Goal" },
-    { key: "spin", label: "Spin" },
-    { key: "pantry", label: "Pantry items" },
-    { key: "logmeal", label: "Log meal" },
-    { key: "flaggedmeal", label: "Flagged meal" },
+    { key: "log intake", label: "Log intake" },
+    { key: "history", label: "History" },
   ];
 
   return (
@@ -147,8 +144,8 @@ const HomePage = () => {
             <div className="flex items-center md:gap-5 lg:gap-10 md:mr-0 lg:mr-2">
               <FoodSearch
                 onSelectFood={(_food) => {
-                  setActiveTab("logmeal");
-                  /* Pre-fill is handled inside LogMealTab via store */
+                  setActiveTab("log intake");
+                  /* Pre-fill is handled inside LogIntakeTab via store */
                 }}
               />
 
@@ -257,7 +254,7 @@ const HomePage = () => {
                   <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
-                    className={`font-heading relative px-2 md:px-3 lg:px-5 py-2 text-xs lg:text-sm  transition-colors duration-150 z-10
+                    className={`font-heading relative px-5 py-2 text-xs lg:text-sm  transition-colors duration-150 z-10
                         ${
                           activeTab === tab.key
                             ? "text-cocoa dark:text-dark-white font-bold"
@@ -287,12 +284,11 @@ const HomePage = () => {
                     dashData={dashData}
                     waterData={waterData}
                     onRefetchWater={refetchWater}
-                    onLogMealClick={() => setActiveTab("logmeal")}
+                    onLogMealClick={() => setActiveTab("log intake")}
                   />
                 )}
-                {activeTab === "spin" && <SpinTab />}
-                {activeTab === "pantry" && <PantryTab />}
-                {activeTab === "logmeal" && <LogMealTab />}
+                {activeTab === "log intake" && <LogIntakeTab />}
+                {activeTab === "history" && <HistoryTab />}
               </div>
             </div>
 

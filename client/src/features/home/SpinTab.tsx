@@ -12,6 +12,7 @@ import type {
   SpinFilters as SpinFiltersType,
   MealType,
 } from "@/types/apiTypes";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 const TIPS_STORAGE_KEY = "flax-spin-tips-dismissed";
 
@@ -160,218 +161,220 @@ export const SpinTab = () => {
     : 100;
 
   return (
-    <div className="p-5 overflow-y-auto outline outline-1 outline-rose-500">
-      {/* Tips popup */}
-      {showTips && (
-        <SpinTipsPopup
-          onOk={() => {
-            sessionStorage.setItem(TIPS_STORAGE_KEY, "1");
-            setShowTips(false);
-          }}
-          onDontShow={() => {
-            localStorage.setItem(TIPS_STORAGE_KEY, "1");
-            setShowTips(false);
-          }}
-        />
-      )}
-
-      {/* "Spin" label at top */}
-      <p
-        className="text-xs lg:text-sm font-semibold uppercase tracking-wide
-        text-cocoa/50 dark:text-dark-white/40"
-      >
-        Spin
-      </p>
-
-      {/* Main spin area: frame left + details right */}
-      <div className="mt-3 flex flex-col md:flex-row gap-6 outline outline-1 outline-green-500">
-        {/* Left: frame + actions */}
-        <div className="flex flex-col items-start gap-4 outline outline-1 outline-yellow-500">
-          <SpinFrame
-            isSpinning={isSpinning}
-            result={result?.food ?? null}
-            cycleImages={cycleImages}
+    <AppLayout>
+      <div className="p-5 overflow-y-auto ">
+        {/* Tips popup */}
+        {showTips && (
+          <SpinTipsPopup
+            onOk={() => {
+              sessionStorage.setItem(TIPS_STORAGE_KEY, "1");
+              setShowTips(false);
+            }}
+            onDontShow={() => {
+              localStorage.setItem(TIPS_STORAGE_KEY, "1");
+              setShowTips(false);
+            }}
           />
+        )}
 
-          {/* Action buttons */}
-          <div className="flex items-center justify-between w-full max-w-[300px] outline outline-1 outline-blue-500">
-            <button
-              onClick={() => thumbsUp.mutate()}
-              disabled={!result || thumbsUp.isPending}
-              aria-label="Like this meal"
-              className="w-16 h-8 rounded-2xl flex items-center justify-center
-                bg-off-white dark:bg-dark-bg
-                border border-cocoa/15 dark:border-dark-white/15
-                text-cocoa dark:text-dark-white
-                hover:bg-suface dark:hover:bg-black-surface
-                disabled:opacity-50 transition-colors"
-            >
-              <ThumbsUp size={16} />
-            </button>
-            <button
-              onClick={() => flagMeal.mutate()}
-              disabled={!result || flagMeal.isPending}
-              aria-label="Flag this meal"
-              className="w-16 h-8 rounded-2xl flex items-center justify-center
-                bg-off-white dark:bg-dark-bg
-                border border-cocoa/15 dark:border-dark-white/15
-                text-cocoa dark:text-dark-white
-                hover:bg-suface dark:hover:bg-black-surface
-                disabled:opacity-50 transition-colors"
-            >
-              <img
-                src="./images/redFlag.svg"
-                alt="fire"
-                className="object-contain w-[15px] flex"
-              />
-            </button>
-            <button
-              disabled={!result}
-              className="px-2 text-xs lg:text-sm lg:font-medium h-8 rounded-2xl flex items-center justify-center
-                bg-off-white dark:bg-dark-bg
-                border border-cocoa/15 dark:border-dark-white/15
-                text-cocoa dark:text-dark-white
-                hover:bg-suface dark:hover:bg-black-surface
-                disabled:opacity-50 transition-colors"
-            >
-              Log meal
-            </button>
-          </div>
-        </div>
+        {/* "Spin" label at top */}
+        <p
+          className="text-xs lg:text-sm font-semibold uppercase tracking-wide
+        text-cocoa/50 dark:text-dark-white/40"
+        >
+          Spin
+        </p>
 
-        {/* Right: Noura + nutrition bars + spin button */}
-        <div className="flex-1 flex flex-col gap-4 min-w-[270px]">
-          {/* Noura suggestion box */}
-          {isSpinning ? (
-            <div className="h-28 rounded-2xl bg-cocoa/10 dark:bg-dark-white/10 animate-pulse" />
-          ) : (
-            <div
-              className="rounded-xl lg:rounded-2xl p-2 lg:p-4
-              bg-[rgba(47,93,75,0.14)] dark:bg-[#4d4d4d]"
-            >
-              <p className="font-heading md:text-xs lg:text-sm font-semibold text-cocoa dark:text-dark-white mb-2">
-                Noura
-              </p>
-              <div className="flex gap-2">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="#E8623C"
-                  className="shrink-0 mt-0.5"
-                >
-                  <path d="M12 2L13.5 10.5L22 12L13.5 13.5L12 22L10.5 13.5L2 12L10.5 10.5L12 2Z" />
-                </svg>
-                <p className="text-xs lg:text-sm italic text-cocoa dark:text-dark-white leading-relaxed">
-                  {result?.reasoning ??
-                    "Spin, and I will tell you why each meal was picked"}
-                </p>
-              </div>
+        {/* Main spin area: frame left + details right */}
+        <div className="mt-3 flex flex-col md:flex-row gap-6">
+          {/* Left: frame + actions */}
+          <div className="flex flex-col items-start gap-4 ">
+            <SpinFrame
+              isSpinning={isSpinning}
+              result={result?.food ?? null}
+              cycleImages={cycleImages}
+            />
+
+            {/* Action buttons */}
+            <div className="flex items-center justify-between w-full max-w-[300px] ">
+              <button
+                onClick={() => thumbsUp.mutate()}
+                disabled={!result || thumbsUp.isPending}
+                aria-label="Like this meal"
+                className="w-16 h-8 rounded-2xl flex items-center justify-center
+                bg-off-white dark:bg-dark-bg
+                border border-cocoa/15 dark:border-dark-white/15
+                text-cocoa dark:text-dark-white
+                hover:bg-suface dark:hover:bg-black-surface
+                disabled:opacity-50 transition-colors"
+              >
+                <ThumbsUp size={16} />
+              </button>
+              <button
+                onClick={() => flagMeal.mutate()}
+                disabled={!result || flagMeal.isPending}
+                aria-label="Flag this meal"
+                className="w-16 h-8 rounded-2xl flex items-center justify-center
+                bg-off-white dark:bg-dark-bg
+                border border-cocoa/15 dark:border-dark-white/15
+                text-cocoa dark:text-dark-white
+                hover:bg-suface dark:hover:bg-black-surface
+                disabled:opacity-50 transition-colors"
+              >
+                <img
+                  src="./images/redFlag.svg"
+                  alt="fire"
+                  className="object-contain w-[15px] flex"
+                />
+              </button>
+              <button
+                disabled={!result}
+                className="px-2 text-xs lg:text-sm lg:font-medium h-8 rounded-2xl flex items-center justify-center
+                bg-off-white dark:bg-dark-bg
+                border border-cocoa/15 dark:border-dark-white/15
+                text-cocoa dark:text-dark-white
+                hover:bg-suface dark:hover:bg-black-surface
+                disabled:opacity-50 transition-colors"
+              >
+                Log meal
+              </button>
             </div>
-          )}
-          {/* Nutrition bars */}
-          <div className="space-y-2 lg:space-y-3 mt-1">
-            {NUTRITION_BARS.map((bar) => {
-              const value = result?.food
-                ? ((result.food as unknown as Record<string, number>)[
-                    bar.key
-                  ] ?? 0)
-                : 0;
-              const pct =
-                maxNutrition > 0
-                  ? Math.min(100, (value / maxNutrition) * 100)
-                  : 0;
+          </div>
 
-              return (
-                <div key={bar.key}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full shrink-0"
-                        style={{ backgroundColor: bar.color }}
-                      />
-                      {/* Label never skeletons, only the bar and value do */}
-                      <span className="text-xs lg:text-sm text-cocoa dark:text-dark-white">
-                        {bar.label}
-                      </span>
-                    </div>
-                    {/* Value skeletons while spinning */}
-                    {isSpinning ? (
-                      <span
-                        className="inline-block w-8 h-3.5 rounded
+          {/* Right: Noura + nutrition bars + spin button */}
+          <div className="flex-1 flex flex-col gap-4 min-w-[270px]">
+            {/* Noura suggestion box */}
+            {isSpinning ? (
+              <div className="h-28 rounded-2xl bg-cocoa/10 dark:bg-dark-white/10 animate-pulse" />
+            ) : (
+              <div
+                className="rounded-xl lg:rounded-2xl p-2 lg:p-4
+              bg-[rgba(47,93,75,0.14)] dark:bg-[#4d4d4d]"
+              >
+                <p className="font-heading md:text-xs lg:text-sm font-semibold text-cocoa dark:text-dark-white mb-2">
+                  Noura
+                </p>
+                <div className="flex gap-2">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="#E8623C"
+                    className="shrink-0 mt-0.5"
+                  >
+                    <path d="M12 2L13.5 10.5L22 12L13.5 13.5L12 22L10.5 13.5L2 12L10.5 10.5L12 2Z" />
+                  </svg>
+                  <p className="text-xs lg:text-sm italic text-cocoa dark:text-dark-white leading-relaxed">
+                    {result?.reasoning ??
+                      "Spin, and I will tell you why each meal was picked"}
+                  </p>
+                </div>
+              </div>
+            )}
+            {/* Nutrition bars */}
+            <div className="space-y-2 lg:space-y-3 mt-1">
+              {NUTRITION_BARS.map((bar) => {
+                const value = result?.food
+                  ? ((result.food as unknown as Record<string, number>)[
+                      bar.key
+                    ] ?? 0)
+                  : 0;
+                const pct =
+                  maxNutrition > 0
+                    ? Math.min(100, (value / maxNutrition) * 100)
+                    : 0;
+
+                return (
+                  <div key={bar.key}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: bar.color }}
+                        />
+                        {/* Label never skeletons, only the bar and value do */}
+                        <span className="text-xs lg:text-sm text-cocoa dark:text-dark-white">
+                          {bar.label}
+                        </span>
+                      </div>
+                      {/* Value skeletons while spinning */}
+                      {isSpinning ? (
+                        <span
+                          className="inline-block w-8 h-3.5 rounded
                       bg-cocoa/10 dark:bg-dark-white/10 animate-pulse"
+                        />
+                      ) : (
+                        <span className="text-xs lg:text-sm font-medium text-cocoa dark:text-dark-white">
+                          {value}g
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Bar skeletons while spinning, animates in on land */}
+                    {isSpinning ? (
+                      <div
+                        className="h-1.5 rounded-full
+            bg-cocoa/10 dark:bg-dark-white/10 animate-pulse"
                       />
                     ) : (
-                      <span className="text-xs lg:text-sm font-medium text-cocoa dark:text-dark-white">
-                        {value}g
-                      </span>
+                      <div className="h-1.5 rounded-full bg-cocoa/10 dark:bg-dark-white/10">
+                        <div
+                          className="h-full rounded-full transition-all duration-700"
+                          style={{
+                            width: result ? `${pct}%` : "0%",
+                            backgroundColor: bar.color,
+                          }}
+                        />
+                      </div>
                     )}
                   </div>
-
-                  {/* Bar skeletons while spinning, animates in on land */}
-                  {isSpinning ? (
-                    <div
-                      className="h-1.5 rounded-full
-            bg-cocoa/10 dark:bg-dark-white/10 animate-pulse"
-                    />
-                  ) : (
-                    <div className="h-1.5 rounded-full bg-cocoa/10 dark:bg-dark-white/10">
-                      <div
-                        className="h-full rounded-full transition-all duration-700"
-                        style={{
-                          width: result ? `${pct}%` : "0%",
-                          backgroundColor: bar.color,
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
-      {/* Food name + description */}
-      {isSpinning ? (
-        /* Skeleton during spin */
-        <div className="space-y-2 max-w-[800px] mt-5">
-          <div className="h-6 w-36 rounded-lg bg-cocoa/10 dark:bg-dark-white/10 animate-pulse" />
-          <div className="h-4 w-full rounded-lg bg-cocoa/10 dark:bg-dark-white/10 animate-pulse" />
-          <div className="h-4 w-3/4 rounded-lg bg-cocoa/10 dark:bg-dark-white/10 animate-pulse" />
-        </div>
-      ) : (
-        <div className="max-w-[800px] mt-5 outline outline-1 outline-purple-500">
-          <h2 className=" w-full font-heading font-bold text-lg lg:text-xl text-cocoa dark:text-dark-white mb-1">
-            {result?.food.name ?? "Spin to get a suggestion"}
-          </h2>
-          <p className="w-full text-sm lg:text-base text-cocoa dark:text-surface/70 leading-relaxed">
-            {result?.food.description ?? ""}
-          </p>
-        </div>
-      )}
-      {/* Spin button */}
-      <div className="max-w-[200px] lg:max-w-[300px]">
-        <button
-          onClick={() => spinMutation.mutate()}
-          disabled={isSpinning}
-          className="w-full py-3 lg:py-4 rounded-xl text-sm font-bold
+        {/* Food name + description */}
+        {isSpinning ? (
+          /* Skeleton during spin */
+          <div className="space-y-2 max-w-[800px] mt-5">
+            <div className="h-6 w-36 rounded-lg bg-cocoa/10 dark:bg-dark-white/10 animate-pulse" />
+            <div className="h-4 w-full rounded-lg bg-cocoa/10 dark:bg-dark-white/10 animate-pulse" />
+            <div className="h-4 w-3/4 rounded-lg bg-cocoa/10 dark:bg-dark-white/10 animate-pulse" />
+          </div>
+        ) : (
+          <div className="max-w-[800px] mt-5">
+            <h2 className=" w-full font-heading font-bold text-lg lg:text-xl text-cocoa dark:text-dark-white mb-1">
+              {result?.food.name ?? "Spin to get a suggestion"}
+            </h2>
+            <p className="w-full text-sm lg:text-base text-cocoa dark:text-surface/70 leading-relaxed">
+              {result?.food.description ?? ""}
+            </p>
+          </div>
+        )}
+        {/* Spin button */}
+        <div className="max-w-[200px] lg:max-w-[300px]">
+          <button
+            onClick={() => spinMutation.mutate()}
+            disabled={isSpinning}
+            className="w-full py-3 lg:py-4 rounded-xl text-sm font-bold
               bg-pawpaw dark:bg-black-pawpaw text-surface
               hover:opacity-90 transition-opacity
               disabled:opacity-60 mt-5"
-        >
-          {isSpinning ? "Spinning..." : "Spin"}
-        </button>
-      </div>
+          >
+            {isSpinning ? "Spinning..." : "Spin"}
+          </button>
+        </div>
 
-      {/* Filters */}
-      <SpinFilter
-        filters={filters}
-        selectedMealType={selectedMealType}
-        onMealTypeChange={setSelectedMealType}
-        selectedTags={selectedTags}
-        onTagsChange={setSelectedTags}
-        userAllergies={[]} /* TRACK: pull from user profile health.allergies */
-      />
-    </div>
+        {/* Filters */}
+        <SpinFilter
+          filters={filters}
+          selectedMealType={selectedMealType}
+          onMealTypeChange={setSelectedMealType}
+          selectedTags={selectedTags}
+          onTagsChange={setSelectedTags}
+          userAllergies={[]} /* TRACK: pull from user profile health.allergies */
+        />
+      </div>
+    </AppLayout>
   );
 };

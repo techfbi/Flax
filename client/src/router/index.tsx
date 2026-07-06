@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import type { ApiResponse, AuthUser, FullProfile } from "@/types/apiTypes";
+import { SpinTab } from "@/features/home/SpinTab";
 
 /* Lazy pages */
 const LandingPage = lazy(() => import("@/features/landing/LandingPage"));
@@ -247,10 +248,10 @@ const AppRouter = () => {
               }
             />
             <Route
-              path="/spin-history"
+              path="/spin"
               element={
                 <ProtectedRoute>
-                  <PlaceholderPage />
+                  <SpinTab />
                 </ProtectedRoute>
               }
             />
