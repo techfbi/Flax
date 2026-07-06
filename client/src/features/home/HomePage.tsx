@@ -115,7 +115,7 @@ const HomePage = () => {
         {/* CENTERING WRAPPER */}
         <div
           className="flex-1 flex flex-col min-h-0 w-full
-          max-w-[1600px] mx-auto overflow-hidden"
+          max-w-[1700px] mx-auto overflow-hidden"
         >
           {/* Desktop top header */}
           <div className="hidden md:flex items-start justify-between px-8 pt-2 lg:pt-8 pb-5 shrink-0">
@@ -193,7 +193,7 @@ const HomePage = () => {
           <div className=" flex gap-5 px-4 md:px-5 pb-4  overflow-x-hidden w-full lg:min-h-0 lg:flex-1">
             {/* Left: tabs + content */}
 
-            <div className="flex-1 flex flex-col min-w-0 lg:min-h-0 ">
+            <div className="flex-1 flex flex-col min-w-0 lg:min-w-[500px] lg:min-h-0 ">
               {/* Mobile top nav — sticky */}
               <div className="md:hidden">
                 <MobileTopNav />
@@ -261,7 +261,7 @@ const HomePage = () => {
                         ${
                           activeTab === tab.key
                             ? "text-cocoa dark:text-dark-white font-bold"
-                            : "text-cocoa/90 dark:text-dark-white/60 hover:text-cocoa dark:hover:text-dark-white font-medium md:font-normal"
+                            : "text-cocoa/90 lg:text-cocoa dark:text-dark-white/60 hover:text-cocoa dark:hover:text-dark-white font-medium md:font-normal"
                         }
                     `}
                   >

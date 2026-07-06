@@ -168,7 +168,7 @@ export const StreakPanel = ({
 
         <div>
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs md:font-medium lg:font-semibold text-cocoa dark:text-dark-white">
+            <span className="text-xs lg:text-base md:font-medium lg:font-semibold text-cocoa dark:text-dark-white">
               Hydration level
             </span>
             <span className="text-xs font-semibold text-cocoa dark:text-dark-white">

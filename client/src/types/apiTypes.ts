@@ -117,6 +117,7 @@ export interface SpinResult {
   food: Food
   reasoning: string
   pantry_match: boolean
+  recencyRelaxed: boolean
 }
 
 /*

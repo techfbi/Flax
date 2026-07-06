@@ -24,7 +24,7 @@ interface SpinFrameProps {
   Duration: cycling ~3 seconds total, decelerating over the last ~1 second.
 */
 
-const FRAME_SIZE = 340;
+const FRAME_SIZE = 300;
 const SPIN_DURATION_MS = 3000;
 const CYCLE_START_INTERVAL = 80;
 const CYCLE_END_INTERVAL = 500;
@@ -34,7 +34,9 @@ export const SpinFrame = ({
   result,
   cycleImages,
 }: SpinFrameProps) => {
-  const [displayImage, setDisplayImage] = useState<string | null>(null);
+  const [displayImage, setDisplayImage] = useState<string | null>(
+    "./images/randomImage.png",
+  );
   const [blur, setBlur] = useState(0);
   const [landed, setLanded] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -42,21 +44,24 @@ export const SpinFrame = ({
   const spinSoundRef = useRef<HTMLAudioElement | null>(null);
   const landSoundRef = useRef<HTMLAudioElement | null>(null);
 
-  /* Preload sounds */
+  //Added this ref to track previous spinning state
+  const wasSpinningRef = useRef(isSpinning);
+
+  // Create audio objects for the spin and landing sounds.
   useEffect(() => {
-    spinSoundRef.current = new Audio("/sounds/spinStart.mp3");
-    landSoundRef.current = new Audio("/sounds/spinLand.mp3");
+    spinSoundRef.current = new Audio("/sounds/spinning.mp3");
+    landSoundRef.current = new Audio("/sounds/matchFound.mp3");
     spinSoundRef.current.loop = true;
   }, []);
 
+  /* Preload sounds. */
   useEffect(() => {
     if (isSpinning && cycleImages.length > 0) {
       setLanded(false);
       frameRef.current = 0;
 
-      /* Play spin sound */
       spinSoundRef.current?.play().catch(() => {
-        /* autoplay may be blocked */
+        // Autoplay may be blocked by the browser.
       });
 
       const startTime = Date.now();
@@ -66,12 +71,12 @@ export const SpinFrame = ({
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / SPIN_DURATION_MS, 1);
 
-        /* Decelerate: interval grows from 80ms to 500ms */
+        // Gradually increase the interval to simulate deceleration.
         currentInterval =
           CYCLE_START_INTERVAL +
           (CYCLE_END_INTERVAL - CYCLE_START_INTERVAL) * progress;
 
-        /* Blur: max at start, clears as we slow */
+        // Blur is strongest at the start and fades as the spin slows.
         const blurPx = Math.round((1 - progress) * 6);
         setBlur(blurPx);
 
@@ -86,21 +91,30 @@ export const SpinFrame = ({
       intervalRef.current = setTimeout(cycle, currentInterval);
     }
 
+    // Determine whether the spin has just ended. This is true when the previous
+    // state was spinning and the current state is not.
+    const justEnded = wasSpinningRef.current === true && isSpinning === false;
+
     if (!isSpinning) {
       if (intervalRef.current) clearTimeout(intervalRef.current);
       setBlur(0);
 
-      if (result) {
+      // Only play the landing sound and trigger the landing animation if the
+      // spin has genuinely finished and a result is available.
+      if (result && justEnded) {
         setDisplayImage(result.image_url);
         setLanded(true);
         spinSoundRef.current?.pause();
         if (spinSoundRef.current) spinSoundRef.current.currentTime = 0;
         landSoundRef.current?.play().catch(() => {});
 
-        /* Clear landing animation after it plays */
+        // Clear the landing animation state after it completes.
         setTimeout(() => setLanded(false), 800);
       }
     }
+
+    // Update the ref to the current spinning state for the next render.
+    wasSpinningRef.current = isSpinning;
 
     return () => {
       if (intervalRef.current) clearTimeout(intervalRef.current);
@@ -109,11 +123,8 @@ export const SpinFrame = ({
 
   return (
     <div
-      className="relative rounded-2xl overflow-hidden shrink-0"
+      className="relative rounded-2xl overflow-hidden w-full max-w-[300px] aspect-square shrink-0"
       style={{
-        width: FRAME_SIZE,
-        height: FRAME_SIZE,
-        maxWidth: "100%",
         border: "3px solid #7FB096",
         transition: landed
           ? "transform 0.3s ease, box-shadow 0.3s ease"

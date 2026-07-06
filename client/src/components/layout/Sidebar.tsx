@@ -171,7 +171,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
             >
               <item.icon size={18} className="shrink-0" />
               {!collapsed && (
-                <span className="text-sm font-medium flex items-center gap-1.5">
+                <span className="text-sm font-heading font-medium flex items-center gap-1.5">
                   {item.label}
                   {item.dot && (
                     <svg
@@ -190,7 +190,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         </nav>
 
         {/* Bottom section */}
-        <div className="flex flex-col gap-0.5 px-2 pb-4 lg:mt-5 lg:gap-4">
+        <div className="flex flex-col gap-0.5 px-2 pb-4 lg:mb-5 lg:gap-4">
           {/* Logout */}
           <button
             onClick={() => setShowLogout(true)}
@@ -200,15 +200,17 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
               transition-colors duration-150 w-full text-left`}
           >
             <LogOut size={18} className="shrink-0" />
-            {!collapsed && <span className="text-sm font-medium">Log out</span>}
+            {!collapsed && (
+              <span className="text-sm font-heading font-medium">Log out</span>
+            )}
           </button>
 
           {/* Avatar + firstname */}
-          <div className="flex items-center gap-3 px-3 py-2.5">
+          <div className="flex items-center gap-3 px-3 py-2.5 cursor-pointer">
             <UserAvatar avatarUrl={avatarUrl} name={firstName} />
 
             {!collapsed && (
-              <span className="text-sm font-medium text-cocoa dark:text-dark-white truncate">
+              <span className="text-sm font-heading font-medium text-cocoa dark:text-dark-white truncate">
                 {firstName}
               </span>
             )}
@@ -225,7 +227,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
           >
             <Settings size={18} className="shrink-0" />
             {!collapsed && (
-              <span className="text-sm font-medium">Settings</span>
+              <span className="text-sm font-heading font-medium">Settings</span>
             )}
           </NavLink>
         </div>

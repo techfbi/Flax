@@ -160,7 +160,7 @@ export const CalorieProgressBar = ({
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-xs md:font-medium lg:font-semibold text-cocoa dark:text-dark-white">
+        <span className="text-xs lg:text-base md:font-medium lg:font-semibold text-cocoa dark:text-dark-white">
           Calorie progress
         </span>
         <span className="text-xs font-bold text-cocoa dark:text-dark-white">

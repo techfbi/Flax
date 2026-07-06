@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ThumbsUp, Flag } from "lucide-react";
+import { ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 import { SpinFrame } from "./SpinFrame";
 import { SpinFilter } from "./SpinFilters";
@@ -102,6 +102,11 @@ export const SpinTab = () => {
       setTimeout(() => {
         setIsSpinning(false);
         setResult(data);
+        if (data.recencyRelaxed === true) {
+          toast.message(
+            "All current filter matches seen. Showing previous meals",
+          );
+        }
         queryClient.invalidateQueries({ queryKey: ["spin-history"] });
       }, 3000);
     },
@@ -155,7 +160,7 @@ export const SpinTab = () => {
     : 100;
 
   return (
-    <div className="p-5 overflow-y-auto">
+    <div className="p-5 overflow-y-auto outline outline-1 outline-rose-500">
       {/* Tips popup */}
       {showTips && (
         <SpinTipsPopup
@@ -171,12 +176,17 @@ export const SpinTab = () => {
       )}
 
       {/* "Spin" label at top */}
-      <p className="text-sm font-semibold text-cocoa-faded mb-4">Spin</p>
+      <p
+        className="text-xs lg:text-sm font-semibold uppercase tracking-wide
+        text-cocoa/50 dark:text-dark-white/40"
+      >
+        Spin
+      </p>
 
       {/* Main spin area: frame left + details right */}
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Left: frame + actions + food name + description */}
-        <div className="flex flex-col items-start gap-4">
+      <div className="mt-3 flex flex-col md:flex-row gap-6 outline outline-1 outline-green-500">
+        {/* Left: frame + actions */}
+        <div className="flex flex-col items-start gap-4 outline outline-1 outline-yellow-500">
           <SpinFrame
             isSpinning={isSpinning}
             result={result?.food ?? null}
@@ -184,7 +194,7 @@ export const SpinTab = () => {
           />
 
           {/* Action buttons */}
-          <div className="flex items-center justify-between w-full">
+          <div className="flex items-center justify-between w-full max-w-[300px] outline outline-1 outline-blue-500">
             <button
               onClick={() => thumbsUp.mutate()}
               disabled={!result || thumbsUp.isPending}
@@ -209,51 +219,37 @@ export const SpinTab = () => {
                 hover:bg-suface dark:hover:bg-black-surface
                 disabled:opacity-50 transition-colors"
             >
-              <Flag size={16} />
+              <img
+                src="./images/redFlag.svg"
+                alt="fire"
+                className="object-contain w-[15px] flex"
+              />
             </button>
             <button
               disabled={!result}
-              className="px-4 py-2 rounded-full text-sm font-medium
-                border border-cocoa/20 dark:border-dark-white/20
+              className="px-2 text-xs lg:text-sm lg:font-medium h-8 rounded-2xl flex items-center justify-center
+                bg-off-white dark:bg-dark-bg
+                border border-cocoa/15 dark:border-dark-white/15
                 text-cocoa dark:text-dark-white
-                hover:bg-cocoa/5 dark:hover:bg-dark-white/5
-                disabled:opacity-40 transition-colors"
+                hover:bg-suface dark:hover:bg-black-surface
+                disabled:opacity-50 transition-colors"
             >
               Log meal
             </button>
           </div>
-
-          {/* Food name + description */}
-          {isSpinning ? (
-            /* Skeleton during spin */
-            <div className="space-y-2 w-full">
-              <div className="h-6 w-36 rounded-lg bg-cocoa/10 dark:bg-dark-white/10 animate-pulse" />
-              <div className="h-4 w-full rounded-lg bg-cocoa/10 dark:bg-dark-white/10 animate-pulse" />
-              <div className="h-4 w-3/4 rounded-lg bg-cocoa/10 dark:bg-dark-white/10 animate-pulse" />
-            </div>
-          ) : (
-            <div>
-              <h2 className="font-heading font-bold text-xl text-cocoa dark:text-dark-white mb-1">
-                {result?.food.name ?? "Spin to get a suggestion"}
-              </h2>
-              <p className="text-sm text-cocoa-faded leading-relaxed max-w-xs">
-                {result?.food.description ?? ""}
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Right: Noura + nutrition bars + spin button */}
-        <div className="flex-1 flex flex-col gap-4">
+        <div className="flex-1 flex flex-col gap-4 min-w-[270px]">
           {/* Noura suggestion box */}
           {isSpinning ? (
             <div className="h-28 rounded-2xl bg-cocoa/10 dark:bg-dark-white/10 animate-pulse" />
           ) : (
             <div
-              className="rounded-2xl p-4
+              className="rounded-xl lg:rounded-2xl p-2 lg:p-4
               bg-[rgba(47,93,75,0.14)] dark:bg-[#4d4d4d]"
             >
-              <p className="text-xs font-semibold text-cocoa dark:text-dark-white mb-2">
+              <p className="font-heading md:text-xs lg:text-sm font-semibold text-cocoa dark:text-dark-white mb-2">
                 Noura
               </p>
               <div className="flex gap-2">
@@ -266,7 +262,7 @@ export const SpinTab = () => {
                 >
                   <path d="M12 2L13.5 10.5L22 12L13.5 13.5L12 22L10.5 13.5L2 12L10.5 10.5L12 2Z" />
                 </svg>
-                <p className="text-sm italic text-cocoa dark:text-dark-white leading-relaxed">
+                <p className="text-xs lg:text-sm italic text-cocoa dark:text-dark-white leading-relaxed">
                   {result?.reasoning ??
                     "Spin, and I will tell you why each meal was picked"}
                 </p>
@@ -274,7 +270,7 @@ export const SpinTab = () => {
             </div>
           )}
           {/* Nutrition bars */}
-          <div className="space-y-3">
+          <div className="space-y-2 lg:space-y-3 mt-1">
             {NUTRITION_BARS.map((bar) => {
               const value = result?.food
                 ? ((result.food as unknown as Record<string, number>)[
@@ -294,8 +290,8 @@ export const SpinTab = () => {
                         className="w-2.5 h-2.5 rounded-full shrink-0"
                         style={{ backgroundColor: bar.color }}
                       />
-                      {/* Label never skeletons — only the bar and value do */}
-                      <span className="text-sm text-cocoa dark:text-dark-white">
+                      {/* Label never skeletons, only the bar and value do */}
+                      <span className="text-xs lg:text-sm text-cocoa dark:text-dark-white">
                         {bar.label}
                       </span>
                     </div>
@@ -303,10 +299,10 @@ export const SpinTab = () => {
                     {isSpinning ? (
                       <span
                         className="inline-block w-8 h-3.5 rounded
-              bg-cocoa/10 dark:bg-dark-white/10 animate-pulse"
+                      bg-cocoa/10 dark:bg-dark-white/10 animate-pulse"
                       />
                     ) : (
-                      <span className="text-sm font-semibold text-cocoa dark:text-dark-white">
+                      <span className="text-xs lg:text-sm font-medium text-cocoa dark:text-dark-white">
                         {value}g
                       </span>
                     )}
@@ -321,7 +317,7 @@ export const SpinTab = () => {
                   ) : (
                     <div className="h-1.5 rounded-full bg-cocoa/10 dark:bg-dark-white/10">
                       <div
-                        className="h-full rounded-full transition-all duration-700 ease-out"
+                        className="h-full rounded-full transition-all duration-700"
                         style={{
                           width: result ? `${pct}%` : "0%",
                           backgroundColor: bar.color,
@@ -333,18 +329,38 @@ export const SpinTab = () => {
               );
             })}
           </div>
-          {/* Spin button */}
-          <button
-            onClick={() => spinMutation.mutate()}
-            disabled={isSpinning}
-            className="w-full py-4 rounded-xl text-sm font-bold
+        </div>
+      </div>
+      {/* Food name + description */}
+      {isSpinning ? (
+        /* Skeleton during spin */
+        <div className="space-y-2 max-w-[800px] mt-5">
+          <div className="h-6 w-36 rounded-lg bg-cocoa/10 dark:bg-dark-white/10 animate-pulse" />
+          <div className="h-4 w-full rounded-lg bg-cocoa/10 dark:bg-dark-white/10 animate-pulse" />
+          <div className="h-4 w-3/4 rounded-lg bg-cocoa/10 dark:bg-dark-white/10 animate-pulse" />
+        </div>
+      ) : (
+        <div className="max-w-[800px] mt-5 outline outline-1 outline-purple-500">
+          <h2 className=" w-full font-heading font-bold text-lg lg:text-xl text-cocoa dark:text-dark-white mb-1">
+            {result?.food.name ?? "Spin to get a suggestion"}
+          </h2>
+          <p className="w-full text-sm lg:text-base text-cocoa dark:text-surface/70 leading-relaxed">
+            {result?.food.description ?? ""}
+          </p>
+        </div>
+      )}
+      {/* Spin button */}
+      <div className="max-w-[200px] lg:max-w-[300px]">
+        <button
+          onClick={() => spinMutation.mutate()}
+          disabled={isSpinning}
+          className="w-full py-3 lg:py-4 rounded-xl text-sm font-bold
               bg-pawpaw dark:bg-black-pawpaw text-surface
               hover:opacity-90 transition-opacity
-              disabled:opacity-60 mt-auto"
-          >
-            {isSpinning ? "Spinning..." : "Spin"}
-          </button>
-        </div>
+              disabled:opacity-60 mt-5"
+        >
+          {isSpinning ? "Spinning..." : "Spin"}
+        </button>
       </div>
 
       {/* Filters */}

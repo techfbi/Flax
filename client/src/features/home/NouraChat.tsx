@@ -267,7 +267,7 @@ export const NouraChat = () => {
           </svg>
         </div>
         <div>
-          <p className="font-semibold font-heading text-sm text-cocoa dark:text-dark-white">
+          <p className="font-semibold font-heading text-xs lg:text-base text-cocoa dark:text-dark-white">
             Noura
           </p>
           <p className="text-xs text-cocoa-faded">Your nutrition assistant</p>

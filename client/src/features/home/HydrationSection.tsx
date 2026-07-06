@@ -94,7 +94,7 @@ export const HydrationSection = ({
 
   return (
     <div>
-      <h2 className="font-heading text-[16px] md:text-[1rem] lg:text-xl font-bold text-cocoa dark:text-dark-white mt-7 mb-1 md:mb-2 md:mt-[60px] lg:mt-10">
+      <h2 className="font-heading text-base md:text-[1rem] lg:text-xl font-bold text-cocoa dark:text-dark-white mt-7 mb-1 md:mb-2 md:mt-[60px] lg:mt-10">
         Hydration
       </h2>
       <div className="flex flex-row shrink-0">
@@ -161,7 +161,7 @@ export const HydrationSection = ({
             className="flex-1 rounded-2xl p-4 min-w-[210px]  
           bg-off-white dark:bg-dark-bg"
           >
-            <p className="font-heading text-sm font-bold text-cocoa dark:text-dark-white mb-3">
+            <p className="font-heading text-sm lg:text-base font-bold text-cocoa dark:text-dark-white mb-3">
               Log water intake
             </p>
             <div className=" md:flex-none mb-3">
@@ -181,7 +181,7 @@ export const HydrationSection = ({
             </div>
 
             {/* Quick add */}
-            <p className="text-[14px] md:text-xs font-semibold text-cocoa dark:text-dark-white mb-2">
+            <p className="text-[14px] md:text-xs lg:text-sm font-semibold text-cocoa dark:text-dark-white lg:mt-7 mb-2">
               Quick add
             </p>
             <div className="flex flex-wrap gap-2 mb-4">
