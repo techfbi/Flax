@@ -35,6 +35,7 @@ export const NouraFullChat = () => {
     isSending,
     clearChat,
     isClearing,
+    retryMessage,
   } = useNouraChat();
 
   useEffect(() => {
@@ -118,18 +119,32 @@ export const NouraFullChat = () => {
         {localMessages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+            className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
           >
             <div
               className={`rounded-2xl px-4 py-3 max-w-[75%] text-sm leading-relaxed
-              ${
-                msg.role === "user"
-                  ? "rounded-tr-sm bg-off-white dark:bg-dark-bg text-cocoa dark:text-dark-white"
-                  : "rounded-tl-sm bg-[rgba(47,93,75,0.14)] dark:bg-[#4d4d4d] text-cocoa dark:text-dark-white"
-              }`}
+      ${
+        msg.role === "user"
+          ? "rounded-tr-sm bg-off-white dark:bg-dark-bg text-cocoa dark:text-dark-white"
+          : "rounded-tl-sm bg-[rgba(47,93,75,0.14)] dark:bg-[#4d4d4d] text-cocoa dark:text-dark-white"
+      }
+      ${msg.status === "failed" ? "opacity-60" : ""}`}
             >
               {msg.content}
             </div>
+            {msg.status === "failed" && (
+              <div className="flex items-center gap-2 mt-1 mr-1">
+                <span className="text-xs text-rose-500">
+                  Message not sent, please try again
+                </span>
+                <button
+                  onClick={() => retryMessage(msg.id)}
+                  className="text-xs font-semibold text-moringa dark:text-moringa-faded hover:opacity-70"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
           </div>
         ))}
 

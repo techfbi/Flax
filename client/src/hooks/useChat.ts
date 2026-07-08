@@ -17,9 +17,11 @@ import type {
 */
 
 export interface LocalMessage {
-  role: "user" | "assistant" | "streaming";
+  role: "user" | "assistant";
   content: string;
   id: string;
+  /** Only meaningful for role "user". Undefined means already confirmed sent. */
+  status?: "sending" | "failed";
 }
 
 export const useNouraChat = () => {
@@ -82,22 +84,31 @@ export const useNouraChat = () => {
   }, [streamingText]);
 
   const sendMutation = useMutation({
-    mutationFn: async (msg: string) => {
-      const { data } = await api.post<ApiResponse<ChatReplyData>>("/api/chat", {
-        message: msg,
-      });
-      return data.data.reply;
-    },
-    onSuccess: (reply) => {
-      setIsThinking(false);
-      setStreamingText(reply);
-    },
-    onError: () => {
-      setIsThinking(false);
-      setLocalMessages((prev) => prev.slice(0, -1));
-      toast.error("Could not send message. Try again.");
-    },
-  });
+  mutationFn: async ({ id, text }: { id: string; text: string }) => {
+    const { data } = await api.post<ApiResponse<ChatReplyData>>("/api/chat", {
+      message: text,
+    });
+    return { id, reply: data.data.reply };
+  },
+  onSuccess: ({ id, reply }) => {
+    setIsThinking(false);
+    setLocalMessages((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, status: undefined } : m)),
+    );
+    setStreamingText(reply);
+  },
+  onError: (_err, variables) => {
+    setIsThinking(false);
+    // The message stays in the list, it just gets marked failed instead
+    // of being deleted, so a lost connection never erases what the
+    // user typed.
+    setLocalMessages((prev) =>
+      prev.map((m) =>
+        m.id === variables.id ? { ...m, status: "failed" } : m,
+      ),
+    );
+  },
+});
 
 const clearMutation = useMutation({
   mutationFn: async () => {
@@ -119,15 +130,25 @@ const clearMutation = useMutation({
 
     setMessage("");
 
-    const userMsg: LocalMessage = {
-      role: "user",
-      content: trimmed,
-      id: `user-${Date.now()}`,
-    };
-    setLocalMessages((prev) => [...prev, userMsg]);
+    const id = `user-${Date.now()}`;
+    setLocalMessages((prev) => [
+        ...prev,
+        { role: "user", content: trimmed, id, status: "sending" },
+    ]);
     setIsThinking(true);
-    sendMutation.mutate(trimmed);
-  };
+    sendMutation.mutate({ id, text: trimmed });
+   };
+
+   const retryMessage = (id: string) => {
+    const target = localMessages.find((m) => m.id === id);
+    if (!target || target.status !== "failed") return;
+
+    setLocalMessages((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, status: "sending" } : m)),
+    );
+    setIsThinking(true);
+    sendMutation.mutate({ id, text: target.content });
+    };
 
   const handleStreamDone = () => {
     if (streamingText === null) return;
@@ -168,5 +189,6 @@ return {
   isSending: isThinking || streamingText !== null,
   clearChat: () => clearMutation.mutate(),
   isClearing: clearMutation.isPending,
+  retryMessage,
 };
 };
