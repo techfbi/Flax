@@ -38,8 +38,7 @@ const NouraIdentity = () => (
         Noura
       </p>
       <p className="text-[11px] lg:text-xs text-cocoa-faded leading-snug truncate max-w-[220px] lg:max-w-[280px] lg:whitespace-normal">
-        Your nutrition assistant. Ask about meals, ingredients, or what fits
-        your goal today.
+        Your nutrition assistant.
       </p>
     </div>
   </div>

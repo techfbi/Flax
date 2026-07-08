@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { Send, Trash2 } from "lucide-react";
 import { useNouraChat } from "@/hooks/useChat";
+import { useAuthStore } from "@/store/authStore";
 
 /*
   Full screen Noura chat body. No background behind the messages, they
@@ -18,6 +19,9 @@ export const NouraFullChat = () => {
   const [displayed, setDisplayed] = useState("");
   const indexRef = useRef(0);
   const [confirmingClear, setConfirmingClear] = useState(false);
+  const { user } = useAuthStore();
+
+  const firstName = user?.display_name?.split(" ")[0] ?? "there";
 
   const {
     message,
@@ -67,33 +71,14 @@ export const NouraFullChat = () => {
     <div className="flex flex-col h-full min-h-0 w-full max-w-[720px] mx-auto relative">
       {localMessages.length > 0 && (
         <div className="flex justify-end px-4 pt-2 shrink-0">
-          {confirmingClear ? (
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-cocoa-faded">Clear entire chat?</span>
-              <button
-                onClick={handleConfirmClear}
-                disabled={isClearing}
-                className="font-semibold text-rose-500 hover:opacity-70"
-              >
-                Yes, clear
-              </button>
-              <button
-                onClick={() => setConfirmingClear(false)}
-                className="text-cocoa-faded hover:text-cocoa dark:hover:text-dark-white"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setConfirmingClear(true)}
-              aria-label="Clear chat"
-              className="flex items-center gap-1.5 text-xs text-cocoa-faded
+          <button
+            onClick={() => setConfirmingClear(true)}
+            aria-label="Clear chat"
+            className="flex items-center gap-1.5 text-xs text-cocoa-faded
                 hover:text-rose-500 transition-colors"
-            >
-              <Trash2 size={13} /> Clear chat
-            </button>
-          )}
+          >
+            <Trash2 size={13} /> Clear chat
+          </button>
         </div>
       )}
 
@@ -106,11 +91,11 @@ export const NouraFullChat = () => {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <p className="font-heading font-bold text-2xl lg:text-3xl text-cocoa dark:text-dark-white mb-2">
-                Hi, I am Noura
+                Hi {firstName}, I am Noura
               </p>
               <p className="text-sm text-cocoa-faded max-w-sm">
-                Ask me about meals, nutrition, or what to eat next. I know what
-                you have logged today.
+                Ask me about meals, ingredients, nutrition, what fits your goal
+                today, or what to eat next. I know what you have logged today.
               </p>
             </div>
           </div>
@@ -125,7 +110,7 @@ export const NouraFullChat = () => {
               className={`rounded-2xl px-4 py-3 max-w-[75%] text-sm leading-relaxed
       ${
         msg.role === "user"
-          ? "rounded-tr-sm bg-off-white dark:bg-dark-bg text-cocoa dark:text-dark-white"
+          ? "rounded-tr-sm bg-surface-two dark:bg-dark-bg text-cocoa dark:text-dark-white"
           : "rounded-tl-sm bg-[rgba(47,93,75,0.14)] dark:bg-[#4d4d4d] text-cocoa dark:text-dark-white"
       }
       ${msg.status === "failed" ? "opacity-60" : ""}`}
@@ -134,7 +119,7 @@ export const NouraFullChat = () => {
             </div>
             {msg.status === "failed" && (
               <div className="flex items-center gap-2 mt-1 mr-1">
-                <span className="text-xs text-rose-500">
+                <span className="text-xs text-rose-700 dark:text-rose-500">
                   Message not sent, please try again
                 </span>
                 <button
@@ -214,6 +199,41 @@ export const NouraFullChat = () => {
           </button>
         </div>
       </div>
+      {confirmingClear && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div
+            className="w-[90%] max-w-sm rounded-2xl bg-off-white dark:bg-dark-bg
+      p-5 shadow-xl border border-cocoa/10 dark:border-dark-white/10"
+          >
+            <h3 className="text-base font-semibold text-cocoa dark:text-dark-white">
+              Clear chat?
+            </h3>
+
+            <p className="mt-2 text-sm text-cocoa-faded">
+              This will permanently delete the entire conversation.
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmingClear(false)}
+                className="px-4 py-2 rounded-lg text-sm
+            text-cocoa-faded hover:text-cocoa dark:hover:text-dark-white"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleConfirmClear}
+                disabled={isClearing}
+                className="px-4 py-2 rounded-lg bg-rose-500 text-white text-sm
+            hover:bg-rose-600 disabled:opacity-50"
+              >
+                {isClearing ? "Clearing..." : "Clear chat"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

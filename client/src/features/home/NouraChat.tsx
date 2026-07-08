@@ -162,7 +162,7 @@ export const NouraChat = () => {
             </div>
             {msg.status === "failed" && (
               <div className="flex items-center gap-2 mt-1 mr-1">
-                <span className="text-[10px] text-rose-500">
+                <span className="text-[10px]  text-rose-700 dark:text-rose-500">
                   Message not sent, please try again
                 </span>
                 <button
