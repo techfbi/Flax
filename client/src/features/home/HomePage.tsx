@@ -15,6 +15,8 @@ import { MobileTopNav } from "@/components/layout/MobileTopNav";
 import api from "@/lib/api";
 import { useSessionState } from "@/hooks/useSessionState";
 import { UserAvatar } from "@/components/layout/Sidebar";
+import { useSpinStore } from "@/store/spinStore";
+import { PantryTab } from "./PantryTab";
 import type {
   ApiResponse,
   DashboardData,
@@ -22,7 +24,7 @@ import type {
   StreakData,
 } from "@/types/apiTypes";
 
-type Tab = "goal" | "log intake" | "history";
+type Tab = "goal" | "pantry" | "logintake" | "history";
 
 /*
   HomePage: the main authenticated page at "/".
@@ -43,6 +45,7 @@ const HomePage = () => {
     "goal",
   );
   const [notifOpen, setNotifOpen] = useState(false);
+  const setPrefillMeal = useSpinStore((s) => s.setPrefillMeal);
 
   const firstName = user?.display_name?.split(" ")[0] ?? "User";
 
@@ -94,7 +97,8 @@ const HomePage = () => {
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "goal", label: "Goal" },
-    { key: "log intake", label: "Log intake" },
+    { key: "pantry", label: "Pantry items" },
+    { key: "logintake", label: "Log intake" },
     { key: "history", label: "History" },
   ];
 
@@ -143,9 +147,9 @@ const HomePage = () => {
             {/* Search + icons */}
             <div className="flex items-center md:gap-5 lg:gap-10 md:mr-0 lg:mr-2">
               <FoodSearch
-                onSelectFood={(_food) => {
-                  setActiveTab("log intake");
-                  /* Pre-fill is handled inside LogIntakeTab via store */
+                onSelectFood={(food) => {
+                  setPrefillMeal({ food_ref: food._id, food_name: food.name });
+                  setActiveTab("logintake");
                 }}
               />
 
@@ -237,6 +241,7 @@ const HomePage = () => {
                   level={dashData?.daily_totals.calories ?? 0}
                   target={dashData?.calorie_target ?? 0}
                   type="calorie"
+                  hasStreak={hasStreak}
                 />
                 <MobileStreakCard
                   icon="💧"
@@ -245,6 +250,7 @@ const HomePage = () => {
                   level={waterData?.daily_total ?? 0}
                   target={waterData?.target_ml ?? 0}
                   type="water"
+                  hasStreak={hasStreak}
                 />
               </div>
 
@@ -284,10 +290,16 @@ const HomePage = () => {
                     dashData={dashData}
                     waterData={waterData}
                     onRefetchWater={refetchWater}
-                    onLogMealClick={() => setActiveTab("log intake")}
+                    onLogMealClick={() => setActiveTab("logintake")}
                   />
                 )}
-                {activeTab === "log intake" && <LogIntakeTab />}
+                {activeTab === "pantry" && <PantryTab />}
+                {activeTab === "logintake" && (
+                  <LogIntakeTab
+                    waterData={waterData}
+                    onRefetchWater={refetchWater}
+                  />
+                )}
                 {activeTab === "history" && <HistoryTab />}
               </div>
             </div>
@@ -318,6 +330,7 @@ const MobileStreakCard = ({
   level,
   target,
   type,
+  hasStreak,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -325,6 +338,7 @@ const MobileStreakCard = ({
   level: number;
   target: number;
   type: "calorie" | "water";
+  hasStreak: boolean;
 }) => {
   const pct =
     target > 0 ? Math.min(100, Math.round((level / target) * 100)) : 0;
@@ -332,7 +346,11 @@ const MobileStreakCard = ({
   return (
     <div className="bg-surface-two dark:bg-black-surface rounded-2xl px-4 py-3 shadow-md">
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-xl">{icon}</span>
+        {hasStreak ? (
+          <span className="text-xl">{icon}</span>
+        ) : (
+          <span className="text-xl opacity-15 dark:opacity-10">{icon}</span>
+        )}
         <div className="space-y-[-1px]">
           <p className="text-xs font-semibold text-cocoa/40 dark:text-dark-white/45">
             {label}

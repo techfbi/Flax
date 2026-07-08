@@ -133,9 +133,11 @@ export interface SpinHistoryEntry {
   id: string
   food_ref: string
   result_name: string
+  result_description: string | null
   filters_applied: Record<string, unknown>
   was_accepted: boolean
-  created_at: string
+  rejection_reason: string | null
+  spun_at: string
 }
 
 export interface FlaggedMeal {

@@ -24,7 +24,7 @@ interface SpinFrameProps {
   Duration: cycling ~3 seconds total, decelerating over the last ~1 second.
 */
 
-const FRAME_SIZE = 300;
+//const FRAME_SIZE = 300;
 const SPIN_DURATION_MS = 3000;
 const CYCLE_START_INTERVAL = 80;
 const CYCLE_END_INTERVAL = 500;

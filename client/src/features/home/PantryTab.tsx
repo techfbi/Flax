@@ -75,7 +75,7 @@ export const PantryTab = () => {
   return (
     <div className="p-5">
       <div className="flex items-center justify-between mb-5">
-        <h2 className="font-heading font-bold text-lg text-cocoa dark:text-dark-white">
+        <h2 className="font-heading font-bold text-base text-cocoa dark:text-dark-white">
           Pantry items
         </h2>
         <span className="text-xs text-cocoa-faded">{items.length}/20</span>

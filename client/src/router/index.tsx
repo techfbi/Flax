@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import type { ApiResponse, AuthUser, FullProfile } from "@/types/apiTypes";
-import { SpinTab } from "@/features/home/SpinTab";
 
 /* Lazy pages */
 const LandingPage = lazy(() => import("@/features/landing/LandingPage"));
@@ -22,6 +21,10 @@ const OnboardingFlow = lazy(
   () => import("@/features/onboarding/OnboardingFlow"),
 );
 const PlaceholderPage = lazy(() => import("@/pages/PlaceholderPage"));
+const SpinTab = lazy(() =>
+  import("@/features/home/SpinTab").then((m) => ({ default: m.SpinTab })),
+);
+const AskNouraPage = lazy(() => import("@/pages/AskNouraPage"));
 
 /* Full screen spinner, shown while verifying session */
 const PageLoader = () => (
@@ -267,7 +270,7 @@ const AppRouter = () => {
               path="/ask-noura"
               element={
                 <ProtectedRoute>
-                  <PlaceholderPage />
+                  <AskNouraPage />
                 </ProtectedRoute>
               }
             />

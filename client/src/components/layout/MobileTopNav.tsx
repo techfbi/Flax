@@ -8,11 +8,11 @@ import {
   Settings,
   Home,
   BarChart2,
-  History,
   Sun,
   Moon,
   Monitor,
   MessageCircle,
+  RefreshCw,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuthStore } from "@/store/authStore";
@@ -122,7 +122,7 @@ export const MobileTopNav = () => {
             {[
               { to: "/", icon: Home, label: "Homepage" },
               { to: "/dashboard", icon: BarChart2, label: "Dashboard" },
-              { to: "/spin-history", icon: History, label: "Spin history" },
+              { to: "/spin", icon: RefreshCw, label: "Spin" },
               { to: "/ask-noura", icon: MessageCircle, label: "Ask Noura" },
               { to: "/settings", icon: Settings, label: "Settings" },
             ].map((item) => (

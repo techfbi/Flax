@@ -158,13 +158,13 @@ export const SpinFilter = ({
   };
 
   return (
-    <div className="rounded-sm p-5 bg-off-white dark:bg-dark-bg mt-5 md:mt-7 lg:mt-10">
+    <div className="rounded-lg p-5 bg-surface-two dark:bg-dark-bg mt-5 md:mt-7 lg:mt-10">
       <h3 className="font-heading font-semibold text-sm lg:text-base text-cocoa/70 dark:text-dark-sec mb-5">
         Filters
       </h3>
 
       {/* Desktop: two column layout */}
-      <div className="flex flex-col md:flex-row gap-5">
+      <div className="flex flex-col gap-5">
         {/* Left column */}
         <div className="flex-1">
           {/* Meal types */}
@@ -180,7 +180,7 @@ export const SpinFilter = ({
                     onMealTypeChange(selectedMealType === type ? null : type)
                   }
                   className={`
-                    px-4 py-1.5 rounded-full text-sm capitalize
+                    px-2 md:px-4 py-1.5 rounded-full text-xs md:text-sm capitalize
                     transition-colors duration-150
                     ${
                       selectedMealType === type
@@ -236,9 +236,6 @@ export const SpinFilter = ({
             </div>
           </div>
         </div>
-
-        {/* Divider — desktop only */}
-        <div className="hidden md:block w-px bg-cocoa/10 dark:bg-dark-white/10" />
 
         {/* Right column */}
         <div className="flex-1">
