@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { SlidingTabs } from "@/components/ui/SlidingTabs";
 import { goToLogMeal } from "@/lib/prefillNavigation";
+import { toast } from "sonner";
 import api from "@/lib/api";
 import type {
   ApiResponse,
@@ -54,6 +55,17 @@ export const SpinHistoryPanel = () => {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
     new Set(),
   );
+  const queryClient = useQueryClient();
+  const unflagMutation = useMutation({
+    mutationFn: async (flagId: string) => {
+      await api.delete(`/api/spin/flag/${flagId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["spin-flagged"] });
+      toast.success("Unflagged");
+    },
+    onError: () => toast.error("Could not unflag. Try again."),
+  });
 
   const { data: history, isLoading: historyLoading } = useQuery({
     queryKey: ["spin-history", 2],
@@ -223,18 +235,21 @@ export const SpinHistoryPanel = () => {
               </p>
             )}
             {flagged?.map((meal) => (
-              <div
+              <button
                 key={meal.id}
-                className="flex items-center justify-between py-3
-                  border-b border-cocoa/15 dark:border-dark-sec/20 last:border-0"
+                onClick={() => unflagMutation.mutate(meal.id)}
+                disabled={unflagMutation.isPending}
+                className="flex items-center justify-between w-full py-3 text-left
+                border-b border-cocoa/15 dark:border-dark-sec/20 last:border-0
+                hover:opacity-60 transition-opacity disabled:opacity-40"
               >
                 <p className="text-sm font-medium text-cocoa dark:text-dark-white">
                   {meal.food_name}
                 </p>
                 <span className="text-[11px] text-cocoa-faded">
-                  {formatTime(meal.created_at)}
+                  Tap to unflag · {formatTime(meal.created_at)}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
         )}
