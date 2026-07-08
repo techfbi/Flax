@@ -759,11 +759,11 @@ export const getValidatedFoodRefs = async (userId: string): Promise<Set<string>>
 export const getSpinHistory = async ( userId: string, displayDays: number = 2 ): Promise<object[]> => {
   const result = await pgPool.query(
     `SELECT
-       id, food_ref, result_name, filters_applied, was_accepted, rejection_reason, spun_at
-     FROM spin_history
-     WHERE user_id = $1
-       AND spun_at >= NOW() - ($2 || ' days')::INTERVAL
-     ORDER BY spun_at DESC`,
+   id, food_ref, result_name, result_description, filters_applied, was_accepted, rejection_reason, spun_at
+    FROM spin_history
+    WHERE user_id = $1
+      AND spun_at >= NOW() - ($2 || ' days')::INTERVAL
+    ORDER BY spun_at DESC`,
     [userId, displayDays]
   );
 

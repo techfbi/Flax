@@ -95,6 +95,7 @@ CREATE TABLE IF NOT EXISTS spin_history (
   filters_applied  JSONB NOT NULL DEFAULT '[]',
   was_accepted     BOOLEAN NOT NULL DEFAULT TRUE,
   rejection_reason TEXT,                     -- NULL if the user accepted the spin result
+  result_description TEXT
   spun_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

@@ -207,13 +207,14 @@ export const spin = async ( req: Request, res: Response, next: NextFunction ): P
     // food_ref is the MongoDB _id. result_name is stored as fallback display.
     // ---------------------------------------------------------------------------
     await pgPool.query(
-      `INSERT INTO spin_history
-         (user_id, food_ref, result_name, filters_applied, was_accepted)
-       VALUES ($1, $2, $3, $4, TRUE)`,
-      [
+    `INSERT INTO spin_history
+      (user_id, food_ref, result_name, result_description, filters_applied, was_accepted)
+    VALUES ($1, $2, $3, $4, $5, TRUE)`,
+    [
         userId,
         selectedFood._id,
         selectedFood.name,
+        selectedFood.description ?? null,
         JSON.stringify({
           meal_type: filters.meal_type ?? null,
           tags: filters.tags ?? [],
