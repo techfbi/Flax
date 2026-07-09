@@ -13,6 +13,7 @@ import { goToLogMeal } from "@/lib/prefillNavigation";
 import { useTheme } from "@/context/ThemeContext";
 import { useScreenTier } from "@/hooks/useMediaQuery";
 import api from "@/lib/api";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import type {
   ApiResponse,
   SpinResult,
@@ -39,6 +40,7 @@ export const SpinTab = () => {
   const queryClient = useQueryClient();
   const { resolvedTheme } = useTheme();
   const tier = useScreenTier();
+  const { data: profile } = useUserProfile();
 
   const [showTips, setShowTips] = useState(false);
   const [tipsChecked, setTipsChecked] = useState(false);
@@ -478,7 +480,7 @@ export const SpinTab = () => {
       onMealTypeChange={setSelectedMealType}
       selectedTags={selectedTags}
       onTagsChange={setSelectedTags}
-      userAllergies={[] /* TRACK: pull from user profile health.allergies */}
+      userAllergies={profile?.health?.allergies ?? []}
     />
   );
 
@@ -579,8 +581,8 @@ export const SpinTab = () => {
               <div className="flex-1 min-w-0 overflow-y-auto mt-20">
                 {mainContentNode}
               </div>
-              <div className="w-[470px] shrink-0 flex flex-col min-h-0">
-                <div className="shrink-0">{filtersNode}</div>
+              <div className="max-w-[470px] shrink-1 flex flex-col min-h-0">
+                <div className="shrink-1">{filtersNode}</div>
                 <div className="flex-1 min-h-0 overflow-y-auto mt-5">
                   {historyNode}
                 </div>

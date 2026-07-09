@@ -3,6 +3,7 @@ import { GlassWater, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
 import type { WaterLogEntry } from "@/types/apiTypes";
+import { useTheme } from "@/context/ThemeContext";
 
 interface WaterLogListProps {
   logs: WaterLogEntry[];
@@ -17,6 +18,7 @@ interface WaterLogListProps {
 */
 export const WaterLogList = ({ logs }: WaterLogListProps) => {
   const queryClient = useQueryClient();
+  const { resolvedTheme } = useTheme();
 
   const deleteLog = useMutation({
     mutationFn: async (id: string) => {
@@ -47,7 +49,15 @@ export const WaterLogList = ({ logs }: WaterLogListProps) => {
             className="w-9 h-9 rounded-full flex items-center justify-center shrink-0
             bg-off-white dark:bg-dark-bg text-cocoa dark:text-dark-white"
           >
-            <GlassWater size={16} />
+            <img
+              src={
+                resolvedTheme === "dark"
+                  ? "/images/cupDark.svg"
+                  : "/images/cupWhite.svg"
+              }
+              alt="waterCup"
+              className="object-contain w-[15px] flex"
+            />
           </div>
 
           <div className="flex-1 min-w-0">
@@ -69,7 +79,7 @@ export const WaterLogList = ({ logs }: WaterLogListProps) => {
             className="text-cocoa/30 dark:text-dark-white/30
               hover:text-rose-500 transition-colors disabled:opacity-40 shrink-0"
           >
-            <Trash2 size={14} />
+            <Trash2 size={17} />
           </button>
         </div>
       ))}

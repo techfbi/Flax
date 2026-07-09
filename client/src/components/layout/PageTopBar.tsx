@@ -77,7 +77,10 @@ export const PageTopBar = ({
           aria-label={`Theme: ${theme}`}
           className="text-cocoa dark:text-dark-white hover:opacity-70 transition-opacity"
         >
-          <ThemeIcon size={20} />
+          <ThemeIcon
+            size={20}
+            fill={theme === "dark" ? "dark-white" : "cocoa"}
+          />
         </button>
 
         <div className="relative">
@@ -86,7 +89,7 @@ export const PageTopBar = ({
             aria-label="Notifications"
             className="relative text-cocoa dark:text-dark-white hover:opacity-70 mt-2 transition-opacity"
           >
-            <Bell size={20} />
+            <Bell size={20} fill="cocoa" />
             <span
               className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full
               bg-pawpaw text-surface text-[10px] font-bold

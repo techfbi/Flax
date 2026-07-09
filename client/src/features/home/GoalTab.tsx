@@ -16,6 +16,20 @@ interface GoalTabProps {
   onLogMealClick: () => void;
 }
 
+const COLORS = {
+  Calorie: "#7FB096",
+  Protein: "#F43F5E",
+  Carbs: "#8B5CF6",
+  Fat: "#F59E0B",
+};
+
+const legend = [
+  { label: "Calorie", color: COLORS.Calorie },
+  { label: "Carbs", color: COLORS.Carbs },
+  { label: "Fat", color: COLORS.Fat },
+  { label: "Protein", color: COLORS.Protein },
+];
+
 /*
   Goal tab content.
   Shows today's calorie overview, the multi-line area chart, and hydration section.
@@ -99,6 +113,20 @@ export const GoalTab = ({
 
       {/* Chart */}
       <CalorieChart logs={logs ?? []} />
+
+      <div className="flex items-center justify-center gap-3 text-[10px]">
+        {legend.map((item) => (
+          <div key={item.label} className="flex items-center gap-1">
+            <span
+              className="w-2 h-2 rounded-full shrink-0"
+              style={{ backgroundColor: item.color }}
+            />
+            <span className="text-cocoa/60 dark:text-dark-white/60">
+              {item.label}
+            </span>
+          </div>
+        ))}
+      </div>
 
       {/* Hydration */}
       <HydrationSection waterData={waterData} onRefetch={onRefetchWater} />

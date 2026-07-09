@@ -185,7 +185,7 @@ export const SpinFilter = ({
                     ${
                       selectedMealType === type
                         ? "bg-moringa dark:bg-moringa-faded border-moringa dark:border-moringa-faded text-surface"
-                        : "bg-surface-two  dark:bg-dark-white/10 text-cocoa dark:text-dark-white"
+                        : "bg-off-white  dark:bg-dark-white/10 text-cocoa dark:text-dark-white"
                     }
                   `}
                 >

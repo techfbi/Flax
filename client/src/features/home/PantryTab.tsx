@@ -74,10 +74,7 @@ export const PantryTab = () => {
 
   return (
     <div className="p-5">
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="font-heading font-bold text-base text-cocoa dark:text-dark-white">
-          Pantry items
-        </h2>
+      <div className="flex justify-end mb-5">
         <span className="text-xs text-cocoa-faded">{items.length}/20</span>
       </div>
 
@@ -93,8 +90,7 @@ export const PantryTab = () => {
           className="flex-1 bg-transparent border border-cocoa/20
             dark:border-dark-white/20 rounded-xl px-4 py-2.5 text-base lg:text-sm
             text-cocoa dark:text-dark-white outline-none
-            focus:border-pawpaw focus:ring-1 focus:ring-pawpaw
-            dark:focus:border-black-pawpaw dark:focus:ring-black-pawpaw"
+      focus:border-moringa-faded focus:ring-1 focus:ring-moringa-faded/50 "
         />
         <button
           onClick={handleAdd}

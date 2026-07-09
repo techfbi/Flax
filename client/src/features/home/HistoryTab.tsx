@@ -83,10 +83,6 @@ export const HistoryTab = () => {
 
   return (
     <div className="p-5">
-      <h2 className="font-heading font-bold text-base text-cocoa dark:text-dark-white mb-4">
-        History
-      </h2>
-
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={() => shiftDate(-1)}

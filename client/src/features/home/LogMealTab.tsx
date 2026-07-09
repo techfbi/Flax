@@ -281,15 +281,11 @@ export const LogMealTab = () => {
     "w-full bg-surface dark:bg-black-surface border border-cocoa/20 " +
     "dark:border-dark-white/20 rounded-lg px-3 py-2 text-base lg:text-sm " +
     "outline-none text-cocoa dark:text-dark-white " +
-    "focus:border-pawpaw dark:focus:border-black-pawpaw";
+    "focus:border-moringa-faded focus:ring-1 focus:ring-moringa-faded/50";
 
   return (
     <div className="p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="font-heading font-bold text-base text-cocoa dark:text-dark-white">
-          Log meal
-        </h2>
-
+      <div className="flex items-center mb-4">
         {/* Catalogue vs custom toggle */}
         <div className="flex bg-cocoa/5 dark:bg-dark-white/5 rounded-full p-1">
           {(["catalogue", "custom"] as const).map((m) => (
@@ -299,7 +295,7 @@ export const LogMealTab = () => {
               className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-colors
                 ${
                   mode === m
-                    ? "bg-moringa dark:bg-moringa-faded text-surface"
+                    ? "bg-pawpaw dark:bg-black-pawpaw text-surface"
                     : "text-cocoa/60 dark:text-dark-white/60"
                 }`}
             >
@@ -353,7 +349,7 @@ export const LogMealTab = () => {
                       {food.name}
                     </p>
                     <p className="text-[10px] text-cocoa-faded">
-                      {food.calories_per_100g} kcal/100g · click to log
+                      {food.calories_per_100g} kcal/100g
                     </p>
                   </div>
                   <button
@@ -361,9 +357,8 @@ export const LogMealTab = () => {
                       e.stopPropagation();
                       selectCatalogueFood(food);
                     }}
-                    className="text-[11px] font-semibold px-3 py-1.5 rounded-full
-                      bg-moringa dark:bg-moringa-faded text-surface
-                      hover:opacity-90 shrink-0 ml-3"
+                    className="text-[9px] lg:text-[11px] font-normal px-3 lg:px-2 py-1 rounded-lg
+                  dark:border-dark-sec/50 dark:hover:border-dark-sec/90 border-cocoa/50 hover:border-cocoa/90 border-[1px] text-cocoa dark:text-surface shrink-0 ml-3"
                   >
                     Log
                   </button>
@@ -578,7 +573,7 @@ export const LogMealTab = () => {
                     className="text-cocoa/30 dark:text-dark-white/30
                       hover:text-cocoa dark:hover:text-dark-white transition-colors"
                   >
-                    <Pencil size={14} />
+                    <Pencil size={17} />
                   </button>
                   <button
                     onClick={() => deleteMeal.mutate(log.id)}
@@ -587,7 +582,7 @@ export const LogMealTab = () => {
                     className="text-cocoa/30 dark:text-dark-white/30
                       hover:text-rose-500 transition-colors disabled:opacity-40"
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={17} />
                   </button>
                 </div>
               </>

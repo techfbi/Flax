@@ -117,7 +117,7 @@ export const WaterCups = ({
   //   }
 
   return (
-    <div className="flex flex-wrap items-end gap-1.5 mt-3">
+    <div className="flex flex-wrap items-end gap-1.5 mt-2">
       {cups.map((cup, i) => (
         <div key={i} className="flex flex-col items-center gap-0.5">
           {cup.size === 500 ? (
@@ -125,7 +125,7 @@ export const WaterCups = ({
           ) : (
             <Cup250 isDark={isDark} />
           )}
-          <span className="text-[9px] font-medium text-cocoa-faded mt-0.5">
+          <span className="text-[9px] font-medium text-cocoa/80 dark:text-surface/80 mt-1">
             {cup.size}ml
           </span>
           {cup.timestamp && (

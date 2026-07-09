@@ -114,7 +114,7 @@ export const AskNouraPage = () => {
             </div>
 
             {/* Streak panel, desktop only, unchanged from before. */}
-            <div className="hidden lg:flex flex-col w-[340px] shrink-0 pt-2 overflow-y-auto">
+            <div className="hidden lg:flex flex-1 flex-col max-w-[380px] gap-4 shrink-1 mt-6 overflow-y-auto">
               <StreakPanel
                 streakData={streakData}
                 dashData={dashData}

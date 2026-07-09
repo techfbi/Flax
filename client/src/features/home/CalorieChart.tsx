@@ -5,7 +5,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 import type { MealLogEntry } from "@/types/apiTypes";
@@ -250,7 +249,7 @@ export const CalorieChart = ({ logs }: CalorieChartProps) => {
         </p>
       </div>
 
-      <ResponsiveContainer width="100%" height={230}>
+      <ResponsiveContainer width="100%" height={210}>
         <AreaChart
           data={displayData}
           margin={{ top: isMobile ? 2 : 10, right: 0, left: 0, bottom: 0 }}
@@ -334,15 +333,6 @@ export const CalorieChart = ({ logs }: CalorieChartProps) => {
           />
 
           <Tooltip content={<CustomTooltip />} />
-
-          <Legend
-            wrapperStyle={{
-              fontSize: "12px",
-              paddingTop: "8px",
-            }}
-            iconType="circle"
-            iconSize={isMobile ? 6 : 8}
-          />
 
           <Area
             yAxisId="cal"

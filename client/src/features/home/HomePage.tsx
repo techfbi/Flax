@@ -23,6 +23,7 @@ import type {
   WaterData,
   StreakData,
 } from "@/types/apiTypes";
+import { NavLink } from "react-router-dom";
 
 type Tab = "goal" | "pantry" | "logintake" | "history";
 
@@ -173,7 +174,7 @@ const HomePage = () => {
                   className="relative text-cocoa dark:text-dark-white hover:opacity-70 mt-2
                   transition-opacity"
                 >
-                  <Bell size={20} fill="cocoa" className="" />
+                  <Bell size={20} fill="cocoa" />
                   {/* Unread badge */}
                   <span
                     className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full
@@ -199,32 +200,39 @@ const HomePage = () => {
               <div className="md:hidden">
                 <MobileTopNav />
               </div>
-              <div className="md:hidden mt-20 mb-7 shrink-0 flex items-center gap-2 ">
-                {/* Mobile greeting + Avatar */}
-                <UserAvatar avatarUrl={avatarUrl} name={firstName} size={35} />
-                <div className="space-y-[-2px]">
-                  <h1
-                    className="font-heading text-[16px] font-bold text-cocoa dark:text-dark-white
+              <NavLink to="/profile">
+                <div className="md:hidden mt-20 mb-7 shrink-0 flex items-center gap-2 ">
+                  {/* Mobile greeting + Avatar */}
+
+                  <UserAvatar
+                    avatarUrl={avatarUrl}
+                    name={firstName}
+                    size={35}
+                  />
+                  <div className="space-y-[-2px]">
+                    <h1
+                      className="font-heading text-[16px] font-bold text-cocoa dark:text-dark-white
                 flex items-center gap-2"
-                  >
-                    Hello, {firstName}!
-                    {hasStreak && (
-                      <span>
-                        <img
-                          src="/images/fire.png"
-                          alt="fire"
-                          className="object-contain w-[17px] flex"
-                        />
-                      </span>
-                    )}
-                  </h1>
-                  <p className="text-[12px] text-cocoa/50 dark:text-dark-white/50">
-                    {hasStreak
-                      ? "You're on fire. Let's see what we've got here, today."
-                      : "Let's see what we've got here, today."}
-                  </p>
+                    >
+                      Hello, {firstName}!
+                      {hasStreak && (
+                        <span>
+                          <img
+                            src="/images/fire.png"
+                            alt="fire"
+                            className="object-contain w-[17px] flex"
+                          />
+                        </span>
+                      )}
+                    </h1>
+                    <p className="text-[12px] text-cocoa/50 dark:text-dark-white/50">
+                      {hasStreak
+                        ? "You're on fire. Let's see what we've got here, today."
+                        : "Let's see what we've got here, today."}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              </NavLink>
 
               {/* Mobile streak cards */}
               <div className="md:hidden grid grid-cols-2 gap-3 mb-3 shrink-0">
@@ -260,7 +268,7 @@ const HomePage = () => {
                   <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
-                    className={`font-heading relative px-5 py-2 text-xs lg:text-sm  transition-colors duration-150 z-10
+                    className={`font-heading relative px-3 md:px-4 lg:px-5 py-2 text-xs lg:text-sm  transition-colors duration-150 z-10
                         ${
                           activeTab === tab.key
                             ? "text-cocoa dark:text-dark-white font-bold"

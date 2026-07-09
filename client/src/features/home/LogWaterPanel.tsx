@@ -59,9 +59,6 @@ export const LogWaterPanel = ({ waterData, onRefetch }: LogWaterPanelProps) => {
 
   return (
     <div className="p-5">
-      <h2 className="font-heading font-bold text-base text-cocoa dark:text-dark-white mb-1">
-        Log water
-      </h2>
       <p className="text-xs text-cocoa-faded mb-4">
         {remaining > 0
           ? `${remaining}ml left to reach your ${targetMl.toLocaleString()}ml target today`

@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
   Home,
   BarChart2,
@@ -80,30 +80,34 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
           className={`flex items-center md:pt-5 lg:pt-9 pb-6 px-3 ${collapsed ? "flex-col gap-4" : "justify-between"}`}
         >
           {!collapsed && (
-            <img
-              src={
-                resolvedTheme === "dark"
-                  ? "/images/logoDark.png"
-                  : "/images/logoLight.png"
-              }
-              alt="Flax"
-              className="h-[35px] w-auto object-contain"
-            />
+            <Link to="/" aria-label="Home">
+              <img
+                src={
+                  resolvedTheme === "dark"
+                    ? "/images/logoDark.png"
+                    : "/images/logoLight.png"
+                }
+                alt="Flax"
+                className="h-[35px] w-auto object-contain"
+              />
+            </Link>
           )}
           {collapsed && (
             /*
               Collapsed logo: icon only.
               Place at public/images/logoIcon.png (40x36px).
             */
-            <img
-              src={
-                resolvedTheme === "dark"
-                  ? "/images/logoIconDark.png"
-                  : "/images/logoIcon.png"
-              }
-              alt="Flax"
-              className="w-8 h-8 object-contain mx-auto"
-            />
+            <Link to="/" aria-label="Home">
+              <img
+                src={
+                  resolvedTheme === "dark"
+                    ? "/images/logoIconDark.png"
+                    : "/images/logoIcon.png"
+                }
+                alt="Flax"
+                className="w-8 h-8 object-contain mx-auto"
+              />
+            </Link>
           )}
           {!collapsed && (
             /* Two vertical bars collapse icon */
@@ -206,21 +210,31 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
           </button>
 
           {/* Avatar + firstname */}
-          <div className="flex items-center gap-3 px-3 py-2.5 cursor-pointer">
-            <UserAvatar avatarUrl={avatarUrl} name={firstName} />
 
-            {!collapsed && (
-              <span className="text-sm font-heading font-medium text-cocoa dark:text-dark-white truncate">
-                {firstName}
-              </span>
-            )}
+          <div className=" cursor-pointer">
+            <NavLink
+              to="/profile"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5
+              transition-colors duration-150
+              ${isActive ? activeClass : inactiveClass}`
+              }
+            >
+              <UserAvatar avatarUrl={avatarUrl} name={firstName} />
+
+              {!collapsed && (
+                <span className="text-sm font-heading font-medium text-cocoa dark:text-dark-white truncate">
+                  {firstName}
+                </span>
+              )}
+            </NavLink>
           </div>
 
           {/* Settings */}
           <NavLink
             to="/settings"
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg
+              `flex items-center gap-3 px-3 py-2.5
               transition-colors duration-150
               ${isActive ? activeClass : inactiveClass}`
             }

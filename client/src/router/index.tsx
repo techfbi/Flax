@@ -25,6 +25,8 @@ const SpinTab = lazy(() =>
   import("@/features/home/SpinTab").then((m) => ({ default: m.SpinTab })),
 );
 const AskNouraPage = lazy(() => import("@/pages/AskNouraPage"));
+const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
+const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
 
 /* Full screen spinner, shown while verifying session */
 const PageLoader = () => (
@@ -278,7 +280,7 @@ const AppRouter = () => {
               path="/profile"
               element={
                 <ProtectedRoute>
-                  <PlaceholderPage />
+                  <ProfilePage />
                 </ProtectedRoute>
               }
             />
@@ -286,7 +288,7 @@ const AppRouter = () => {
               path="/settings"
               element={
                 <ProtectedRoute>
-                  <PlaceholderPage />
+                  <SettingsPage />
                 </ProtectedRoute>
               }
             />
