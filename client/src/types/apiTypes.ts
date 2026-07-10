@@ -270,3 +270,30 @@ export interface FoodSearchData {
 export interface VapidKeyData {
   publicKey: string
 }
+
+export interface InsightsData {
+  range: "week" | "month" | "year"
+  start_date: string
+  end_date: string
+  granularity: "day" | "month"
+  today: {
+    calories: number
+    protein_g: number
+    carbs_g: number
+    fat_g: number
+    calorie_target: number | null
+    water_ml: number
+    water_target_ml: number | null
+  }
+  calorie_trend: { date: string; calories: number }[]
+  macro_trend: { date: string; protein_g: number; carbs_g: number; fat_g: number }[]
+  water_trend: { date: string; amount_ml: number }[]
+  meal_type_breakdown: Record<string, number>
+  most_logged_meals: { name: string; count: number }[]
+}
+
+export interface StreakCalendarData {
+  month: string
+  calorie_target: number | null
+  days: { date: string; calories: number; met_goal: boolean; is_future: boolean }[]
+}

@@ -28,6 +28,7 @@ const AskNouraPage = lazy(() => import("@/pages/AskNouraPage"));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
 const NotificationsPage = lazy(() => import("@/pages/NotificationsPage"));
+const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 
 /* Full screen spinner, shown while verifying session */
 const PageLoader = () => (
@@ -280,7 +281,7 @@ const AppRouter = () => {
               path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <PlaceholderPage />
+                  <DashboardPage />
                 </ProtectedRoute>
               }
             />
