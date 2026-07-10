@@ -5,6 +5,7 @@ import {
   updateHealthProfile,
   changePassword,
   deleteAccount,
+  setTimezone,
 } from "./user.service.js";
 import { sendSuccess } from "../../shared/response.js";
 import type {
@@ -13,6 +14,7 @@ import type {
   ChangePasswordInput,
   DeleteAccountInput,
 } from "./user.schema.js";
+import { promise } from "zod";
 
 // ---------------------------------------------------------------------------
 // GET /api/users/profile
@@ -112,3 +114,19 @@ export const deleteUserAccount = async (
     next(err);
   }
 };
+
+//---------------------------------------------------------------------------------------
+// PATCH /api/users/timezone
+//----------------------------------------------------------------------------------------
+export const patchTimezone = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const timezone = req.body.timezone as string;
+    await setTimezone(req.user!.id, timezone);
+    sendSuccess({
+      res,
+      message: "Timezone successfully set.",
+    });
+  } catch (err) {
+    next(err);
+  }
+} 

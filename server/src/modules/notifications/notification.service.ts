@@ -1,11 +1,30 @@
 import { pgPool } from "../../config/db.postgres.js";
 import { webpush } from "../../config/webpush.js";
+import { insertNotification } from "./notification.model.js";
 
 export interface PushSubscriptionInput {
   endpoint: string;
   p256dh:   string;
   auth:     string;
 }
+
+// ---------------------------------------------------------------------------
+// notifyUser
+// The one function every event checker calls. Always writes the
+// in-app row, and additionally sends a push if the user has an active
+// subscription. This is what makes the bell work regardless of push
+// permission state.
+// ---------------------------------------------------------------------------
+export const notifyUser = async (
+  userId: string,
+  type: string,
+  title: string,
+  body: string,
+  url?: string
+): Promise<void> => {
+  await insertNotification(userId, type, title, body, url);
+  await sendPushToUser(userId, { title, body, url });
+};
 
 // ---------------------------------------------------------------------------
 // saveSubscription

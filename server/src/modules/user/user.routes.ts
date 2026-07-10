@@ -14,6 +14,7 @@ import {
   patchHealth,
   patchPassword,
   deleteUserAccount,
+  patchTimezone,
 } from "./user.controller.js";
 
 export const userRouter = Router();
@@ -40,3 +41,4 @@ userRouter.patch("/profile", validate(updateProfileSchema), patchProfile);
 userRouter.patch("/health", validate(updateHealthSchema), patchHealth);
 userRouter.patch( "/password", passwordChangeLimiter, validate(changePasswordSchema), patchPassword );
 userRouter.delete( "/account", deleteAccountLimiter, validate(deleteAccountSchema), deleteUserAccount );
+userRouter.patch("/timezone",  patchTimezone)

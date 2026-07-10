@@ -14,6 +14,7 @@ import {
   customMealLogSchema,
   patchMealLogSchema,
 } from "./meallog.schema.js";
+import { getInsights, getStreakCalendar } from "./insights.service.js";
 
 // ---------------------------------------------------------------------------
 // POST /api/meal-logs
@@ -185,6 +186,49 @@ export const patchLog = async ( req: Request, res: Response, next: NextFunction 
       message: "Meal log updated.",
       data: { log },
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+//----------------------------------------------------------------------------------------------------------------------
+//Get Insights and streak calender
+//----------------------------------------------------------------------------------------------------------------------
+export const getInsightsHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const range = (req.query.range as string) ?? "week";
+    const endDate = (req.query.end_date as string) ?? new Date().toISOString().split("T")[0];
+
+    if (!["week", "month", "year"].includes(range)) {
+      throw new AppError("range must be week, month, or year", 400, "INVALID_RANGE");
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+      throw new AppError("end_date must be YYYY-MM-DD", 400, "INVALID_DATE_FORMAT");
+    }
+
+    const insights = await getInsights(req.user!.id, range as "week" | "month" | "year", endDate);
+    sendSuccess({ res, data: { insights } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getStreakCalendarHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const month = (req.query.month as string) ?? new Date().toISOString().slice(0, 7);
+    if (!/^\d{4}-\d{2}$/.test(month)) {
+      throw new AppError("month must be YYYY-MM", 400, "INVALID_MONTH_FORMAT");
+    }
+    const calendar = await getStreakCalendar(req.user!.id, month);
+    sendSuccess({ res, data: { calendar } });
   } catch (err) {
     next(err);
   }

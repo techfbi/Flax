@@ -5,6 +5,7 @@ import { pgPool } from "./config/db.postgres.js";
 import { connectMongo } from "./config/db.mongo.js";
 import { connectRedis } from "./config/db.redis.js";
 import { startCleanupJob } from "./config/cleanup.js";
+import { startScheduler } from "./schedular.js";
 
 async function startServer(): Promise<void> {
   try {
@@ -20,6 +21,7 @@ async function startServer(): Promise<void> {
 
     app.listen(env.PORT, () => {
       console.log(`Server listening on port ${env.PORT}`);
+      startScheduler()
       console.log(`Health check: http://localhost:${env.PORT}/health`);
     });
   } catch (err) {

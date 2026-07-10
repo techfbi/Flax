@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { sendSuccess } from "../../shared/response.js";
 import { AppError } from "../../shared/errors.js";
+import { getRecentNotifications, getUnreadCount, markAllRead } from "./notification.model.js";
 import {
   saveSubscription,
   removeSubscription,
@@ -56,6 +57,34 @@ export const unsubscribeHandler = async ( req: Request, res: Response, next: Nex
 
     await removeSubscription(req.user!.id, endpoint);
     sendSuccess({ res, message: "Push notifications disabled." });
+  } catch (err) {
+    next(err);
+  }
+};
+
+//--------------------------------------------------------------------------------------
+export const listNotificationsHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const notifications = await getRecentNotifications(req.user!.id);
+    const unreadCount = await getUnreadCount(req.user!.id);
+    sendSuccess({ res, data: { notifications, unreadCount } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const markReadHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    await markAllRead(req.user!.id);
+    sendSuccess({ res, data: { success: true } });
   } catch (err) {
     next(err);
   }

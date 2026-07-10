@@ -440,3 +440,24 @@ export const deleteAccount = async ( userId: string, input: DeleteAccountInput )
     `[REMOVE LOG LATER] Account soft deleted. ${userId}`
   );
 };
+
+//------------------------------------------------------------------------------------
+//Save user's timezone
+//------------------------------------------------------------------------------------
+export const setTimezone = async (userId: string, timezone: string): Promise<void> => {
+  //fetch cuent user
+  const result = await pgPool.query(
+    "SELECT email FROM users WHERE id = $1 AND deleted_at IS NULL",
+    [userId]
+  );
+  const user = result.rows[0];
+
+  if (!user) {
+    throw new AppError("User not found", 404, "USER_NOT_FOUND");
+  }
+
+  await pgPool.query(
+    "UPDATE users SET timezone = $1 WHERE id = $2", [timezone, userId]
+  );
+
+}

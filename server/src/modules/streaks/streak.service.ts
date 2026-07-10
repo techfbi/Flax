@@ -1,4 +1,7 @@
 import { pgPool } from "../../config/db.postgres.js";
+import { AppError } from "../../shared/errors.js";
+
+type StreakStatus = "active" | "restorable" | "none";
 
 // ---------------------------------------------------------------------------
 // getOrCreateStreaks
@@ -122,9 +125,94 @@ export const updateWaterStreak = async (
   );
 };
 
+//----------------------------------------------------------------------------
+// Pure date math on YYYY-MM-DD strings, both are always DATE-only so
+// this is safe regardless of server timezone.
+//----------------------------------------------------------------------------------
+const computeStatus = (
+  lastDate: string | null,
+  today: string
+): StreakStatus => {
+  if (!lastDate) return "none";
+  const diffDays = Math.round(
+    (new Date(today).getTime() - new Date(lastDate).getTime()) / 86400000
+  );
+  if (diffDays <= 1) return "active";
+  if (diffDays === 2) return "restorable";
+  return "none";
+};
 // ---------------------------------------------------------------------------
 // getStreaks
+// Lazily evaluates whether each streak is still active, in its 24 hour
+// restore window, or has fully expired, based on today's date rather
+// than only reacting to write events. This is what actually stops a
+// stale streak count from showing forever after the user stops
+// logging, previous version had no path that ever reset it.
 // ---------------------------------------------------------------------------
-export const getStreaks = async (userId: string) => {
-  return getOrCreateStreaks(userId);
+export const getStreaks = async (userId: string, today: string) => {
+  const row = await getOrCreateStreaks(userId);
+
+  const goalStatus = computeStatus(row.last_goal_date, today);
+  const waterStatus = computeStatus(row.last_water_log_date, today);
+
+  // Restore window fully closed, zero it out for good so a stale
+  // number can never come back without a genuine new streak.
+  if (goalStatus === "none" && row.goal_streak > 0) {
+    await pgPool.query(
+      "UPDATE streaks SET goal_streak = 0, updated_at = NOW() WHERE user_id = $1",
+      [userId]
+    );
+    row.goal_streak = 0;
+    }
+  if (waterStatus === "none" && row.water_streak > 0) {
+    await pgPool.query(
+      "UPDATE streaks SET water_streak = 0, updated_at = NOW() WHERE user_id = $1",
+      [userId]
+    );
+    row.water_streak = 0;
+  }
+
+  return {
+    goal_streak: row.goal_streak,
+    goal_streak_best: row.goal_streak_best,
+    last_goal_date: row.last_goal_date,
+    goal_streak_status: goalStatus,
+    water_streak: row.water_streak,
+    water_streak_best: row.water_streak_best,
+    last_water_log_date: row.last_water_log_date,
+    water_streak_status: waterStatus,
+  };
+};
+
+// ---------------------------------------------------------------------------
+// restoreStreak
+// Only allowed while status is "restorable". Sets the last qualifying
+// date to today, which immediately makes the streak read as active
+// again on the next getStreaks call, the count itself is untouched
+// since it was never zeroed during the restore window.
+// ---------------------------------------------------------------------------
+export const restoreStreak = async (
+  userId: string,
+  type: "goal" | "water",
+  today: string
+) => {
+  const row = await getOrCreateStreaks(userId);
+  const lastDate = type === "goal" ? row.last_goal_date : row.last_water_log_date;
+  const status = computeStatus(lastDate, today);
+
+  if (status !== "restorable") {
+    throw new AppError(
+      "This streak is not currently restorable",
+      400,
+      "STREAK_NOT_RESTORABLE"
+    );
+  }
+
+  const column = type === "goal" ? "last_goal_date" : "last_water_log_date";
+  await pgPool.query(
+    `UPDATE streaks SET ${column} = $2, updated_at = NOW() WHERE user_id = $1`,
+    [userId, today]
+  );
+
+  return getStreaks(userId, today);
 };

@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS users (
   avatar_url    TEXT,
   is_verified   BOOLEAN NOT NULL DEFAULT FALSE,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  timezone      TEXT
   last_login_at TIMESTAMPTZ,
   deleted_at    TIMESTAMPTZ                  -- NULL means active, timestamp means soft-deleted
 );
@@ -152,6 +153,32 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- In-app notification stack. This exists independently of push, so
+-- the bell has real content to show even for users who never grant
+-- push permission.
+CREATE TABLE IF NOT EXISTS notifications (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type        TEXT NOT NULL,
+  title       TEXT NOT NULL,
+  body        TEXT NOT NULL,
+  url         TEXT,
+  is_read     BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- One row per user per event type per day, prevents the same
+-- reminder firing twice in one day even if the scheduler runs more
+-- than once in that window.
+CREATE TABLE IF NOT EXISTS notification_event_log (
+  user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  event_type  TEXT NOT NULL,
+  event_date  DATE NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, event_type, event_date)
+);
+
+
 -- Tracks daily streak counters for meal logging and water intake.
 -- last_meal_log_date and last_water_log_date are the most recent dates that contributed to each streak. Used to detect broken streaks.
 -- milestone columns track the highest streak ever reached for achievement display.
@@ -177,6 +204,8 @@ CREATE TABLE IF NOT EXISTS water_logs (
   logged_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE INDEX IF NOT EXISTS idx_notifications_user_unread
+  ON notifications (user_id, is_read, created_at DESC);
 
 -- Covers quick lookup of all validated meals for a user when generating spin results
 CREATE INDEX IF NOT EXISTS idx_validated_meals_user
