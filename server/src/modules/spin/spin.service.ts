@@ -141,8 +141,8 @@ const applyPantryLogic = async (
   // Before failing, relax ONLY the 48-hour exclusion.
   //
   // We continue respecting:
-  //   ✓ allergens
-  //   ✓ flagged meals
+  //   allergens
+  //   flagged meals
   console.log(
     `[REMOVE LOG LATER] No foods after exclusions. Relaxing recency for ${userId}`
   );
