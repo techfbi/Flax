@@ -12,6 +12,7 @@ import { SlidingTabs } from "@/components/ui/SlidingTabs";
 import { goToLogMeal } from "@/lib/prefillNavigation";
 import { useTheme } from "@/context/ThemeContext";
 import { useScreenTier } from "@/hooks/useMediaQuery";
+import { useSpinSound } from "@/hooks/useSpinSound";
 import api from "@/lib/api";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import type {
@@ -41,6 +42,7 @@ export const SpinTab = () => {
   const { resolvedTheme } = useTheme();
   const tier = useScreenTier();
   const { data: profile } = useUserProfile();
+  const { enabled: spinSoundEnabled } = useSpinSound();
 
   const [showTips, setShowTips] = useState(false);
   const [tipsChecked, setTipsChecked] = useState(false);
@@ -460,6 +462,7 @@ export const SpinTab = () => {
             isSpinning={isSpinning}
             result={result?.food ?? null}
             cycleImages={cycleImages}
+            soundEnabled={spinSoundEnabled}
           />
           {actionButtons}
         </div>
@@ -581,7 +584,7 @@ export const SpinTab = () => {
               <div className="flex-1 min-w-0 overflow-y-auto mt-20">
                 {mainContentNode}
               </div>
-              <div className="max-w-[470px] shrink-1 flex flex-col min-h-0">
+              <div className="max-w-[470px] shrink-1 flex flex-col min-h-0 mt-[-10px]">
                 <div className="shrink-1">{filtersNode}</div>
                 <div className="flex-1 min-h-0 overflow-y-auto mt-5">
                   {historyNode}

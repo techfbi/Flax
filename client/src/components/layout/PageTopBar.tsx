@@ -6,6 +6,9 @@ import { useTheme } from "@/context/ThemeContext";
 import { useSpinStore } from "@/store/spinStore";
 import { useNavigate } from "react-router-dom";
 import type { Food } from "@/types/apiTypes";
+import { useQuery } from "@tanstack/react-query";
+import { ApiResponse } from "@/types/apiTypes";
+import api from "@/lib/api";
 
 interface PageTopBarProps {
   /** Uppercase page label, e.g. "SPIN". Ignored if leftContent is given. */
@@ -32,6 +35,18 @@ export const PageTopBar = ({
   const [notifOpen, setNotifOpen] = useState(false);
   const setPrefillMeal = useSpinStore((s) => s.setPrefillMeal);
   const navigate = useNavigate();
+  const { data: notifData } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: async () => {
+      const { data } =
+        await api.get<
+          ApiResponse<{ notifications: unknown[]; unreadCount: number }>
+        >("/api/notifications");
+      return data.data;
+    },
+    staleTime: 30 * 1000,
+  });
+  const unreadCount = notifData?.unreadCount ?? 0;
 
   const cycleTheme = () => {
     const next: Record<string, "light" | "dark" | "system"> = {
@@ -90,13 +105,15 @@ export const PageTopBar = ({
             className="relative text-cocoa dark:text-dark-white hover:opacity-70 mt-2 transition-opacity"
           >
             <Bell size={20} fill="cocoa" />
-            <span
-              className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full
-              bg-pawpaw text-surface text-[10px] font-bold
-              flex items-center justify-center"
-            >
-              1
-            </span>
+            {unreadCount > 0 && (
+              <span
+                className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full
+    bg-pawpaw text-surface text-[10px] font-bold
+    flex items-center justify-center"
+              >
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
           </button>
           {notifOpen && (
             <NotificationDropdown onClose={() => setNotifOpen(false)} />

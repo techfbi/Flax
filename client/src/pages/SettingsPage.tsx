@@ -22,7 +22,7 @@ const inputClass =
   "w-full bg-surface dark:bg-black-surface border border-cocoa/20 " +
   "dark:border-dark-white/20 rounded-lg px-3 py-2 text-base lg:text-sm " +
   "outline-none text-cocoa dark:text-dark-white " +
-  "focus:border-pawpaw dark:focus:border-black-pawpaw";
+  "focus:border-moringa-faded focus:ring-1 focus:ring-moringa-faded/50";
 
 const SectionCard = ({
   title,
@@ -32,7 +32,7 @@ const SectionCard = ({
   children: React.ReactNode;
 }) => (
   <div className="bg-surface-two dark:bg-black-surface rounded-2xl p-5">
-    <h2 className="font-heading font-bold text-base text-cocoa dark:text-dark-white mb-4">
+    <h2 className="font-heading font-bold text-sm md:text-base text-cocoa dark:text-dark-white mb-5">
       {title}
     </h2>
     {children}
@@ -44,6 +44,7 @@ export const SettingsPage = () => {
   const { data: profile } = useUserProfile();
   const { clearAuth } = useAuthStore();
   const navigate = useNavigate();
+  const showDeleteAccount = import.meta.env.VITE_SHOW_DELETE_ACCOUNT;
 
   // ---- Notifications ----
   const [pushEnabled, setPushEnabled] = useState(false);
@@ -146,7 +147,7 @@ export const SettingsPage = () => {
   const isOAuth = profile?.provider === "google";
 
   const mainContent = (
-    <div className="space-y-5 max-w-2xl">
+    <div className="space-y-5 max-w-2xl mx-auto mt-16 md:mt-0">
       <SectionCard title="Appearance">
         <div className="flex gap-2">
           {[
@@ -182,7 +183,7 @@ export const SettingsPage = () => {
               <BellOff size={18} className="text-cocoa-faded" />
             )}
             <div>
-              <p className="text-sm font-medium text-cocoa dark:text-dark-white">
+              <p className="text-sm  text-cocoa dark:text-dark-white">
                 Push notifications
               </p>
               <p className="text-xs text-cocoa-faded">
@@ -204,11 +205,10 @@ export const SettingsPage = () => {
         </div>
       </SectionCard>
 
-      <SectionCard title="Password">
+      <SectionCard title="Change password">
         {isOAuth ? (
           <p className="text-sm text-cocoa-faded">
-            This account signs in with Google, so there is no Flax password to
-            change.
+            This account signs in with Google.
           </p>
         ) : (
           <div className="space-y-3">
@@ -258,61 +258,63 @@ export const SettingsPage = () => {
         )}
       </SectionCard>
 
-      <div className="bg-surface-two dark:bg-black-surface rounded-2xl p-5 border border-rose-500/20">
-        <h2 className="font-heading font-bold text-base text-rose-500 mb-1">
-          Delete account
-        </h2>
-        <p className="text-xs text-cocoa-faded mb-4">
-          This permanently removes your access to Flax. This cannot be undone.
-        </p>
-
-        {isOAuth ? (
-          <p className="text-sm text-cocoa-faded">
-            Google accounts cannot be deleted from here. Contact support to
-            remove this account.
+      {showDeleteAccount === "true" && (
+        <div className="bg-surface-two dark:bg-black-surface rounded-2xl p-5">
+          <h2 className="font-heading font-bold text-sm md:text-base text-rose-500 mb-1">
+            Delete account
+          </h2>
+          <p className="text-xs text-cocoa-faded mb-4">
+            This permanently removes your access to Flax. This cannot be undone.
           </p>
-        ) : !showDelete ? (
-          <button
-            onClick={() => setShowDelete(true)}
-            className="py-2.5 px-6 rounded-xl border border-rose-500 text-rose-500
-              text-sm font-semibold hover:bg-rose-500/5"
-          >
-            Delete my account
-          </button>
-        ) : (
-          <div className="space-y-3">
-            <input
-              type="password"
-              placeholder="Enter your password to confirm"
-              value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)}
-              className={inputClass}
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={() => deleteAccountMutation.mutate()}
-                disabled={deleteAccountMutation.isPending || !deletePassword}
-                className="py-2.5 px-6 rounded-xl bg-rose-500 text-surface
+
+          {isOAuth ? (
+            <p className="text-sm text-cocoa-faded">
+              Google accounts cannot be deleted from here. Contact support to
+              remove this account.
+            </p>
+          ) : !showDelete ? (
+            <button
+              onClick={() => setShowDelete(true)}
+              className="py-2.5 px-6 rounded-xl border border-rose-500 text-rose-500
+              text-sm font-medium hover:bg-rose-500/5"
+            >
+              Delete my account
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <input
+                type="password"
+                placeholder="Enter your password to confirm"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                className={inputClass}
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => deleteAccountMutation.mutate()}
+                  disabled={deleteAccountMutation.isPending || !deletePassword}
+                  className="py-2.5 px-6 rounded-xl bg-rose-500 text-surface
                   text-sm font-semibold hover:opacity-90 disabled:opacity-50"
-              >
-                {deleteAccountMutation.isPending
-                  ? "Deleting..."
-                  : "Confirm delete"}
-              </button>
-              <button
-                onClick={() => {
-                  setShowDelete(false);
-                  setDeletePassword("");
-                }}
-                className="py-2.5 px-6 rounded-xl border border-cocoa/20 dark:border-dark-white/20
+                >
+                  {deleteAccountMutation.isPending
+                    ? "Deleting..."
+                    : "Confirm delete"}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDelete(false);
+                    setDeletePassword("");
+                  }}
+                  className="py-2.5 px-6 rounded-xl border border-cocoa/20 dark:border-dark-white/20
                   text-sm text-cocoa dark:text-dark-white"
-              >
-                Cancel
-              </button>
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 
@@ -333,7 +335,7 @@ export const SettingsPage = () => {
             <MobileTopNav />
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 pt-4 md:pt-20 lg:pt-2 pb-6">
+          <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 pt-4 md:pt-5 lg:pt-2 pb-6">
             {mainContent}
           </div>
         </div>

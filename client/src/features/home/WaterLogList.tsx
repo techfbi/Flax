@@ -1,12 +1,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { GlassWater, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
 import type { WaterLogEntry } from "@/types/apiTypes";
 import { useTheme } from "@/context/ThemeContext";
+import { useState } from "react";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 interface WaterLogListProps {
   logs: WaterLogEntry[];
+  editable?: boolean;
 }
 
 /*
@@ -16,7 +19,8 @@ interface WaterLogListProps {
   streak panel, this component is for the detailed list in Log intake
   and History.
 */
-export const WaterLogList = ({ logs }: WaterLogListProps) => {
+export const WaterLogList = ({ logs, editable = true }: WaterLogListProps) => {
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const { resolvedTheme } = useTheme();
 
@@ -72,17 +76,28 @@ export const WaterLogList = ({ logs }: WaterLogListProps) => {
             </p>
           </div>
 
-          <button
-            onClick={() => deleteLog.mutate(log.id)}
-            disabled={deleteLog.isPending}
-            aria-label="Delete water log"
-            className="text-cocoa/30 dark:text-dark-white/30
-              hover:text-rose-500 transition-colors disabled:opacity-40 shrink-0"
-          >
-            <Trash2 size={17} />
-          </button>
+          {editable && (
+            <button
+              onClick={() => setDeleteTargetId(log.id)}
+              aria-label="Delete water log"
+              className="text-cocoa/30 dark:text-dark-white/30 hover:text-rose-500 transition-colors shrink-0"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
         </div>
       ))}
+      <ConfirmModal
+        open={deleteTargetId !== null}
+        title="Remove this water log?"
+        message="This removes it from today's total. This cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={() => {
+          if (deleteTargetId) deleteLog.mutate(deleteTargetId);
+          setDeleteTargetId(null);
+        }}
+        onCancel={() => setDeleteTargetId(null)}
+      />
     </div>
   );
 };

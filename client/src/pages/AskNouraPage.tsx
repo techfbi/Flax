@@ -5,6 +5,7 @@ import { MobileTopNav } from "@/components/layout/MobileTopNav";
 import { NouraFullChat } from "@/features/home/NouraFullChat";
 import { StreakPanel } from "@/features/home/StreakPanel";
 import { useTheme } from "@/context/ThemeContext";
+import { getLocalDateStr } from "@/lib/date";
 import api from "@/lib/api";
 import type {
   ApiResponse,
@@ -51,7 +52,7 @@ export const AskNouraPage = () => {
     queryKey: ["dashboard"],
     queryFn: async () => {
       const { data } = await api.get<ApiResponse<{ dashboard: DashboardData }>>(
-        "/api/meal-logs/dashboard",
+        `/api/meal-logs/dashboard?date=${getLocalDateStr()}`,
       );
       return data.data.dashboard;
     },
@@ -61,9 +62,8 @@ export const AskNouraPage = () => {
   const { data: waterData } = useQuery({
     queryKey: ["water", "today"],
     queryFn: async () => {
-      const today = new Date().toISOString().split("T")[0];
       const { data } = await api.get<ApiResponse<WaterData>>(
-        `/api/water?date=${today}`,
+        `/api/water?date=${getLocalDateStr()}`,
       );
       return data.data;
     },
@@ -73,8 +73,9 @@ export const AskNouraPage = () => {
   const { data: streakData } = useQuery({
     queryKey: ["streaks"],
     queryFn: async () => {
-      const { data } =
-        await api.get<ApiResponse<{ streaks: StreakData }>>("/api/streaks");
+      const { data } = await api.get<ApiResponse<{ streaks: StreakData }>>(
+        `/api/streaks?date=${getLocalDateStr()}`,
+      );
       return data.data.streaks;
     },
     staleTime: 5 * 60 * 1000,

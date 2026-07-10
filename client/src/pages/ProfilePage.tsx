@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, X, Check } from "lucide-react";
 import { toast } from "sonner";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageTopBar } from "@/components/layout/PageTopBar";
 import { MobileTopNav } from "@/components/layout/MobileTopNav";
 import { StreakPanel } from "@/features/home/StreakPanel";
+import { AvatarPickerModal } from "@/features/profile/AvatarPickerModal";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthStore } from "@/store/authStore";
 import { useTheme } from "@/context/ThemeContext";
-import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import type {
   ApiResponse,
@@ -25,14 +25,14 @@ import type {
 
 /*
   Profile page. Who the user is and what Flax knows about their health,
-  in one place, editable in it. Account security (password, delete
-  account) and app preferences (theme, notifications) live in Settings
-  instead, that split is the familiar one, profile is identity, settings
-  is configuration.
+  editable in place. Account security and app preferences live in
+  Settings instead, that split is the familiar one, profile is
+  identity, settings is configuration.
 
-  Calorie and water panel stays on the right on desktop, same component
-  and same data every other page with it uses, hidden on tablet and
-  mobile where the main content needs the width instead.
+  Calorie and water panel stays on the right on desktop, same
+  component and same data every other page with it uses. Hidden on
+  tablet and mobile where the main content needs the width instead,
+  and the main content centers itself either way.
 */
 
 const DIETARY_STYLES: DietaryStyle[] = [
@@ -115,11 +115,10 @@ export const ProfilePage = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // ---- Identity: name and avatar, small inline edits ----
+  // ---- Identity: name inline edit, avatar via preset picker ----
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState("");
-  const [editingAvatar, setEditingAvatar] = useState(false);
-  const [avatarInput, setAvatarInput] = useState("");
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   useEffect(() => {
     if (profile) setNameInput(profile.display_name);
@@ -142,14 +141,14 @@ export const ProfilePage = () => {
       setAvatarUrl(updated.avatar_url);
       toast.success("Profile updated");
       setEditingName(false);
-      setEditingAvatar(false);
+      setShowAvatarPicker(false);
     },
     onError: () => toast.error("Could not update profile. Try again."),
   });
 
-  // ---- Health form ----
+  // ---- Health form, collapsed behind an edit icon ----
+  const [editingHealth, setEditingHealth] = useState(false);
   const [health, setHealth] = useState({
-    region: "",
     dietary_style: "" as DietaryStyle | "",
     health_goal: "" as HealthGoal | "",
     biological_sex: "" as BiologicalSex | "",
@@ -169,7 +168,6 @@ export const ProfilePage = () => {
     healthInitialized.current = true;
     const h = profile.health;
     setHealth({
-      region: h.region ?? "",
       dietary_style: (h.dietary_style as DietaryStyle) ?? "",
       health_goal: (h.health_goal as HealthGoal) ?? "",
       biological_sex: (h.biological_sex as BiologicalSex) ?? "",
@@ -193,6 +191,7 @@ export const ProfilePage = () => {
     onSuccess: (updated) => {
       queryClient.setQueryData(["user-profile"], updated);
       toast.success("Health profile updated");
+      setEditingHealth(false);
     },
     onError: () => toast.error("Could not update health profile. Try again."),
   });
@@ -202,7 +201,6 @@ export const ProfilePage = () => {
       allergies,
       health_conditions: conditions,
     };
-    if (health.region.trim()) body.region = health.region.trim();
     if (health.dietary_style) body.dietary_style = health.dietary_style;
     if (health.health_goal) body.health_goal = health.health_goal;
     if (health.biological_sex) body.biological_sex = health.biological_sex;
@@ -235,8 +233,9 @@ export const ProfilePage = () => {
     setConditionInput("");
   };
 
-  // ---- Calorie and water targets, separate mini editors since they
-  // have a distinct null means auto calculated semantic ----
+  // ---- Targets, collapsed behind an edit icon, own mini editors since
+  // they have a distinct null means auto calculated semantic ----
+  const [editingTargets, setEditingTargets] = useState(false);
   const [calorieInput, setCalorieInput] = useState("");
   const [waterInput, setWaterInput] = useState("");
   useEffect(() => {
@@ -277,7 +276,7 @@ export const ProfilePage = () => {
     profile.provider === "google" ? "Google account" : "Email and password";
 
   const mainContent = (
-    <div className="space-y-5 max-w-2xl">
+    <div className="space-y-5 max-w-2xl mx-auto">
       {/* Identity card */}
       <div className="bg-surface-two dark:bg-black-surface rounded-2xl p-5">
         <div className="flex items-center gap-4">
@@ -296,10 +295,7 @@ export const ProfilePage = () => {
               )}
             </div>
             <button
-              onClick={() => {
-                setAvatarInput(profile.avatar_url ?? "");
-                setEditingAvatar(true);
-              }}
+              onClick={() => setShowAvatarPicker(true)}
               aria-label="Edit avatar"
               className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-pawpaw dark:bg-black-pawpaw
                 text-surface flex items-center justify-center hover:opacity-90"
@@ -359,9 +355,6 @@ export const ProfilePage = () => {
                 </button>
               </div>
             )}
-            <p className="text-sm text-cocoa-faded truncate mt-0.5">
-              {profile.email}
-            </p>
             <div className="flex items-center gap-2 mt-1.5">
               <span className="text-[11px] px-2 py-0.5 rounded-full bg-cocoa/8 dark:bg-dark-white/8 text-cocoa-faded">
                 {providerLabel}
@@ -376,368 +369,386 @@ export const ProfilePage = () => {
             </div>
           </div>
         </div>
+      </div>
 
-        {editingAvatar && (
-          <div className="mt-4 pt-4 border-t border-cocoa/10 dark:border-dark-white/10">
-            <label className="text-xs text-cocoa-faded block mb-1">
-              Image URL. Direct photo upload is not available yet, paste a link
-              to an image for now.
-            </label>
-            <div className="flex gap-2">
+      <AvatarPickerModal
+        open={showAvatarPicker}
+        biologicalSex={profile.health?.biological_sex}
+        currentUrl={profile.avatar_url}
+        onSelect={(url) => updateProfileMutation.mutate({ avatar_url: url })}
+        onClose={() => setShowAvatarPicker(false)}
+      />
+
+      {/* Health and goals, collapsed until edit is tapped */}
+      <div className="bg-surface-two dark:bg-black-surface rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-heading font-bold text-base text-cocoa dark:text-dark-white">
+            Health and goals
+          </h2>
+          <button
+            onClick={() => setEditingHealth((v) => !v)}
+            aria-label="Edit health and goals"
+            className="text-cocoa/40 dark:text-dark-white/40 hover:text-cocoa dark:hover:text-dark-white"
+          >
+            <Pencil size={15} />
+          </button>
+        </div>
+
+        {!editingHealth ? (
+          <p className="text-sm text-cocoa-faded">
+            {[
+              profile.health?.dietary_style,
+              profile.health?.health_goal,
+              profile.health?.activity_level,
+            ]
+              .filter(Boolean)
+              .map((v) => labelize(v as string))
+              .join(" · ") ||
+              "Not set yet, tap edit to add your health details"}
+          </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="text-xs text-cocoa-faded block mb-1">
+                  Region
+                </label>
+                <p
+                  className="w-full bg-cocoa/5 dark:bg-dark-white/5 border border-cocoa/10 dark:border-dark-white/10
+                  rounded-lg px-3 py-2 text-sm text-cocoa-faded italic"
+                >
+                  {profile.health?.region || "Not set"}
+                </p>
+              </div>
+              <div>
+                <label className="text-xs text-cocoa-faded block mb-1">
+                  Age
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={health.exact_age}
+                  onChange={(e) =>
+                    setHealth((p) => ({
+                      ...p,
+                      exact_age: sanitizeNumber(e.target.value),
+                    }))
+                  }
+                  placeholder={profile.health?.age_range ?? "Your age"}
+                  className={inputClass}
+                />
+                <p className="text-[10px] text-cocoa-faded mt-1">
+                  Input exact age to get more accurate calorie and water targets
+                </p>
+              </div>
+              <div>
+                <label className="text-xs text-cocoa-faded block mb-1">
+                  Dietary style
+                </label>
+                <select
+                  value={health.dietary_style}
+                  onChange={(e) =>
+                    setHealth((p) => ({
+                      ...p,
+                      dietary_style: e.target.value as DietaryStyle,
+                    }))
+                  }
+                  className={`${inputClass} capitalize`}
+                >
+                  <option value="">Not set</option>
+                  {DIETARY_STYLES.map((d) => (
+                    <option key={d} value={d}>
+                      {labelize(d)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-cocoa-faded block mb-1">
+                  Health goal
+                </label>
+                <select
+                  value={health.health_goal}
+                  onChange={(e) =>
+                    setHealth((p) => ({
+                      ...p,
+                      health_goal: e.target.value as HealthGoal,
+                    }))
+                  }
+                  className={inputClass}
+                >
+                  <option value="">Not set</option>
+                  {HEALTH_GOALS.map((g) => (
+                    <option key={g} value={g}>
+                      {labelize(g)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-cocoa-faded block mb-1">
+                  Biological sex
+                </label>
+                <select
+                  value={health.biological_sex}
+                  onChange={(e) =>
+                    setHealth((p) => ({
+                      ...p,
+                      biological_sex: e.target.value as BiologicalSex,
+                    }))
+                  }
+                  className={`${inputClass} capitalize`}
+                >
+                  <option value="">Not set</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-cocoa-faded block mb-1">
+                  Activity level
+                </label>
+                <select
+                  value={health.activity_level}
+                  onChange={(e) =>
+                    setHealth((p) => ({
+                      ...p,
+                      activity_level: e.target.value as ActivityLevel,
+                    }))
+                  }
+                  className={inputClass}
+                >
+                  <option value="">Not set</option>
+                  {ACTIVITY_LEVELS.map((a) => (
+                    <option key={a} value={a}>
+                      {labelize(a)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-cocoa-faded block mb-1">
+                  Height (cm)
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={health.height_cm}
+                  onChange={(e) =>
+                    setHealth((p) => ({
+                      ...p,
+                      height_cm: sanitizeNumber(e.target.value),
+                    }))
+                  }
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-cocoa-faded block mb-1">
+                  Weight (kg)
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={health.weight_kg}
+                  onChange={(e) =>
+                    setHealth((p) => ({
+                      ...p,
+                      weight_kg: sanitizeNumber(e.target.value),
+                    }))
+                  }
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="text-xs text-cocoa-faded block mb-1.5">
+                Allergies
+              </label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {allergies.map((a) => (
+                  <span
+                    key={a}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs
+                      bg-cocoa/8 dark:bg-dark-white/8 text-cocoa dark:text-dark-white
+                      border border-cocoa/15 dark:border-dark-white/15"
+                  >
+                    {a}
+                    <button
+                      onClick={() =>
+                        setAllergies((prev) => prev.filter((x) => x !== a))
+                      }
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
               <input
                 type="text"
-                value={avatarInput}
-                onChange={(e) => setAvatarInput(e.target.value)}
-                placeholder="https://..."
+                value={allergyInput}
+                onChange={(e) => setAllergyInput(e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), addAllergy())
+                }
+                placeholder="Add an allergy and press Enter"
                 className={inputClass}
               />
-              <button
-                onClick={() =>
-                  updateProfileMutation.mutate({
-                    avatar_url: avatarInput.trim() || null,
-                  })
-                }
-                disabled={updateProfileMutation.isPending}
-                className="px-4 py-2 rounded-lg bg-moringa dark:bg-moringa-faded text-surface text-sm font-semibold shrink-0"
-              >
-                Save
-              </button>
-              <button
-                onClick={() => setEditingAvatar(false)}
-                className="px-3 py-2 rounded-lg border border-cocoa/20 dark:border-dark-white/20 text-sm text-cocoa dark:text-dark-white shrink-0"
-              >
-                Cancel
-              </button>
             </div>
-          </div>
+
+            <div className="mb-5">
+              <label className="text-xs text-cocoa-faded block mb-1.5">
+                Health conditions
+              </label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {conditions.map((c) => (
+                  <span
+                    key={c}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs
+                      bg-cocoa/8 dark:bg-dark-white/8 text-cocoa dark:text-dark-white
+                      border border-cocoa/15 dark:border-dark-white/15"
+                  >
+                    {c}
+                    <button
+                      onClick={() =>
+                        setConditions((prev) => prev.filter((x) => x !== c))
+                      }
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <input
+                type="text"
+                value={conditionInput}
+                onChange={(e) => setConditionInput(e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), addCondition())
+                }
+                placeholder="Add a condition and press Enter"
+                className={inputClass}
+              />
+            </div>
+
+            <button
+              onClick={saveHealthForm}
+              disabled={updateHealthMutation.isPending}
+              className="py-2.5 px-6 rounded-xl bg-moringa dark:bg-moringa-faded
+                text-surface text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+            >
+              {updateHealthMutation.isPending ? "Saving..." : "Save changes"}
+            </button>
+          </>
         )}
       </div>
 
-      {/* Health and goals form */}
+      {/* Targets, collapsed until edit is tapped */}
       <div className="bg-surface-two dark:bg-black-surface rounded-2xl p-5">
-        <h2 className="font-heading font-bold text-base text-cocoa dark:text-dark-white mb-4">
-          Health and goals
-        </h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="text-xs text-cocoa-faded block mb-1">
-              Region
-            </label>
-            <input
-              type="text"
-              value={health.region}
-              onChange={(e) =>
-                setHealth((p) => ({ ...p, region: e.target.value }))
-              }
-              placeholder="e.g. South West Nigeria"
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className="text-xs text-cocoa-faded block mb-1">Age</label>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={health.exact_age}
-              onChange={(e) =>
-                setHealth((p) => ({
-                  ...p,
-                  exact_age: sanitizeNumber(e.target.value),
-                }))
-              }
-              placeholder={profile.health?.age_range ?? "Your age"}
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className="text-xs text-cocoa-faded block mb-1">
-              Dietary style
-            </label>
-            <select
-              value={health.dietary_style}
-              onChange={(e) =>
-                setHealth((p) => ({
-                  ...p,
-                  dietary_style: e.target.value as DietaryStyle,
-                }))
-              }
-              className={`${inputClass} capitalize`}
-            >
-              <option value="">Not set</option>
-              {DIETARY_STYLES.map((d) => (
-                <option key={d} value={d}>
-                  {labelize(d)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs text-cocoa-faded block mb-1">
-              Health goal
-            </label>
-            <select
-              value={health.health_goal}
-              onChange={(e) =>
-                setHealth((p) => ({
-                  ...p,
-                  health_goal: e.target.value as HealthGoal,
-                }))
-              }
-              className={inputClass}
-            >
-              <option value="">Not set</option>
-              {HEALTH_GOALS.map((g) => (
-                <option key={g} value={g}>
-                  {labelize(g)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs text-cocoa-faded block mb-1">
-              Biological sex
-            </label>
-            <select
-              value={health.biological_sex}
-              onChange={(e) =>
-                setHealth((p) => ({
-                  ...p,
-                  biological_sex: e.target.value as BiologicalSex,
-                }))
-              }
-              className={`${inputClass} capitalize`}
-            >
-              <option value="">Not set</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-xs text-cocoa-faded block mb-1">
-              Activity level
-            </label>
-            <select
-              value={health.activity_level}
-              onChange={(e) =>
-                setHealth((p) => ({
-                  ...p,
-                  activity_level: e.target.value as ActivityLevel,
-                }))
-              }
-              className={inputClass}
-            >
-              <option value="">Not set</option>
-              {ACTIVITY_LEVELS.map((a) => (
-                <option key={a} value={a}>
-                  {labelize(a)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs text-cocoa-faded block mb-1">
-              Height (cm)
-            </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={health.height_cm}
-              onChange={(e) =>
-                setHealth((p) => ({
-                  ...p,
-                  height_cm: sanitizeNumber(e.target.value),
-                }))
-              }
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className="text-xs text-cocoa-faded block mb-1">
-              Weight (kg)
-            </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={health.weight_kg}
-              onChange={(e) =>
-                setHealth((p) => ({
-                  ...p,
-                  weight_kg: sanitizeNumber(e.target.value),
-                }))
-              }
-              className={inputClass}
-            />
-          </div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-heading font-bold text-base text-cocoa dark:text-dark-white">
+            Daily targets
+          </h2>
+          <button
+            onClick={() => setEditingTargets((v) => !v)}
+            aria-label="Edit targets"
+            className="text-cocoa/40 dark:text-dark-white/40 hover:text-cocoa dark:hover:text-dark-white"
+          >
+            <Pencil size={15} />
+          </button>
         </div>
 
-        {/* Allergies */}
-        <div className="mb-4">
-          <label className="text-xs text-cocoa-faded block mb-1.5">
-            Allergies
-          </label>
-          <div className="flex flex-wrap gap-2 mb-2">
-            {allergies.map((a) => (
-              <span
-                key={a}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs
-                  bg-cocoa/8 dark:bg-dark-white/8 text-cocoa dark:text-dark-white
-                  border border-cocoa/15 dark:border-dark-white/15"
-              >
-                {a}
+        {!editingTargets ? (
+          <p className="text-sm text-cocoa-faded">
+            Edit to input desired targets
+          </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs text-cocoa-faded block mb-1">
+                  Calorie target
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={calorieInput}
+                    onChange={(e) =>
+                      setCalorieInput(sanitizeNumber(e.target.value))
+                    }
+                    className={inputClass}
+                  />
+                  <button
+                    onClick={() =>
+                      calorieInput &&
+                      targetMutation.mutate({
+                        calorie_target: Number(calorieInput),
+                      })
+                    }
+                    disabled={targetMutation.isPending}
+                    className="px-3 py-2 rounded-lg bg-moringa dark:bg-moringa-faded text-surface text-xs font-semibold shrink-0"
+                  >
+                    Save
+                  </button>
+                </div>
                 <button
                   onClick={() =>
-                    setAllergies((prev) => prev.filter((x) => x !== a))
+                    targetMutation.mutate({ calorie_target: null })
                   }
+                  disabled={targetMutation.isPending}
+                  className="text-[11px] text-cocoa-faded hover:text-cocoa dark:hover:text-dark-white mt-1.5 underline decoration-dotted"
                 >
-                  <X size={12} />
+                  Reset to auto calculated
                 </button>
-              </span>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={allergyInput}
-              onChange={(e) => setAllergyInput(e.target.value)}
-              onKeyDown={(e) =>
-                e.key === "Enter" && (e.preventDefault(), addAllergy())
-              }
-              placeholder="Add an allergy and press Enter"
-              className={inputClass}
-            />
-          </div>
-        </div>
+              </div>
 
-        {/* Health conditions */}
-        <div className="mb-5">
-          <label className="text-xs text-cocoa-faded block mb-1.5">
-            Health conditions
-          </label>
-          <div className="flex flex-wrap gap-2 mb-2">
-            {conditions.map((c) => (
-              <span
-                key={c}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs
-                  bg-cocoa/8 dark:bg-dark-white/8 text-cocoa dark:text-dark-white
-                  border border-cocoa/15 dark:border-dark-white/15"
-              >
-                {c}
+              <div>
+                <label className="text-xs text-cocoa-faded block mb-1">
+                  Water target (ml)
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={waterInput}
+                    onChange={(e) =>
+                      setWaterInput(sanitizeNumber(e.target.value))
+                    }
+                    className={inputClass}
+                  />
+                  <button
+                    onClick={() =>
+                      waterInput &&
+                      targetMutation.mutate({
+                        water_target_ml: Number(waterInput),
+                      })
+                    }
+                    disabled={targetMutation.isPending}
+                    className="px-3 py-2 rounded-lg bg-moringa dark:bg-moringa-faded text-surface text-xs font-semibold shrink-0"
+                  >
+                    Save
+                  </button>
+                </div>
                 <button
                   onClick={() =>
-                    setConditions((prev) => prev.filter((x) => x !== c))
+                    targetMutation.mutate({ water_target_ml: null })
                   }
+                  disabled={targetMutation.isPending}
+                  className="text-[11px] text-cocoa-faded hover:text-cocoa dark:hover:text-dark-white mt-1.5 underline decoration-dotted"
                 >
-                  <X size={12} />
+                  Reset to auto calculated
                 </button>
-              </span>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={conditionInput}
-              onChange={(e) => setConditionInput(e.target.value)}
-              onKeyDown={(e) =>
-                e.key === "Enter" && (e.preventDefault(), addCondition())
-              }
-              placeholder="Add a condition and press Enter"
-              className={inputClass}
-            />
-          </div>
-        </div>
-
-        <button
-          onClick={saveHealthForm}
-          disabled={updateHealthMutation.isPending}
-          className="py-2.5 px-6 rounded-xl bg-moringa dark:bg-moringa-faded
-            text-surface text-sm font-semibold hover:opacity-90 disabled:opacity-50"
-        >
-          {updateHealthMutation.isPending ? "Saving..." : "Save changes"}
-        </button>
-      </div>
-
-      {/* Targets, separate from the form above since they have their
-      own auto calculated vs manual override behavior */}
-      <div className="bg-surface-two dark:bg-black-surface rounded-2xl p-5">
-        <h2 className="font-heading font-bold text-base text-cocoa dark:text-dark-white mb-4">
-          Daily targets
-        </h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="text-xs text-cocoa-faded block mb-1">
-              Calorie target
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                inputMode="numeric"
-                value={calorieInput}
-                onChange={(e) =>
-                  setCalorieInput(sanitizeNumber(e.target.value))
-                }
-                className={inputClass}
-              />
-              <button
-                onClick={() =>
-                  calorieInput &&
-                  targetMutation.mutate({
-                    calorie_target: Number(calorieInput),
-                  })
-                }
-                disabled={targetMutation.isPending}
-                className="px-3 py-2 rounded-lg bg-moringa dark:bg-moringa-faded text-surface text-xs font-semibold shrink-0"
-              >
-                Save
-              </button>
+              </div>
             </div>
-            <button
-              onClick={() => targetMutation.mutate({ calorie_target: null })}
-              disabled={targetMutation.isPending}
-              className="text-[11px] text-cocoa-faded hover:text-cocoa dark:hover:text-dark-white mt-1.5 underline decoration-dotted"
-            >
-              Reset to auto calculated
-            </button>
-          </div>
-
-          <div>
-            <label className="text-xs text-cocoa-faded block mb-1">
-              Water target (ml)
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                inputMode="numeric"
-                value={waterInput}
-                onChange={(e) => setWaterInput(sanitizeNumber(e.target.value))}
-                className={inputClass}
-              />
-              <button
-                onClick={() =>
-                  waterInput &&
-                  targetMutation.mutate({ water_target_ml: Number(waterInput) })
-                }
-                disabled={targetMutation.isPending}
-                className="px-3 py-2 rounded-lg bg-moringa dark:bg-moringa-faded text-surface text-xs font-semibold shrink-0"
-              >
-                Save
-              </button>
-            </div>
-            <button
-              onClick={() => targetMutation.mutate({ water_target_ml: null })}
-              disabled={targetMutation.isPending}
-              className="text-[11px] text-cocoa-faded hover:text-cocoa dark:hover:text-dark-white mt-1.5 underline decoration-dotted"
-            >
-              Reset to auto calculated
-            </button>
-          </div>
-        </div>
-        <p className="text-[11px] text-cocoa-faded mt-3">
-          Auto calculated targets use your sex, weight, height, age, activity
-          level, and goal above. Set enough of those fields and save for the
-          auto calculation to have something to work with.
-        </p>
+            <p className="text-[11px] text-cocoa-faded mt-3">
+              Auto calculated targets use your sex, weight, height, age,
+              activity level, and goal above. Set enough of those fields and
+              save for the auto calculation to have something to work with.
+            </p>
+          </>
+        )}
       </div>
     </div>
   );

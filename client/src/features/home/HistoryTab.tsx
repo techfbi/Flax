@@ -5,7 +5,13 @@ import { toast } from "sonner";
 import { WaterLogList } from "./WaterLogList";
 import api from "@/lib/api";
 import { SlidingTabs } from "@/components/ui/SlidingTabs";
-import type { ApiResponse, MealLogEntry, WaterData } from "@/types/apiTypes";
+import type {
+  ApiResponse,
+  MealLogEntry,
+  WaterData,
+  MealType,
+} from "@/types/apiTypes";
+import { getLocalDateStr } from "@/lib/date";
 
 /*
   History tab. Meals and water logs, not bounded to 2 days, that limit
@@ -18,7 +24,7 @@ import type { ApiResponse, MealLogEntry, WaterData } from "@/types/apiTypes";
 const toDateStr = (d: Date) => d.toISOString().split("T")[0];
 
 const formatLabel = (dateStr: string) => {
-  const today = toDateStr(new Date());
+  const today = getLocalDateStr();
   const yesterday = toDateStr(new Date(Date.now() - 86400000));
   if (dateStr === today) return "Today";
   if (dateStr === yesterday) return "Yesterday";
@@ -36,6 +42,13 @@ export const HistoryTab = () => {
   const [selectedDate, setSelectedDate] = useState(today);
   const [view, setView] = useState<View>("meals");
   const dateInputRef = useRef<HTMLInputElement>(null);
+  const MEAL_TYPE_ORDER: MealType[] = [
+    "breakfast",
+    "brunch",
+    "lunch",
+    "dinner",
+    "snack",
+  ];
 
   const shiftDate = (days: number) => {
     const next = toDateStr(
@@ -155,24 +168,38 @@ export const HistoryTab = () => {
               No meals logged on this day
             </p>
           )}
-          {logs?.map((log) => (
-            <div
-              key={log.id}
-              className="flex items-center justify-between px-4 py-3
-                rounded-xl bg-cocoa/5 dark:bg-dark-white/5
-                border border-cocoa/5 dark:border-dark-white/5"
-            >
-              <div>
-                <p className="text-sm font-medium text-cocoa dark:text-dark-white">
-                  {log.food_name ?? log.custom_name}
+          {MEAL_TYPE_ORDER.map((type) => {
+            const entries = (logs ?? []).filter((l) => l.meal_type === type);
+            if (entries.length === 0) return null;
+
+            return (
+              <div key={type} className="mb-4 last:mb-0">
+                <p className="text-xs font-semibold text-cocoa/70 dark:text-dark-white/60 uppercase tracking-wide mb-2">
+                  {type}
                 </p>
-                <p className="text-[11px] text-cocoa-faded capitalize">
-                  {log.meal_type} · {log.quantity_grams}g ·{" "}
-                  {Math.round(log.calories)} kcal
-                </p>
+                <div className="space-y-2">
+                  {entries.map((log) => (
+                    <div
+                      key={log.id}
+                      className="flex items-center justify-between px-4 py-3
+              rounded-xl bg-cocoa/5 dark:bg-dark-white/5
+              border border-cocoa/5 dark:border-dark-white/5"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-cocoa dark:text-dark-white">
+                          {log.food_name ?? log.custom_name}
+                        </p>
+                        <p className="text-[11px] text-cocoa-faded">
+                          {log.quantity_grams}g · {Math.round(log.calories)}{" "}
+                          kcal
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div>
@@ -186,7 +213,10 @@ export const HistoryTab = () => {
                 {water?.target_ml ? ` of ${water.target_ml}ml target` : ""}
               </p>
               {water && water.logs.length > 0 ? (
-                <WaterLogList logs={water.logs} />
+                <WaterLogList
+                  logs={water.logs}
+                  editable={selectedDate === today}
+                />
               ) : (
                 <p className="text-sm text-cocoa-faded text-center py-8">
                   No water logged on this day

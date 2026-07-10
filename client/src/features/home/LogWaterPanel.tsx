@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { WaterLogList } from "./WaterLogList";
 import api from "@/lib/api";
 import type { ApiResponse, WaterData } from "@/types/apiTypes";
+import { getLocalDateStr } from "@/lib/date";
 
 interface LogWaterPanelProps {
   waterData: WaterData | undefined;
@@ -35,6 +36,7 @@ export const LogWaterPanel = ({ waterData, onRefetch }: LogWaterPanelProps) => {
     mutationFn: async (amount: number) => {
       const { data } = await api.post<ApiResponse<unknown>>("/api/water", {
         amount_ml: amount,
+        logged_date: getLocalDateStr(),
       });
       return data;
     },

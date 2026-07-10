@@ -22,6 +22,8 @@ import type {
 */
 
 const SEND_TIMEOUT_MS = 20000;
+const DRAFT_STORAGE_KEY = "flax-noura-draft";
+const FAILED_STORAGE_KEY = "flax-noura-failed-messages";
 
 export interface LocalMessage {
   role: "user" | "assistant";
@@ -32,7 +34,6 @@ export interface LocalMessage {
 }
 
 export const useNouraChat = () => {
-  const [message, setMessage] = useState("");
   const [localMessages, setLocalMessages] = useState<LocalMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
   const [streamingText, setStreamingText] = useState<string | null>(null);
@@ -43,7 +44,43 @@ export const useNouraChat = () => {
   const sendControllerRef = useRef<AbortController | null>(null);
   const sendTimeoutRef = useRef<number | null>(null);
 
+  //1 second delay before the thinking animation
+  const thinkingDelayRef = useRef<number | null>(null);
+  const clearThinkingDelay = () => {
+    if (thinkingDelayRef.current) {
+      window.clearTimeout(thinkingDelayRef.current);
+      thinkingDelayRef.current = null;
+    }
+  };
+
   const queryClient = useQueryClient();
+  // Restore anything left in the input box from before a reload.
+  const [message, setMessage] = useState(() => {
+    try {
+      return sessionStorage.getItem(DRAFT_STORAGE_KEY) ?? "";
+    } catch {
+      return "";
+    }
+  });
+
+  useEffect(() => {
+    try {
+      if (message) sessionStorage.setItem(DRAFT_STORAGE_KEY, message);
+      else sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch {
+      // storage unavailable, draft just will not survive a reload
+    }
+  }, [message]);
+
+  useEffect(() => {
+    const failed = localMessages.filter((m) => m.status === "failed");
+    try {
+      if (failed.length) sessionStorage.setItem(FAILED_STORAGE_KEY, JSON.stringify(failed));
+      else sessionStorage.removeItem(FAILED_STORAGE_KEY);
+    } catch {
+      // storage unavailable, failed messages just will not survive a reload
+    }
+  }, [localMessages]);
 
   const { data: history } = useQuery({
     queryKey: ["chat-history"],
@@ -67,6 +104,24 @@ export const useNouraChat = () => {
       );
     }
   }, [history]);
+
+  //Persist failed messages so a message that couldn't send survives a reload too, and restore them once history has loaded
+useEffect(() => {
+  if (history && !historyLoaded.current) {
+    historyLoaded.current = true;
+    let restoredFailed: LocalMessage[] = [];
+    try {
+      const raw = sessionStorage.getItem(FAILED_STORAGE_KEY);
+      if (raw) restoredFailed = JSON.parse(raw);
+    } catch {
+      // ignore corrupt or unavailable storage
+    }
+    setLocalMessages([
+      ...history.map((m, i) => ({ role: m.role, content: m.content, id: `history-${i}` })),
+      ...restoredFailed,
+    ]);
+  }
+}, [history]);
 
   const handleScroll = () => {
     if (!scrollRef.current) return;
@@ -118,9 +173,10 @@ export const useNouraChat = () => {
       // to fire correctly. At the deadline it aborts the request and
       // flips this message to failed itself.
       clearSendWatchdog();
+      clearThinkingDelay();
+      thinkingDelayRef.current = window.setTimeout(() => setIsThinking(true), 1000);
       sendTimeoutRef.current = window.setTimeout(() => {
         sendControllerRef.current?.abort();
-        setIsThinking(false);
         setLocalMessages((prev) =>
           prev.map((m) => (m.id === id ? { ...m, status: "failed" } : m)),
         );
@@ -128,6 +184,7 @@ export const useNouraChat = () => {
     },
     onSuccess: ({ id, reply }) => {
       clearSendWatchdog();
+      clearThinkingDelay();
       setIsThinking(false);
       setLocalMessages((prev) =>
         prev.map((m) => (m.id === id ? { ...m, status: undefined } : m)),
@@ -136,6 +193,7 @@ export const useNouraChat = () => {
     },
     onError: (err: unknown, variables) => {
       clearSendWatchdog();
+      clearThinkingDelay();
       const code = (err as { code?: string })?.code;
 
       // The watchdog already reset state before this fires, nothing
@@ -168,13 +226,21 @@ export const useNouraChat = () => {
     if (!trimmed || isThinking || streamingText !== null) return;
 
     setMessage("");
+    try {
+      sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch {
+      // no-op
+    }
 
     const id = `user-${Date.now()}`;
     setLocalMessages((prev) => [
       ...prev,
       { role: "user", content: trimmed, id, status: "sending" },
     ]);
-    setIsThinking(true);
+    clearThinkingDelay();
+    thinkingDelayRef.current = window.setTimeout(() => {
+      setIsThinking(true);
+    }, 1000);
     sendMutation.mutate({ id, text: trimmed });
   };
 
@@ -185,7 +251,10 @@ export const useNouraChat = () => {
     setLocalMessages((prev) =>
       prev.map((m) => (m.id === id ? { ...m, status: "sending" } : m)),
     );
-    setIsThinking(true);
+    clearThinkingDelay();
+    thinkingDelayRef.current = window.setTimeout(() => {
+      setIsThinking(true);
+    }, 1000);
     sendMutation.mutate({ id, text: target.content });
   };
 

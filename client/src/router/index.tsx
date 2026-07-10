@@ -27,6 +27,7 @@ const SpinTab = lazy(() =>
 const AskNouraPage = lazy(() => import("@/pages/AskNouraPage"));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
+const NotificationsPage = lazy(() => import("@/pages/NotificationsPage"));
 
 /* Full screen spinner, shown while verifying session */
 const PageLoader = () => (
@@ -195,6 +196,21 @@ const SessionGate = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppRouter = () => {
+  // Useeffect to set timezone for user
+  useEffect(() => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const lastSent = sessionStorage.getItem("flax-timezone-sent");
+    if (lastSent === tz) return;
+    api
+      .patch("/api/users/timezone", { timezone: tz })
+      .then(() => sessionStorage.setItem("flax-timezone-sent", tz))
+      .catch(() => {
+        // non critical, scheduled notifications just skip this user
+        // until it succeeds on a future load
+      });
+    console.log(`User's Timesone is ${tz}`);
+  }, []);
+
   return (
     <BrowserRouter>
       <SessionGate>
@@ -296,7 +312,7 @@ const AppRouter = () => {
               path="/notifications"
               element={
                 <ProtectedRoute>
-                  <PlaceholderPage />
+                  <NotificationsPage />
                 </ProtectedRoute>
               }
             />

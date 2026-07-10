@@ -75,7 +75,7 @@ export const NouraFullChat = () => {
             onClick={() => setConfirmingClear(true)}
             aria-label="Clear chat"
             className="flex items-center gap-1.5 text-xs text-cocoa-faded
-                hover:text-rose-500 transition-colors"
+                hover:text-rose-700 transition-colors"
           >
             <Trash2 size={13} /> Clear chat
           </button>

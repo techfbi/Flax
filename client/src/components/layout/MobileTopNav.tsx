@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { ApiResponse } from "@/types/apiTypes";
 import {
   Menu,
   X,
@@ -31,6 +33,20 @@ export const MobileTopNav = () => {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
+
+  //The counter capped at 9+ clearing on notification open
+  const { data: notifData } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: async () => {
+      const { data } =
+        await api.get<
+          ApiResponse<{ notifications: unknown[]; unreadCount: number }>
+        >("/api/notifications");
+      return data.data;
+    },
+    staleTime: 30 * 1000,
+  });
+  const unreadCount = notifData?.unreadCount ?? 0;
 
   const cycleTheme = () => {
     const next: Record<string, "light" | "dark" | "system"> = {
@@ -98,7 +114,15 @@ export const MobileTopNav = () => {
                 bg-pawpaw text-surface text-[9px] font-bold
                 flex items-center justify-center"
               >
-                1
+                {unreadCount > 0 && (
+                  <span
+                    className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full
+                  bg-pawpaw text-surface text-[9px] font-bold
+                  flex items-center justify-center"
+                  >
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
               </span>
             </Link>
 

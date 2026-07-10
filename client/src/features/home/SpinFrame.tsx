@@ -5,6 +5,7 @@ interface SpinFrameProps {
   isSpinning: boolean;
   result: Food | null;
   cycleImages: string[];
+  soundEnabled: boolean;
 }
 
 /*
@@ -33,6 +34,7 @@ export const SpinFrame = ({
   isSpinning,
   result,
   cycleImages,
+  soundEnabled,
 }: SpinFrameProps) => {
   const [displayImage, setDisplayImage] = useState<string | null>(
     "./images/randomImage.png",
@@ -52,7 +54,16 @@ export const SpinFrame = ({
     spinSoundRef.current = new Audio("/sounds/spinning.mp3");
     landSoundRef.current = new Audio("/sounds/matchFound.mp3");
     spinSoundRef.current.loop = true;
+    spinSoundRef.current.muted = !soundEnabled;
+    landSoundRef.current.muted = !soundEnabled;
   }, []);
+
+  // Keep both elements in sync if the setting changes mid session,
+  // e.g. toggled in Settings while a spin is in progress.
+  useEffect(() => {
+    if (spinSoundRef.current) spinSoundRef.current.muted = !soundEnabled;
+    if (landSoundRef.current) landSoundRef.current.muted = !soundEnabled;
+  }, [soundEnabled]);
 
   /* Preload sounds. */
   useEffect(() => {

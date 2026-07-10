@@ -217,9 +217,11 @@ export interface StreakData {
   goal_streak: number
   goal_streak_best: number
   last_goal_date: string | null
+  goal_streak_status: "active" | "restorable" | "none"
   water_streak: number
   water_streak_best: number
   last_water_log_date: string | null
+  water_streak_status: "active" | "restorable" | "none"
 }
 
 /*

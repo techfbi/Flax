@@ -17,6 +17,9 @@ import { useSessionState } from "@/hooks/useSessionState";
 import { UserAvatar } from "@/components/layout/Sidebar";
 import { useSpinStore } from "@/store/spinStore";
 import { PantryTab } from "./PantryTab";
+import { getLocalDateStr } from "@/lib/date";
+import { useStreakRestore } from "@/hooks/useStreakRestore";
+import { getGoalStatus, getWaterStatus } from "@/lib/streakStatus";
 import type {
   ApiResponse,
   DashboardData,
@@ -47,6 +50,19 @@ const HomePage = () => {
   );
   const [notifOpen, setNotifOpen] = useState(false);
   const setPrefillMeal = useSpinStore((s) => s.setPrefillMeal);
+  const restoreMutation = useStreakRestore();
+  const { data: notifData } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: async () => {
+      const { data } =
+        await api.get<
+          ApiResponse<{ notifications: unknown[]; unreadCount: number }>
+        >("/api/notifications");
+      return data.data;
+    },
+    staleTime: 30 * 1000,
+  });
+  const unreadCount = notifData?.unreadCount ?? 0;
 
   const firstName = user?.display_name?.split(" ")[0] ?? "User";
 
@@ -54,7 +70,7 @@ const HomePage = () => {
     queryKey: ["dashboard"],
     queryFn: async () => {
       const { data } = await api.get<ApiResponse<{ dashboard: DashboardData }>>(
-        "/api/meal-logs/dashboard",
+        `/api/meal-logs/dashboard?date=${getLocalDateStr()}`,
       );
       return data.data.dashboard;
     },
@@ -102,6 +118,8 @@ const HomePage = () => {
     { key: "logintake", label: "Log intake" },
     { key: "history", label: "History" },
   ];
+  const goalStatus = getGoalStatus(streakData);
+  const waterStatus = getWaterStatus(streakData);
 
   return (
     <AppLayout>
@@ -176,13 +194,15 @@ const HomePage = () => {
                 >
                   <Bell size={20} fill="cocoa" />
                   {/* Unread badge */}
-                  <span
-                    className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full
-                  bg-pawpaw text-surface text-[10px] font-bold
-                  flex items-center justify-center"
-                  >
-                    1
-                  </span>
+                  {unreadCount > 0 && (
+                    <span
+                      className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full
+    bg-pawpaw text-surface text-[10px] font-bold
+    flex items-center justify-center"
+                    >
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
                 </button>
                 {notifOpen && (
                   <NotificationDropdown onClose={() => setNotifOpen(false)} />
@@ -250,6 +270,8 @@ const HomePage = () => {
                   target={dashData?.calorie_target ?? 0}
                   type="calorie"
                   hasStreak={hasStreak}
+                  status={goalStatus}
+                  onRestore={() => restoreMutation.mutate("goal")}
                 />
                 <MobileStreakCard
                   icon="💧"
@@ -259,6 +281,8 @@ const HomePage = () => {
                   target={waterData?.target_ml ?? 0}
                   type="water"
                   hasStreak={hasStreak}
+                  status={waterStatus}
+                  onRestore={() => restoreMutation.mutate("water")}
                 />
               </div>
 
@@ -339,6 +363,8 @@ const MobileStreakCard = ({
   target,
   type,
   hasStreak,
+  status,
+  onRestore,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -347,6 +373,8 @@ const MobileStreakCard = ({
   target: number;
   type: "calorie" | "water";
   hasStreak: boolean;
+  status: "ongoing" | "restorable" | "ended" | "not_started";
+  onRestore: () => void;
 }) => {
   const pct =
     target > 0 ? Math.min(100, Math.round((level / target) * 100)) : 0;
@@ -364,7 +392,17 @@ const MobileStreakCard = ({
             {label}
           </p>
           <p className="font-heading font-bold text-sm text-cocoa dark:text-dark-white">
-            {days > 0 ? `${days} ${days === 1 ? "day" : "days"}` : "No streak"}
+            {status === "ongoing"
+              ? `${days} ${days === 1 ? "day" : "days"}`
+              : "No streak"}
+            {status === "restorable" && (
+              <button
+                onClick={onRestore}
+                className="text-[10px] font-semibold text-rose-500 underline decoration-dotted"
+              >
+                Restore?
+              </button>
+            )}
           </p>
         </div>
       </div>

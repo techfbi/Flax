@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useSpinStore } from "@/store/spinStore";
 import api from "@/lib/api";
+import { getLocalDateStr } from "@/lib/date";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import type {
   ApiResponse,
   MealLogEntry,
@@ -105,6 +107,7 @@ export const LogMealTab = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQuantity, setEditQuantity] = useState("100");
   const [editMealType, setEditMealType] = useState<MealType>("breakfast");
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   const debouncedQ = useDebounce(searchQ, 350);
   const quantityRef = useRef<HTMLInputElement>(null);
@@ -194,6 +197,7 @@ export const LogMealTab = () => {
             food_name: selectedFood.food_name,
             quantity_grams: quantity,
             meal_type: mealType,
+            logged_date: getLocalDateStr(),
           },
         );
         return data.data.log;
@@ -206,6 +210,7 @@ export const LogMealTab = () => {
         custom_name: customName.trim(),
         quantity_grams: quantity,
         meal_type: mealType,
+        logged_date: getLocalDateStr(),
       };
       if (customNutrition.calories_per_100g)
         body.calories_per_100g = Number(customNutrition.calories_per_100g);
@@ -576,11 +581,9 @@ export const LogMealTab = () => {
                     <Pencil size={17} />
                   </button>
                   <button
-                    onClick={() => deleteMeal.mutate(log.id)}
-                    disabled={deleteMeal.isPending}
+                    onClick={() => setDeleteTargetId(log.id)}
                     aria-label="Delete meal"
-                    className="text-cocoa/30 dark:text-dark-white/30
-                      hover:text-rose-500 transition-colors disabled:opacity-40"
+                    className="text-cocoa/30 dark:text-dark-white/30 hover:text-rose-500 transition-colors"
                   >
                     <Trash2 size={17} />
                   </button>
@@ -590,6 +593,17 @@ export const LogMealTab = () => {
           </div>
         ))}
       </div>
+      <ConfirmModal
+        open={deleteTargetId !== null}
+        title="Delete this meal?"
+        message="This removes it from today's log. This cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={() => {
+          if (deleteTargetId) deleteMeal.mutate(deleteTargetId);
+          setDeleteTargetId(null);
+        }}
+        onCancel={() => setDeleteTargetId(null)}
+      />
     </div>
   );
 };
