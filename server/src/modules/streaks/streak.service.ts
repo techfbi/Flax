@@ -32,17 +32,25 @@ export const getOrCreateStreaks = async (userId: string) => {
 // Streak only ever moves forward within a day. never backward.
 // ---------------------------------------------------------------------------
 export const checkAndUpdateGoalStreak = async ( userId: string, loggedDate: string ): Promise<void> => {
-  // Get today's calorie total and the user's calorie target in one query.
+  // Judged against the target that was actually in effect on loggedDate,
+  // not the live health_profiles value, since meals can be logged for a
+  // past date and the target may have changed since then. health_profiles
+  // stays the driving table so a row is always returned even if history
+  // has a gap, same safe fallback as before, no target means no credit.
   const result = await pgPool.query(
     `SELECT
        COALESCE(SUM(ml.calories), 0) AS daily_calories,
-       hp.calorie_target
+       hist.calorie_target
      FROM health_profiles hp
      LEFT JOIN meal_logs ml
        ON ml.user_id = hp.user_id
        AND ml.logged_date = $2
+     LEFT JOIN calorie_target_history hist
+       ON hist.user_id = hp.user_id
+       AND hist.effective_from <= $2::date
+       AND (hist.effective_to IS NULL OR hist.effective_to > $2::date)
      WHERE hp.user_id = $1
-     GROUP BY hp.calorie_target`,
+     GROUP BY hist.calorie_target`,
     [userId, loggedDate]
   );
 

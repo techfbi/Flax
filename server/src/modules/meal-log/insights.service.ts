@@ -177,12 +177,6 @@ export const getInsights = async (
 
 // ---------------------------------------------------------------------------
 // getStreakCalendar
-// One calendar month at a time, each day marked as goal met or not.
-// Uses the user's current calorie_target for every day in the month,
-// historical target changes are not tracked, so a day where the
-// target was different when it was actually logged will be judged
-// against today's target instead. Flagging this rather than pretending
-// it accounts for target history it does not have.
 // ---------------------------------------------------------------------------
 export const getStreakCalendar = async (userId: string, monthStr: string) => {
   const targetResult = await pgPool.query(
@@ -192,34 +186,41 @@ export const getStreakCalendar = async (userId: string, monthStr: string) => {
   const calorieTarget = targetResult.rows[0]?.calorie_target ?? null;
 
   const result = await pgPool.query(
-    `SELECT
-       TO_CHAR(dates.d, 'YYYY-MM-DD') AS date,
-       COALESCE(SUM(ml.calories), 0)  AS calories
-     FROM generate_series(
-       date_trunc('month', $2::date),
-       date_trunc('month', $2::date) + INTERVAL '1 month' - INTERVAL '1 day',
-       INTERVAL '1 day'
-     ) AS dates(d)
-     LEFT JOIN meal_logs ml ON ml.logged_date = dates.d AND ml.user_id = $1
-     GROUP BY dates.d
-     ORDER BY dates.d ASC`,
-    [userId, `${monthStr}-01`]
-  );
+  `SELECT
+     TO_CHAR(dates.d, 'YYYY-MM-DD') AS date,
+     COALESCE(SUM(ml.calories), 0)  AS calories,
+     hist.calorie_target            AS target_for_day
+   FROM generate_series(
+     date_trunc('month', $2::date),
+     date_trunc('month', $2::date) + INTERVAL '1 month' - INTERVAL '1 day',
+     INTERVAL '1 day'
+   ) AS dates(d)
+   LEFT JOIN meal_logs ml ON ml.logged_date = dates.d AND ml.user_id = $1
+   LEFT JOIN calorie_target_history hist
+     ON hist.user_id = $1
+     AND hist.effective_from <= dates.d
+     AND (hist.effective_to IS NULL OR hist.effective_to > dates.d)
+   GROUP BY dates.d, hist.calorie_target
+   ORDER BY dates.d ASC`,
+  [userId, `${monthStr}-01`]
+);
 
   const todayStr = new Date().toISOString().split("T")[0];
 
   return {
-    month: monthStr,
-    calorie_target: calorieTarget,
-    days: result.rows.map((r) => {
-      const calories = parseFloat(r.calories);
-      const isFuture = r.date > todayStr;
-      return {
-        date: r.date,
-        calories,
-        met_goal: !isFuture && calorieTarget ? calories >= calorieTarget * 0.8 : false,
-        is_future: isFuture,
-      };
-    }),
-  };
+  month: monthStr,
+  calorie_target: calorieTarget,
+  days: result.rows.map((r) => {
+    const calories = parseFloat(r.calories);
+    const isFuture = r.date > todayStr;
+    const targetForDay = r.target_for_day !== null ? parseInt(r.target_for_day, 10) : null;
+    return {
+      date: r.date,
+      calories,
+      met_goal: !isFuture && targetForDay ? calories >= targetForDay * 0.8 : false,
+      exceeded: !isFuture && targetForDay ? calories >= targetForDay : false,
+      is_future: isFuture,
+    };
+  }),
+};
 };

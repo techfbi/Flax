@@ -12,6 +12,23 @@ import { getStreaks } from "../streaks/streak.service.js";
   even if the scheduler tick overlaps or the server restarts mid day.
 */
 
+const checkNoWaterByEvening = async (userId: string, localDate: string, localHour: number) => {
+  if (localHour !== 18) return;
+  const water = await getWaterLogs(userId, localDate);
+  if (water.logs.length > 0) return;
+
+  const claimed = await claimDailyEvent(userId, "no_water_evening", localDate);
+  if (!claimed) return;
+
+  await notifyUser(
+    userId,
+    "no_water_evening",
+    "No water logged today",
+    "You haven't logged any water yet today. Create an habit that helps you stay hydrated.",
+    "/"
+  );
+};
+
 const checkNoMealLogged = async (userId: string, localDate: string, localHour: number) => {
   if (localHour !== 11) return;
   const dashboard = await getDashboardData(userId, localDate);
@@ -118,6 +135,7 @@ export const runScheduledChecks = async (): Promise<void> => {
       await checkNoMealLogged(user.id, localDate, localHour);
       await checkEveningTarget(user.id, localDate, localHour);
       await checkWaterGap(user.id, localDate, localHour);
+      await checkNoWaterByEvening(user.id, localDate, localHour);
       await checkStreakAtRisk(user.id, localDate, localHour);
     } catch (err) {
       console.error(`[notifications] check failed for user ${user.id}`, err);

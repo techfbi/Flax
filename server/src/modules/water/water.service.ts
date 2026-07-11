@@ -22,17 +22,21 @@ export const logWater = async (
 
   // Get daily total and user water target in one query.
   const summaryResult = await pgPool.query(
-    `SELECT
-    COALESCE(SUM(wl.amount_ml), 0) AS daily_total,
-    hp.water_target_ml
-    FROM health_profiles hp
-    LEFT JOIN water_logs wl
-    ON hp.user_id = wl.user_id
-    AND wl.logged_date = $2
-    WHERE hp.user_id = $1
-    GROUP BY hp.water_target_ml`,
-    [userId, input.logged_date]
-  );
+  `SELECT
+  COALESCE(SUM(wl.amount_ml), 0) AS daily_total,
+  hist.water_target_ml
+  FROM health_profiles hp
+  LEFT JOIN water_logs wl
+  ON hp.user_id = wl.user_id
+  AND wl.logged_date = $2
+  LEFT JOIN water_target_history hist
+  ON hist.user_id = hp.user_id
+  AND hist.effective_from <= $2::date
+  AND (hist.effective_to IS NULL OR hist.effective_to > $2::date)
+  WHERE hp.user_id = $1
+  GROUP BY hist.water_target_ml`,
+  [userId, input.logged_date]
+);
 
   const summary = summaryResult.rows[0];
   const dailyTotal = parseInt(summary?.daily_total ?? "0", 10);
@@ -76,13 +80,17 @@ export const getWaterLogs = async (userId: string, date?: string) => {
     ),
     pgPool.query(
       `SELECT
-         COALESCE(SUM(wl.amount_ml), 0) AS daily_total,
-         hp.water_target_ml
-       FROM health_profiles hp
-       LEFT JOIN water_logs wl
-         ON wl.user_id = hp.user_id AND wl.logged_date = $2
-       WHERE hp.user_id = $1
-       GROUP BY hp.water_target_ml`,
+        COALESCE(SUM(wl.amount_ml), 0) AS daily_total,
+        hist.water_target_ml
+      FROM health_profiles hp
+      LEFT JOIN water_logs wl
+        ON wl.user_id = hp.user_id AND wl.logged_date = $2
+      LEFT JOIN water_target_history hist
+        ON hist.user_id = hp.user_id
+        AND hist.effective_from <= $2::date
+        AND (hist.effective_to IS NULL OR hist.effective_to > $2::date)
+      WHERE hp.user_id = $1
+      GROUP BY hist.water_target_ml`,
       [userId, targetDate]
     ),
   ]);

@@ -204,6 +204,30 @@ CREATE TABLE IF NOT EXISTS water_logs (
   logged_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE calorie_target_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  calorie_target INTEGER,
+  effective_from DATE NOT NULL,
+  effective_to DATE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE water_target_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  water_target_ml INTEGER,
+  effective_from DATE NOT NULL,
+  effective_to DATE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_water_target_history_user_date
+  ON water_target_history (user_id, effective_from);
+
+CREATE INDEX idx_calorie_target_history_user_date
+  ON calorie_target_history (user_id, effective_from);
+
 CREATE INDEX IF NOT EXISTS idx_notifications_user_unread
   ON notifications (user_id, is_read, created_at DESC);
 

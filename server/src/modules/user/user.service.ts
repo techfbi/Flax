@@ -233,55 +233,58 @@ export const updateHealthProfile = async (
   // ---------------------------------------------------------------------------
   // calorie_target. exactly one path runs.
   // ---------------------------------------------------------------------------
-  if (input.calorie_target === null) {
-    // Explicit reset requested. recalculate if we have everything needed.
-    if (sex && activity && height && weight && ageForCalc) {
-      const autoCalorie = calculateCaloricTarget(sex, weight, height, ageForCalc, activity, goal);
-      fields.push(`calorie_target = $${paramIndex++}`);
-      values.push(autoCalorie);
-    } else {
-      // Not enough data to calculate. store null as requested. frontend
-      // should prompt the user to complete their profile for auto calculation.
-      fields.push(`calorie_target = $${paramIndex++}`);
-      values.push(null);
-    }
-  } else if (input.calorie_target !== undefined) {
-    // Manual numeric override provided.
-    fields.push(`calorie_target = $${paramIndex++}`);
-    values.push(input.calorie_target);
-  } else if (
-    current.calorie_target === null && // not fetched above, meaning shouldRecalculate path for OTHER fields changed
-    sex && activity && height && weight && ageForCalc
-  ) {
-    // calorie_target was not mentioned in this request at all, but other
-    // formula inputs changed and no calorie_target has ever been set.
-    // Auto-calculate for the first time.
+  let newCalorieTarget: number | null | undefined = undefined;
+
+if (input.calorie_target === null) {
+  if (sex && activity && height && weight && ageForCalc) {
     const autoCalorie = calculateCaloricTarget(sex, weight, height, ageForCalc, activity, goal);
     fields.push(`calorie_target = $${paramIndex++}`);
     values.push(autoCalorie);
+    newCalorieTarget = autoCalorie;
+  } else {
+    fields.push(`calorie_target = $${paramIndex++}`);
+    values.push(null);
+    newCalorieTarget = null;
   }
+} else if (input.calorie_target !== undefined) {
+  fields.push(`calorie_target = $${paramIndex++}`);
+  values.push(input.calorie_target);
+  newCalorieTarget = input.calorie_target;
+} else if (
+  current.calorie_target === null &&
+  sex && activity && height && weight && ageForCalc
+) {
+  const autoCalorie = calculateCaloricTarget(sex, weight, height, ageForCalc, activity, goal);
+  fields.push(`calorie_target = $${paramIndex++}`);
+  values.push(autoCalorie);
+  newCalorieTarget = autoCalorie;
+}
 
   // ---------------------------------------------------------------------------
   // water_target_ml. exactly one path runs. same three-state pattern.
   // ---------------------------------------------------------------------------
+  let newWaterTarget: number | null | undefined = undefined;
+
   if (input.water_target_ml === null) {
     if (sex && activity) {
       const autoWater = calculateWaterTarget(sex, activity);
       fields.push(`water_target_ml = $${paramIndex++}`);
       values.push(autoWater);
+      newWaterTarget = autoWater;
     } else {
       fields.push(`water_target_ml = $${paramIndex++}`);
       values.push(null);
+      newWaterTarget = null;
     }
   } else if (input.water_target_ml !== undefined) {
     fields.push(`water_target_ml = $${paramIndex++}`);
     values.push(input.water_target_ml);
+    newWaterTarget = input.water_target_ml;
   } else if (shouldRecalculate && sex && activity && current.water_target_ml === null) {
-    // water_target_ml not mentioned this request, but other fields changed
-    // and no water target has ever been set. auto-calculate for first time.
     const autoWater = calculateWaterTarget(sex, activity);
     fields.push(`water_target_ml = $${paramIndex++}`);
     values.push(autoWater);
+    newWaterTarget = autoWater;
   }
 
   // Handle the new fields in the dynamic SET builder
@@ -323,11 +326,45 @@ export const updateHealthProfile = async (
   values.push(userId);
 
   await pgPool.query(
-    `UPDATE health_profiles SET ${fields.join(", ")} WHERE user_id = $${paramIndex}`,
-    values
-  );
+  `UPDATE health_profiles SET ${fields.join(", ")} WHERE user_id = $${paramIndex}`,
+  values
+);
 
-  return getFullProfile(userId);
+// keep a real history of calorie target changes so the streak
+// calendar can judge each past day against what was true then,
+// not whatever the target happens to be right now. only writes
+// when the target actually changed this request.
+if (newCalorieTarget !== undefined) {
+  const today = new Date().toISOString().split("T")[0];
+  await pgPool.query(
+    `UPDATE calorie_target_history
+     SET effective_to = $1
+     WHERE user_id = $2 AND effective_to IS NULL`,
+    [today, userId]
+  );
+  await pgPool.query(
+    `INSERT INTO calorie_target_history (user_id, calorie_target, effective_from, effective_to)
+     VALUES ($1, $2, $3, NULL)`,
+    [userId, newCalorieTarget, today]
+  );
+}
+
+if (newWaterTarget !== undefined) {
+  const today = new Date().toISOString().split("T")[0];
+  await pgPool.query(
+    `UPDATE water_target_history
+     SET effective_to = $1
+     WHERE user_id = $2 AND effective_to IS NULL`,
+    [today, userId]
+  );
+  await pgPool.query(
+    `INSERT INTO water_target_history (user_id, water_target_ml, effective_from, effective_to)
+     VALUES ($1, $2, $3, NULL)`,
+    [userId, newWaterTarget, today]
+  );
+}
+
+return getFullProfile(userId);
 };
 
 // ---------------------------------------------------------------------------
