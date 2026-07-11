@@ -11,6 +11,7 @@ import type {
   BiologicalSex,
   AgeRange,
 } from "@/types/apiTypes";
+import { ConveyorTicker } from "@/components/ui/ConveyorTicker";
 
 /**
  * OnboardingFlow 4-step health profile setup after first registration.
@@ -1074,18 +1075,7 @@ const OnboardingFlow = () => {
                 <br />
                 started
               </h1>
-              <div className="flex flex-col gap-1.5">
-                {PANEL_ITEMS.map((item) => (
-                  <p
-                    key={item}
-                    className="text-sm text-cocoa dark:text-dark-white
-                      conveyor-item"
-                    style={{ opacity: 0.75 }}
-                  >
-                    {item}
-                  </p>
-                ))}
-              </div>
+              <ConveyorTicker items={PANEL_ITEMS} />
             </div>
           </div>
         </div>

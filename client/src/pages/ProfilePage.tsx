@@ -7,6 +7,7 @@ import { PageTopBar } from "@/components/layout/PageTopBar";
 import { MobileTopNav } from "@/components/layout/MobileTopNav";
 import { StreakPanel } from "@/features/home/StreakPanel";
 import { AvatarPickerModal } from "@/features/profile/AvatarPickerModal";
+import { PrivacyNote } from "@/features/profile/PrivacyNote";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthStore } from "@/store/authStore";
 import { useTheme } from "@/context/ThemeContext";
@@ -19,15 +20,15 @@ import type {
   StreakData,
   DietaryStyle,
   HealthGoal,
-  BiologicalSex,
   ActivityLevel,
 } from "@/types/apiTypes";
 
 /*
-  Profile page. Who the user is and what Flax knows about their health,
-  editable in place. Account security and app preferences live in
-  Settings instead, that split is the familiar one, profile is
-  identity, settings is configuration.
+  Region and biological sex are shown but never editable here. Both
+  feed the auto calculation for calorie and water targets, and both
+  were set once at onboarding, letting them change silently later
+  would move numbers the person already trusts with no record of why.
+  Same reasoning the calendar caveat below is built on.
 
   Calorie and water panel stays on the right on desktop, same
   component and same data every other page with it uses. Hidden on
@@ -77,6 +78,17 @@ const sanitizeNumber = (raw: string): string => {
   if (digitsOnly === "") return "";
   return digitsOnly.replace(/^0+(?=\d)/, "");
 };
+
+// Plain label over value row, used for the collapsed health view and
+// for the always locked fields inside the edit form (region, sex).
+const InfoRow = ({ label, value }: { label: string; value: string }) => (
+  <div>
+    <p className="text-xs font-semibold text-cocoa dark:text-dark-white mb-0.5">
+      {label}
+    </p>
+    <p className="text-sm text-cocoa-faded">{value}</p>
+  </div>
+);
 
 export const ProfilePage = () => {
   const { resolvedTheme } = useTheme();
@@ -146,12 +158,13 @@ export const ProfilePage = () => {
     onError: () => toast.error("Could not update profile. Try again."),
   });
 
-  // ---- Health form, collapsed behind an edit icon ----
+  // ---- Health form, collapsed behind an edit icon. Region and
+  // biological sex are read only everywhere, never part of the
+  // editable state or the save payload. ----
   const [editingHealth, setEditingHealth] = useState(false);
   const [health, setHealth] = useState({
     dietary_style: "" as DietaryStyle | "",
     health_goal: "" as HealthGoal | "",
-    biological_sex: "" as BiologicalSex | "",
     activity_level: "" as ActivityLevel | "",
     height_cm: "",
     weight_kg: "",
@@ -170,7 +183,6 @@ export const ProfilePage = () => {
     setHealth({
       dietary_style: (h.dietary_style as DietaryStyle) ?? "",
       health_goal: (h.health_goal as HealthGoal) ?? "",
-      biological_sex: (h.biological_sex as BiologicalSex) ?? "",
       activity_level: (h.activity_level as ActivityLevel) ?? "",
       height_cm: h.height_cm ? String(h.height_cm) : "",
       weight_kg: h.weight_kg ? String(h.weight_kg) : "",
@@ -197,13 +209,14 @@ export const ProfilePage = () => {
   });
 
   const saveHealthForm = () => {
+    // region and biological_sex are intentionally never included here,
+    // they are locked fields, see the note at the top of this file.
     const body: Record<string, unknown> = {
       allergies,
       health_conditions: conditions,
     };
     if (health.dietary_style) body.dietary_style = health.dietary_style;
     if (health.health_goal) body.health_goal = health.health_goal;
-    if (health.biological_sex) body.biological_sex = health.biological_sex;
     if (health.activity_level) body.activity_level = health.activity_level;
     if (health.height_cm) body.height_cm = Number(health.height_cm);
     if (health.weight_kg) body.weight_kg = Number(health.weight_kg);
@@ -262,18 +275,56 @@ export const ProfilePage = () => {
     onError: () => toast.error("Could not update target. Try again."),
   });
 
-  if (isLoading || !profile) {
+  // Only the true first load, with nothing cached yet, gets a full
+  // page spinner. After that this page trusts whatever React Query
+  // has, even offline, same as every other page in the app.
+  if (isLoading && !profile) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center h-full">
-          <div className="w-8 h-8 border-2 border-moringa dark:border-moringa-faded border-t-transparent rounded-full animate-spin" />
+        <div
+          className="flex flex-col h-screen overflow-hidden"
+          style={{
+            background:
+              resolvedTheme === "dark"
+                ? "linear-gradient(180deg, #3E4E42 -10%, #2D342C 4%, #2D342C 10%, #171410 45%)"
+                : "linear-gradient(170deg, #9DAFA1 15%, #EAE8DE 45%, #EAE8DE 30%, #F6F1E7 100%)",
+          }}
+        >
+          <div className="flex items-center justify-center h-full">
+            <div className="w-8 h-8 border-2 border-moringa dark:border-moringa-faded border-t-transparent rounded-full animate-spin" />
+          </div>
         </div>
       </AppLayout>
     );
   }
 
-  const providerLabel =
-    profile.provider === "google" ? "Google account" : "Email and password";
+  if (!profile) {
+    return (
+      <AppLayout>
+        <div
+          className="flex flex-col h-screen overflow-hidden"
+          style={{
+            background:
+              resolvedTheme === "dark"
+                ? "linear-gradient(180deg, #3E4E42 -10%, #2D342C 4%, #2D342C 10%, #171410 45%)"
+                : "linear-gradient(170deg, #9DAFA1 15%, #EAE8DE 45%, #EAE8DE 30%, #F6F1E7 100%)",
+          }}
+        >
+          <div className="flex-1 flex flex-col min-h-0 w-full max-w-[1700px] mx-auto overflow-hidden">
+            <PageTopBar title="Profile" showSearch={false} />
+            <div className="md:hidden shrink-0">
+              <MobileTopNav />
+            </div>
+            <div className="flex flex-col items-center justify-center h-[30rem] md:h-[16rem] gap-2 text-center px-6">
+              <p className="text-sm text-cocoa-faded">
+                Couldn't load your profile. Check your connection.
+              </p>
+            </div>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
   const mainContent = (
     <div className="space-y-5 max-w-2xl mx-auto">
@@ -356,11 +407,11 @@ export const ProfilePage = () => {
               </div>
             )}
             <div className="flex items-center gap-2 mt-1.5">
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-cocoa/8 dark:bg-dark-white/8 text-cocoa-faded">
-                {providerLabel}
+              <span className="text-[11px] text-cocoa-faded truncate">
+                {profile.email}
               </span>
               <span className="text-[11px] text-cocoa-faded">
-                Member since{" "}
+                · Member since{" "}
                 {new Date(profile.created_at).toLocaleDateString(undefined, {
                   month: "short",
                   year: "numeric",
@@ -369,6 +420,8 @@ export const ProfilePage = () => {
             </div>
           </div>
         </div>
+
+        <PrivacyNote />
       </div>
 
       <AvatarPickerModal
@@ -395,31 +448,97 @@ export const ProfilePage = () => {
         </div>
 
         {!editingHealth ? (
-          <p className="text-sm text-cocoa-faded">
-            {[
-              profile.health?.dietary_style,
-              profile.health?.health_goal,
-              profile.health?.activity_level,
-            ]
-              .filter(Boolean)
-              .map((v) => labelize(v as string))
-              .join(" · ") ||
-              "Not set yet, tap edit to add your health details"}
-          </p>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <InfoRow
+                label="Region"
+                value={
+                  profile.health?.region
+                    ? labelize(profile.health.region)
+                    : "Not set"
+                }
+              />
+              <InfoRow
+                label="Age"
+                value={
+                  profile.health?.exact_age
+                    ? String(profile.health.exact_age)
+                    : (profile.health?.age_range ?? "Not set")
+                }
+              />
+              <InfoRow
+                label="Biological sex"
+                value={
+                  profile.health?.biological_sex
+                    ? labelize(profile.health.biological_sex)
+                    : "Not set"
+                }
+              />
+              <InfoRow
+                label="Dietary style"
+                value={
+                  profile.health?.dietary_style
+                    ? labelize(profile.health.dietary_style)
+                    : "Not set"
+                }
+              />
+              <InfoRow
+                label="Health goal"
+                value={
+                  profile.health?.health_goal
+                    ? labelize(profile.health.health_goal)
+                    : "Not set"
+                }
+              />
+              <InfoRow
+                label="Activity level"
+                value={
+                  profile.health?.activity_level
+                    ? labelize(profile.health.activity_level)
+                    : "Not set"
+                }
+              />
+              <InfoRow
+                label="Height"
+                value={
+                  profile.health?.height_cm
+                    ? `${profile.health.height_cm} cm`
+                    : "Not set"
+                }
+              />
+              <InfoRow
+                label="Weight"
+                value={
+                  profile.health?.weight_kg
+                    ? `${profile.health.weight_kg} kg`
+                    : "Not set"
+                }
+              />
+            </div>
+            <InfoRow
+              label="Allergies"
+              value={allergies.length ? allergies.join(", ") : "None added"}
+            />
+            <InfoRow
+              label="Health conditions"
+              value={conditions.length ? conditions.join(", ") : "None added"}
+            />
+          </div>
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="text-xs text-cocoa-faded block mb-1">
-                  Region
-                </label>
-                <p
-                  className="w-full bg-cocoa/5 dark:bg-dark-white/5 border border-cocoa/10 dark:border-dark-white/10
-                  rounded-lg px-3 py-2 text-sm text-cocoa-faded italic"
-                >
-                  {profile.health?.region || "Not set"}
-                </p>
-              </div>
+              <InfoRow
+                label="Region"
+                value={profile.health?.region || "Not set"}
+              />
+              <InfoRow
+                label="Biological sex"
+                value={
+                  profile.health?.biological_sex
+                    ? labelize(profile.health.biological_sex)
+                    : "Not set"
+                }
+              />
               <div>
                 <label className="text-xs text-cocoa-faded block mb-1">
                   Age
@@ -483,25 +602,6 @@ export const ProfilePage = () => {
                       {labelize(g)}
                     </option>
                   ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs text-cocoa-faded block mb-1">
-                  Biological sex
-                </label>
-                <select
-                  value={health.biological_sex}
-                  onChange={(e) =>
-                    setHealth((p) => ({
-                      ...p,
-                      biological_sex: e.target.value as BiologicalSex,
-                    }))
-                  }
-                  className={`${inputClass} capitalize`}
-                >
-                  <option value="">Not set</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
                 </select>
               </div>
               <div>
@@ -644,7 +744,8 @@ export const ProfilePage = () => {
         )}
       </div>
 
-      {/* Targets, collapsed until edit is tapped */}
+      {/* Targets, collapsed until edit is tapped, shows current
+      effective value first either way */}
       <div className="bg-surface-two dark:bg-black-surface rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-heading font-bold text-base text-cocoa dark:text-dark-white">
@@ -659,11 +760,26 @@ export const ProfilePage = () => {
           </button>
         </div>
 
-        {!editingTargets ? (
-          <p className="text-sm text-cocoa-faded">
-            Edit to input desired targets
-          </p>
-        ) : (
+        <div className="flex gap-6 mb-4">
+          <InfoRow
+            label="Calories"
+            value={
+              profile.health?.calorie_target
+                ? `${profile.health.calorie_target} kcal, manually set`
+                : "Auto calculated"
+            }
+          />
+          <InfoRow
+            label="Water"
+            value={
+              profile.health?.water_target_ml
+                ? `${profile.health.water_target_ml} ml, manually set`
+                : "Auto calculated"
+            }
+          />
+        </div>
+
+        {editingTargets && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>

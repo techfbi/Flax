@@ -40,16 +40,6 @@ export default {
         'brand-gradient-dark': 'linear-gradient(170deg, #405245 10%, #2A3129 45%, #2A3129 10%, #171410 100%)',
       },
       keyframes: {
-        // Conveyor belt text animation (auth page left panel)
-        // Items scroll vertically. Each item is one row height (1/3 of visible area).
-        // Three items visible at once. Deferred to animation phase but keyframe defined now.
-        conveyorItem: {
-          '0%':   { transform: 'translateY(100%)', opacity: '0' },
-          '10%':  { transform: 'translateY(0)',    opacity: '1' },
-          '33%':  { transform: 'translateY(0)',    opacity: '1' },
-          '43%':  { transform: 'translateY(-100%)',opacity: '0' },
-          '100%': { transform: 'translateY(-100%)',opacity: '0' },
-        },
         // Typing cursor blink for hero headline animation
         blink: {
           '0%, 100%': { opacity: '1' },

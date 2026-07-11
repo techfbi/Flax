@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, Moon, Sun, Monitor } from "lucide-react";
+import { Menu, X, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuthStore } from "@/store/authStore";
 
@@ -11,15 +11,9 @@ export const Navbar = () => {
   const navigate = useNavigate();
 
   const cycleTheme = () => {
-    const next: Record<string, "light" | "dark" | "system"> = {
-      light: "dark",
-      dark: "system",
-      system: "light",
-    };
-    setTheme(next[theme]);
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
-
-  const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
+  const ThemeIcon = resolvedTheme === "dark" ? Moon : Sun;
 
   const scrollTo = (id: string) => {
     document

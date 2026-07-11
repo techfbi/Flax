@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "@/context/ThemeContext";
+import { ConveyorTicker } from "@/components/ui/ConveyorTicker";
 
 /**
  * AuthLayout — the two-panel card used on Register, Login, and OTP screens.
@@ -162,16 +163,8 @@ export const SecondAuthLayout = ({
             {/* Conveyor belt items — static for now, animation in phase 2
                 Structure: a clipping container with items stacked.
                 On animation phase, these will translate-Y one at a time. */}
-            <div className="mt-4 space-y-1 md:space-y-1.5 hidden md:block">
-              {panelItems.map((item) => (
-                <p
-                  key={item}
-                  className="text-sm text-cocoa dark:text-dark-white conveyor-item"
-                  style={{ opacity: 0.75 }}
-                >
-                  {item}
-                </p>
-              ))}
+            <div className="mt-4 hidden md:block">
+              <ConveyorTicker items={panelItems} />
             </div>
           </div>
         </div>

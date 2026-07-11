@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Bell, Sun, Moon, Monitor } from "lucide-react";
+import { Bell, Sun, Moon } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { GoalTab } from "./GoalTab";
 import { LogIntakeTab } from "./LogIntakeTab";
@@ -102,15 +102,9 @@ const HomePage = () => {
   const hasStreak = (streakData?.goal_streak ?? 0) > 0;
 
   const cycleTheme = () => {
-    const next: Record<string, "light" | "dark" | "system"> = {
-      light: "dark",
-      dark: "system",
-      system: "light",
-    };
-    setTheme(next[theme]);
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
-
-  const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
+  const ThemeIcon = resolvedTheme === "dark" ? Moon : Sun;
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "goal", label: "Goal" },
@@ -178,10 +172,7 @@ const HomePage = () => {
                 aria-label={`Theme: ${theme}`}
                 className="text-cocoa dark:text-dark-white hover:opacity-70 transition-opacity"
               >
-                <ThemeIcon
-                  size={20}
-                  fill={theme === "dark" ? "dark-white" : "cocoa"}
-                />
+                <ThemeIcon size={20} />
               </button>
 
               {/* Notification bell */}
@@ -192,7 +183,7 @@ const HomePage = () => {
                   className="relative text-cocoa dark:text-dark-white hover:opacity-70 mt-2
                   transition-opacity"
                 >
-                  <Bell size={20} fill="cocoa" />
+                  <Bell size={20} />
                   {/* Unread badge */}
                   {unreadCount > 0 && (
                     <span

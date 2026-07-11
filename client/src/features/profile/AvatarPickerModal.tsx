@@ -33,6 +33,8 @@ export const AvatarPickerModal = ({
         ? AVATARS.female
         : [...AVATARS.male, ...AVATARS.female];
 
+  const toAbsolute = (path: string) => `${window.location.origin}${path}`;
+
   return createPortal(
     <div
       className="fixed inset-0 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
@@ -61,11 +63,11 @@ export const AvatarPickerModal = ({
           {options.map((url) => (
             <button
               key={url}
-              onClick={() => onSelect(url)}
+              onClick={() => onSelect(toAbsolute(url))}
               className="relative shrink-0 w-16 h-16 rounded-full overflow-hidden border-2 transition-colors"
               style={{
                 borderColor:
-                  currentUrl === url
+                  currentUrl === toAbsolute(url)
                     ? "var(--tw-color-pawpaw, #E8623C)"
                     : "transparent",
               }}

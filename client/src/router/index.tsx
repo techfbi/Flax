@@ -20,7 +20,7 @@ const ResetPasswordForm = lazy(
 const OnboardingFlow = lazy(
   () => import("@/features/onboarding/OnboardingFlow"),
 );
-const PlaceholderPage = lazy(() => import("@/pages/PlaceholderPage"));
+//const PlaceholderPage = lazy(() => import("@/pages/PlaceholderPage"));
 const SpinTab = lazy(() =>
   import("@/features/home/SpinTab").then((m) => ({ default: m.SpinTab })),
 );

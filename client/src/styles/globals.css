@@ -109,15 +109,18 @@ html.dark input:-webkit-autofill:focus {
   }
 }
 
-/* ── Conveyor belt animation stagger (auth left panel) ──────── */
-/* Each of 6 items in the list gets a staggered delay so they
-   flow one by one. Deferred to animation phase — stub in now. */
-.conveyor-item:nth-child(1) { animation-delay: 0s;    }
-.conveyor-item:nth-child(2) { animation-delay: 1.2s;  }
-.conveyor-item:nth-child(3) { animation-delay: 2.4s;  }
-.conveyor-item:nth-child(4) { animation-delay: 3.6s;  }
-.conveyor-item:nth-child(5) { animation-delay: 4.8s;  }
-.conveyor-item:nth-child(6) { animation-delay: 6.0s;  }
+
+/* 
+   Conveyor belt text animation (auth page left panel)
+   Items scroll vertically. Each item is one row height (1/3 of visible area).
+   Three items visible at once. Deferred to animation phase but keyframe defined now.
+
+animate-conveyor is applied via @apply so Tailwind actually
+   emits the keyframe into the build, referencing it only in raw
+   CSS gets tree shaken since Tailwind never sees the class used
+   in a scanned file otherwise. Duration and delay are overridden
+   per item inline in React, this shorthand is just the base. */
+/*--------------------------------------------------------------------------*/
 
 /* ── Typing animation cursor ────────────────────────────────── */
 .typing-cursor {

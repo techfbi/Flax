@@ -12,7 +12,6 @@ import {
   BarChart2,
   Sun,
   Moon,
-  Monitor,
   MessageCircle,
   RefreshCw,
 } from "lucide-react";
@@ -49,14 +48,9 @@ export const MobileTopNav = () => {
   const unreadCount = notifData?.unreadCount ?? 0;
 
   const cycleTheme = () => {
-    const next: Record<string, "light" | "dark" | "system"> = {
-      light: "dark",
-      dark: "system",
-      system: "light",
-    };
-    setTheme(next[theme]);
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
-  const ThemeIcon = theme === "dark" ? Moon : theme === "light" ? Sun : Monitor;
+  const ThemeIcon = resolvedTheme === "dark" ? Moon : Sun;
 
   const handleLogout = async () => {
     try {
@@ -108,22 +102,16 @@ export const MobileTopNav = () => {
             <Link to="/notifications" className="relative">
               <Bell size={20} className="text-cocoa dark:text-dark-white" />
               {/* Unread badge - shown only when count > 0 */}
-              {/* TODO: wire to real notification count from web push */}
-              <span
-                className="absolute -top-1 -right-1 w-3 h-3 rounded-full
-                bg-pawpaw text-surface text-[9px] font-bold
-                flex items-center justify-center"
-              >
-                {unreadCount > 0 && (
-                  <span
-                    className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full
+
+              {unreadCount > 0 && (
+                <span
+                  className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full
                   bg-pawpaw text-surface text-[9px] font-bold
                   flex items-center justify-center"
-                  >
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
-              </span>
+                >
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </Link>
 
             {/* Hamburger */}

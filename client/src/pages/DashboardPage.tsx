@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -12,6 +12,8 @@ import {
   CartesianGrid,
   Tooltip,
   ReferenceLine,
+  BarChart,
+  Bar,
 } from "recharts";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageTopBar } from "@/components/layout/PageTopBar";
@@ -114,7 +116,31 @@ export const DashboardPage = () => {
   const axisColor = isDark ? "#9CA3AF" : "#8A8479";
   const gridColor = isDark ? "rgba(229,231,235,0.06)" : "rgba(28,26,23,0.06)";
 
-  const { data: insights, isLoading } = useQuery({
+  // Calendar heatmap with tiers + celebration mark
+  const getDayFill = (day: StreakCalendarData["days"][number]) => {
+    if (day.is_future || day.calories === 0) {
+      return { bg: "transparent", met: false, exceeded: false };
+    }
+    if (day.met_goal) {
+      return {
+        bg: isDark ? COLORS.moringaFaded : COLORS.moringa,
+        met: true,
+        exceeded: day.exceeded,
+      };
+    }
+    // logged something, 80 percent not reached, one flat faint fill
+    return {
+      bg: isDark ? "rgba(127,176,150,0.18)" : "rgba(47,93,75,0.12)",
+      met: false,
+      exceeded: false,
+    };
+  };
+
+  const {
+    data: insights,
+    isLoading: insightsLoading,
+    isFetching: insightsFetching,
+  } = useQuery({
     queryKey: ["insights", range, getLocalDateStr()],
     queryFn: async () => {
       const { data } = await api.get<ApiResponse<{ insights: InsightsData }>>(
@@ -123,9 +149,10 @@ export const DashboardPage = () => {
       return data.data.insights;
     },
     staleTime: 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 
-  const { data: waterInsights } = useQuery({
+  const { data: waterInsights, isFetching: waterFetching } = useQuery({
     queryKey: ["insights", waterRange, getLocalDateStr(), "water-only"],
     queryFn: async () => {
       const { data } = await api.get<ApiResponse<{ insights: InsightsData }>>(
@@ -134,6 +161,7 @@ export const DashboardPage = () => {
       return data.data.insights;
     },
     staleTime: 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 
   const { data: calendar } = useQuery({
@@ -224,10 +252,19 @@ export const DashboardPage = () => {
             <MobileTopNav />
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 pt-4 md:pt-20 lg:pt-2 pb-8">
-            {isLoading || !insights ? (
+          <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 pt-[75px] md:pt-5 lg:pt-2 pb-8">
+            <p className="md:hidden pl-1 pb-5 font-heading font-bold text-base tracking-wide text-cocoa/70 dark:text-dark-white/70 shrink-0">
+              Dashboard
+            </p>
+            {insightsLoading && !insights ? (
               <div className="flex items-center justify-center h-64">
                 <div className="w-8 h-8 border-2 border-moringa dark:border-moringa-faded border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : !insights ? (
+              <div className="flex items-center justify-center h-64">
+                <p className="text-center text-sm text-cocoa-faded ">
+                  Couldn't load your dashboard. Check your connection.
+                </p>
               </div>
             ) : (
               <div className="max-w-5xl mx-auto space-y-5">
@@ -238,7 +275,7 @@ export const DashboardPage = () => {
                       Today's calories
                     </p>
                     <div className="flex items-end justify-between mb-2">
-                      <p className="font-heading font-bold text-2xl text-cocoa dark:text-dark-white">
+                      <p className="font-heading font-bold text-base md:text-xl lg:text-2xl text-cocoa dark:text-dark-white">
                         {Math.round(insights.today.calories)}
                         <span className="text-sm font-normal text-cocoa-faded">
                           {" "}
@@ -286,7 +323,7 @@ export const DashboardPage = () => {
                       Today's water
                     </p>
                     <div className="flex items-end justify-between mb-2">
-                      <p className="font-heading font-bold text-2xl text-cocoa dark:text-dark-white">
+                      <p className="font-heading font-bold text-base md:text-xl lg:text-2xl text-cocoa dark:text-dark-white">
                         {insights.today.water_ml}
                         <span className="text-sm font-normal text-cocoa-faded">
                           {" "}
@@ -316,166 +353,201 @@ export const DashboardPage = () => {
                   title="Calorie trend"
                   action={<RangeToggle value={range} onChange={setRange} />}
                 >
-                  <ResponsiveContainer width="100%" height={220}>
-                    <AreaChart
-                      data={insights.calorie_trend}
-                      margin={{ top: 5, right: 8, left: -20, bottom: 0 }}
-                    >
-                      <defs>
-                        <linearGradient
-                          id="calorieFill"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="0%"
-                            stopColor={COLORS.moringa}
-                            stopOpacity={0.25}
-                          />
-                          <stop
-                            offset="100%"
-                            stopColor={COLORS.moringa}
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid stroke={gridColor} vertical={false} />
-                      <XAxis
-                        dataKey="date"
-                        tickFormatter={(d) =>
-                          formatTrendLabel(d, insights.granularity)
-                        }
-                        tick={{ fontSize: 10, fill: axisColor }}
-                        axisLine={false}
-                        tickLine={false}
-                        interval={
-                          insights.granularity === "day"
-                            ? Math.floor(insights.calorie_trend.length / 6)
-                            : 0
-                        }
-                      />
-                      <YAxis
-                        tick={{ fontSize: 10, fill: axisColor }}
-                        axisLine={false}
-                        tickLine={false}
-                        width={40}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          background: isDark ? "#221E18" : "#FFFFFF",
-                          border: "none",
-                          borderRadius: 10,
-                          fontSize: 12,
-                        }}
-                        labelFormatter={(d) =>
-                          formatTrendLabel(String(d), insights.granularity)
-                        }
-                      />
-                      {insights.today.calorie_target && (
-                        <ReferenceLine
-                          y={insights.today.calorie_target}
-                          stroke={isDark ? COLORS.blackPawpaw : COLORS.pawpaw}
-                          strokeDasharray="4 4"
-                          strokeWidth={1.5}
+                  <div
+                    className={`transition-opacity duration-200 ${insightsFetching ? "opacity-40" : "opacity-100"}`}
+                  >
+                    <ResponsiveContainer width="100%" height={220}>
+                      <AreaChart
+                        data={insights.calorie_trend}
+                        margin={{ top: 5, right: 8, left: -20, bottom: 0 }}
+                      >
+                        <defs>
+                          <linearGradient
+                            id="calorieFill"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="0%"
+                              stopColor={COLORS.moringa}
+                              stopOpacity={0.25}
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor={COLORS.moringa}
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid stroke={gridColor} vertical={false} />
+                        <XAxis
+                          dataKey="date"
+                          tickFormatter={(d) =>
+                            formatTrendLabel(d, insights.granularity)
+                          }
+                          tick={{ fontSize: 10, fill: axisColor }}
+                          axisLine={false}
+                          tickLine={false}
+                          interval={
+                            insights.granularity === "day"
+                              ? Math.floor(insights.calorie_trend.length / 6)
+                              : 0
+                          }
                         />
-                      )}
-                      <Area
-                        type="monotone"
-                        dataKey="calories"
-                        stroke={isDark ? COLORS.moringaFaded : COLORS.moringa}
-                        strokeWidth={2}
-                        fill="url(#calorieFill)"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </ChartCard>
-
-                {/* Macro trend */}
-                <ChartCard title="Macro trend">
-                  <ResponsiveContainer width="100%" height={200}>
-                    <LineChart
-                      data={insights.macro_trend}
-                      margin={{ top: 5, right: 8, left: -20, bottom: 0 }}
-                    >
-                      <CartesianGrid stroke={gridColor} vertical={false} />
-                      <XAxis
-                        dataKey="date"
-                        tickFormatter={(d) =>
-                          formatTrendLabel(d, insights.granularity)
-                        }
-                        tick={{ fontSize: 10, fill: axisColor }}
-                        axisLine={false}
-                        tickLine={false}
-                        interval={
-                          insights.granularity === "day"
-                            ? Math.floor(insights.macro_trend.length / 6)
-                            : 0
-                        }
-                      />
-                      <YAxis
-                        tick={{ fontSize: 10, fill: axisColor }}
-                        axisLine={false}
-                        tickLine={false}
-                        width={40}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          background: isDark ? "#221E18" : "#FFFFFF",
-                          border: "none",
-                          borderRadius: 10,
-                          fontSize: 12,
-                        }}
-                        labelFormatter={(d) =>
-                          formatTrendLabel(String(d), insights.granularity)
-                        }
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="protein_g"
-                        name="Protein"
-                        stroke={isDark ? COLORS.moringaFaded : COLORS.moringa}
-                        strokeWidth={2}
-                        dot={false}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="carbs_g"
-                        name="Carbs"
-                        stroke={isDark ? COLORS.blackPawpaw : COLORS.pawpaw}
-                        strokeWidth={2}
-                        dot={false}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="fat_g"
-                        name="Fat"
-                        stroke={isDark ? COLORS.darkWhite : COLORS.cocoa}
-                        strokeWidth={1.5}
-                        strokeOpacity={0.6}
-                        dot={false}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                  <div className="flex gap-4 mt-2 justify-center">
-                    {["Protein", "Carbs", "Fat"].map((label, i) => (
-                      <div key={label} className="flex items-center gap-1.5">
-                        <span
-                          className="w-2 h-2 rounded-full"
-                          style={{
-                            backgroundColor: [
-                              isDark ? COLORS.moringaFaded : COLORS.moringa,
-                              isDark ? COLORS.blackPawpaw : COLORS.pawpaw,
-                              isDark ? COLORS.darkWhite : COLORS.cocoa,
-                            ][i],
+                        <YAxis
+                          tick={{ fontSize: 10, fill: axisColor }}
+                          axisLine={false}
+                          tickLine={false}
+                          width={40}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            background: isDark ? "#221E18" : "#FFFFFF",
+                            border: "none",
+                            borderRadius: 10,
+                            fontSize: 12,
+                          }}
+                          labelFormatter={(d) =>
+                            formatTrendLabel(String(d), insights.granularity)
+                          }
+                        />
+                        {insights.today.calorie_target && (
+                          <ReferenceLine
+                            y={insights.today.calorie_target}
+                            stroke={isDark ? COLORS.blackPawpaw : COLORS.pawpaw}
+                            strokeDasharray="4 4"
+                            strokeWidth={1.5}
+                          />
+                        )}
+                        <Area
+                          type="monotone"
+                          dataKey="calories"
+                          stroke={isDark ? COLORS.moringaFaded : COLORS.moringa}
+                          strokeWidth={2}
+                          fill="url(#calorieFill)"
+                          dot={{
+                            r: 2,
+                            fill: isDark ? COLORS.moringaFaded : COLORS.moringa,
+                            strokeWidth: 0,
                           }}
                         />
-                        <span className="text-[11px] text-cocoa-faded">
-                          {label}
-                        </span>
+                      </AreaChart>
+                    </ResponsiveContainer>
+
+                    <hr className="my-5 md:my-7 lg:my-10 border-t border-gray-300 dark:border-gray-600" />
+
+                    {/* Macro trend */}
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="font-heading font-bold text-sm text-cocoa dark:text-dark-white">
+                          Macro trend
+                        </h2>
                       </div>
-                    ))}
+                      <ResponsiveContainer width="100%" height={200}>
+                        <LineChart
+                          data={insights.macro_trend}
+                          margin={{ top: 5, right: 8, left: -20, bottom: 0 }}
+                        >
+                          <CartesianGrid stroke={gridColor} vertical={false} />
+                          <XAxis
+                            dataKey="date"
+                            tickFormatter={(d) =>
+                              formatTrendLabel(d, insights.granularity)
+                            }
+                            tick={{ fontSize: 10, fill: axisColor }}
+                            axisLine={false}
+                            tickLine={false}
+                            interval={
+                              insights.granularity === "day"
+                                ? Math.floor(insights.macro_trend.length / 6)
+                                : 0
+                            }
+                          />
+                          <YAxis
+                            tick={{ fontSize: 10, fill: axisColor }}
+                            axisLine={false}
+                            tickLine={false}
+                            width={40}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              background: isDark ? "#221E18" : "#FFFFFF",
+                              border: "none",
+                              borderRadius: 10,
+                              fontSize: 12,
+                            }}
+                            labelFormatter={(d) =>
+                              formatTrendLabel(String(d), insights.granularity)
+                            }
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="protein_g"
+                            name="Protein"
+                            stroke={
+                              isDark ? COLORS.moringaFaded : COLORS.moringa
+                            }
+                            strokeWidth={2}
+                            dot={{
+                              r: 2,
+                              fill: isDark
+                                ? COLORS.moringaFaded
+                                : COLORS.moringa,
+                              strokeWidth: 0,
+                            }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="carbs_g"
+                            name="Carbs"
+                            stroke={isDark ? COLORS.blackPawpaw : COLORS.pawpaw}
+                            strokeWidth={2}
+                            dot={{
+                              r: 2,
+                              fill: isDark ? COLORS.blackPawpaw : COLORS.pawpaw,
+                              strokeWidth: 0,
+                            }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="fat_g"
+                            name="Fat"
+                            stroke={isDark ? COLORS.darkWhite : COLORS.cocoa}
+                            strokeWidth={1.5}
+                            strokeOpacity={0.6}
+                            dot={{
+                              r: 1.5,
+                              fill: isDark ? COLORS.darkWhite : COLORS.cocoa,
+                              strokeWidth: 0,
+                            }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                      <div className="flex gap-4 mt-2 justify-center">
+                        {["Protein", "Carbs", "Fat"].map((label, i) => (
+                          <div
+                            key={label}
+                            className="flex items-center gap-1.5"
+                          >
+                            <span
+                              className="w-2 h-2 rounded-full"
+                              style={{
+                                backgroundColor: [
+                                  isDark ? COLORS.moringaFaded : COLORS.moringa,
+                                  isDark ? COLORS.blackPawpaw : COLORS.pawpaw,
+                                  isDark ? COLORS.darkWhite : COLORS.cocoa,
+                                ][i],
+                              }}
+                            />
+                            <span className="text-[11px] text-cocoa-faded">
+                              {label}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </ChartCard>
 
@@ -486,91 +558,62 @@ export const DashboardPage = () => {
                     <RangeToggle value={waterRange} onChange={setWaterRange} />
                   }
                 >
-                  <ResponsiveContainer width="100%" height={200}>
-                    <AreaChart
-                      data={waterInsights?.water_trend ?? []}
-                      margin={{ top: 5, right: 8, left: -20, bottom: 0 }}
-                    >
-                      <defs>
-                        <linearGradient
-                          id="waterFill"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="0%"
-                            stopColor={COLORS.moringaFaded}
-                            stopOpacity={0.3}
-                          />
-                          <stop
-                            offset="100%"
-                            stopColor={COLORS.moringaFaded}
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid stroke={gridColor} vertical={false} />
-                      <XAxis
-                        dataKey="date"
-                        tickFormatter={(d) =>
-                          formatTrendLabel(
-                            d,
-                            waterInsights?.granularity ?? "day",
-                          )
-                        }
-                        tick={{ fontSize: 10, fill: axisColor }}
-                        axisLine={false}
-                        tickLine={false}
-                        interval={
-                          (waterInsights?.granularity ?? "day") === "day"
-                            ? Math.floor(
-                                (waterInsights?.water_trend.length ?? 7) / 6,
-                              )
-                            : 0
-                        }
-                      />
-                      <YAxis
-                        tick={{ fontSize: 10, fill: axisColor }}
-                        axisLine={false}
-                        tickLine={false}
-                        width={40}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          background: isDark ? "#221E18" : "#FFFFFF",
-                          border: "none",
-                          borderRadius: 10,
-                          fontSize: 12,
-                        }}
-                        labelFormatter={(d) =>
-                          formatTrendLabel(
-                            String(d),
-                            waterInsights?.granularity ?? "day",
-                          )
-                        }
-                      />
-                      {insights.today.water_target_ml && (
-                        <ReferenceLine
-                          y={insights.today.water_target_ml}
-                          stroke={isDark ? COLORS.blackPawpaw : COLORS.pawpaw}
-                          strokeDasharray="4 4"
-                          strokeWidth={1.5}
+                  <div
+                    className={`transition-opacity duration-200 ${waterFetching ? "opacity-40" : "opacity-100"}`}
+                  >
+                    <ResponsiveContainer width="100%" height={200}>
+                      <BarChart
+                        data={waterInsights?.water_trend ?? []}
+                        margin={{ top: 5, right: 8, left: -20, bottom: 0 }}
+                      >
+                        <CartesianGrid stroke={gridColor} vertical={false} />
+                        <XAxis
+                          dataKey="date"
+                          tickFormatter={(d) =>
+                            formatTrendLabel(
+                              d,
+                              waterInsights?.granularity ?? "day",
+                            )
+                          }
+                          tick={{ fontSize: 10, fill: axisColor }}
+                          axisLine={false}
+                          tickLine={false}
                         />
-                      )}
-                      <Area
-                        type="monotone"
-                        dataKey="amount_ml"
-                        stroke={COLORS.moringaFaded}
-                        strokeWidth={2}
-                        fill="url(#waterFill)"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                        <YAxis
+                          tick={{ fontSize: 10, fill: axisColor }}
+                          axisLine={false}
+                          tickLine={false}
+                          width={40}
+                        />
+                        <Tooltip
+                          cursor={{ fill: "transparent" }}
+                          contentStyle={{
+                            background: isDark ? "#221E18" : "#FFFFFF",
+                            border: "none",
+                            borderRadius: 10,
+                            fontSize: 12,
+                          }}
+                        />
+                        {insights.today.water_target_ml && (
+                          <ReferenceLine
+                            y={insights.today.water_target_ml}
+                            stroke={isDark ? COLORS.blackPawpaw : COLORS.pawpaw}
+                            strokeDasharray="4 4"
+                            strokeWidth={1.5}
+                          />
+                        )}
+                        <Bar
+                          dataKey="amount_ml"
+                          name="ml logged"
+                          fill={COLORS.moringaFaded}
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </ChartCard>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {/* Meal type breakdown, bar list, no pie */}
                   <ChartCard title="Where your calories come from">
                     {mealTypeEntries.length === 0 ? (
@@ -681,30 +724,30 @@ export const DashboardPage = () => {
                 >
                   {calendar ? (
                     <div className="grid grid-cols-7 gap-1.5">
-                      {calendar.days.map((day) => (
-                        <div
-                          key={day.date}
-                          title={`${day.date}: ${Math.round(day.calories)} kcal`}
-                          className="aspect-square rounded-md flex items-center justify-center text-[10px]"
-                          style={{
-                            backgroundColor: day.is_future
-                              ? "transparent"
-                              : day.met_goal
-                                ? isDark
-                                  ? COLORS.moringaFaded
-                                  : COLORS.moringa
-                                : isDark
-                                  ? "rgba(229,231,235,0.06)"
-                                  : "rgba(28,26,23,0.06)",
-                            color: day.met_goal ? "#FFFFFF" : axisColor,
-                            border: day.is_future
-                              ? `1px dashed ${gridColor}`
-                              : "none",
-                          }}
-                        >
-                          {new Date(`${day.date}T00:00:00Z`).getUTCDate()}
-                        </div>
-                      ))}
+                      {calendar.days.map((day) => {
+                        const fill = getDayFill(day);
+                        return (
+                          <div
+                            key={day.date}
+                            title={`${day.date}: ${Math.round(day.calories)} kcal`}
+                            className="relative aspect-square rounded-md flex items-center justify-center text-[10px]"
+                            style={{
+                              backgroundColor: fill.bg,
+                              color: fill.met ? "#FFFFFF" : axisColor,
+                              border: day.is_future
+                                ? `1px dashed ${gridColor}`
+                                : "none",
+                            }}
+                          >
+                            {new Date(`${day.date}T00:00:00Z`).getUTCDate()}
+                            {fill.exceeded && (
+                              <span className="absolute -top-1 -right-1 text-[10px] lg:text-[20px]">
+                                🎉
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="h-32 flex items-center justify-center">
@@ -713,7 +756,8 @@ export const DashboardPage = () => {
                   )}
                   <p className="text-[11px] text-cocoa-faded mt-3">
                     Filled squares are days you reached 80% or more of your
-                    calorie target.
+                    calorie target. Faded squares are days when target isn't
+                    met.
                   </p>
                 </ChartCard>
               </div>

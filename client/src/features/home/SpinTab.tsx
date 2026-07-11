@@ -515,7 +515,7 @@ export const SpinTab = () => {
 
           {/* Mobile only page title, PageTopBar hides its title below md */}
           {tier === "mobile" && (
-            <p className="mt-20 px-4 font-heading font-bold text-base uppercase tracking-wide text-cocoa/70 dark:text-dark-white/70 shrink-0">
+            <p className="mt-20 px-5 font-heading font-bold text-base tracking-wide text-cocoa/70 dark:text-dark-white/70 shrink-0">
               Spin meal
             </p>
           )}

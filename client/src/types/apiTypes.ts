@@ -295,5 +295,5 @@ export interface InsightsData {
 export interface StreakCalendarData {
   month: string
   calorie_target: number | null
-  days: { date: string; calories: number; met_goal: boolean; is_future: boolean }[]
+  days: { date: string; calories: number; met_goal: boolean; exceeded: boolean; is_future: boolean }[]
 }

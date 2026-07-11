@@ -11,6 +11,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import type { ApiResponse } from "@/types/apiTypes";
+import { useScreenTier } from "@/hooks/useMediaQuery";
 
 /*
   Settings page. Appearance, notifications, account security, and
@@ -43,6 +44,7 @@ export const SettingsPage = () => {
   const { resolvedTheme, theme, setTheme } = useTheme();
   const { data: profile } = useUserProfile();
   const { clearAuth } = useAuthStore();
+  const tier = useScreenTier();
   const navigate = useNavigate();
   const showDeleteAccount = import.meta.env.VITE_SHOW_DELETE_ACCOUNT;
 
@@ -147,7 +149,7 @@ export const SettingsPage = () => {
   const isOAuth = profile?.provider === "google";
 
   const mainContent = (
-    <div className="space-y-5 max-w-2xl mx-auto mt-16 md:mt-0">
+    <div className="space-y-5 max-w-2xl mx-auto mt-1 md:mt-0">
       <SectionCard title="Appearance">
         <div className="flex gap-2">
           {[
@@ -333,6 +335,11 @@ export const SettingsPage = () => {
           <PageTopBar title="Settings" showSearch={false} />
           <div className="md:hidden shrink-0">
             <MobileTopNav />
+            {tier === "mobile" && (
+              <p className="mt-20 px-5 font-heading font-bold text-base tracking-wide text-cocoa/70 dark:text-dark-white/70 shrink-0">
+                Settings
+              </p>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 pt-4 md:pt-5 lg:pt-2 pb-6">
