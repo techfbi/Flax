@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import type { ApiResponse, AuthUser, FullProfile } from "@/types/apiTypes";
+import { motion, useReducedMotion } from "framer-motion";
 
 /* Lazy pages */
 const LandingPage = lazy(() => import("@/features/landing/LandingPage"));
@@ -42,6 +43,30 @@ const PageLoader = () => (
     />
   </div>
 );
+
+/*
+  Enter only, no exit. The old page unmounts instantly like a normal
+  route swap, only the new one fades and settles in over it. Two full
+  page components animating opacity at once, one entering and one
+  exiting, only overlap cleanly with absolute positioning, which gets
+  messy across pages that each manage their own height and scroll
+  differently. Skipping the exit sidesteps that entirely, there is
+  never a moment where two pages coexist, so there is nothing that
+  can look like a blank or dim gap between them.
+*/
+const PageTransition = ({ children }: { children: React.ReactNode }) => {
+  const reduceMotion = useReducedMotion();
+  if (reduceMotion) return <>{children}</>;
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 /*
   RetrySpinner, shown when /me fails due to network error. Retries /me in the background every 3 seconds.
@@ -209,121 +234,154 @@ const AppRouter = () => {
         // non critical, scheduled notifications just skip this user
         // until it succeeds on a future load
       });
-    console.log(`User's Timesone is ${tz}`);
   }, []);
 
   return (
     <BrowserRouter>
       <SessionGate>
         <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<RootRoute />} />
-            <Route path="/api/auth/callback" element={<AuthCallbackPage />} />
-
-            <Route
-              path="/register"
-              element={
-                <PublicRoute>
-                  <RegisterForm />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/login"
-              element={
-                <PublicRoute>
-                  <LoginForm />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/verify-otp"
-              element={
-                <PublicRoute>
-                  <OtpForm />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/forgot-password"
-              element={
-                <PublicRoute>
-                  <ForgotPasswordForm />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/reset-password"
-              element={
-                <PublicRoute>
-                  <ResetPasswordForm />
-                </PublicRoute>
-              }
-            />
-
-            <Route
-              path="/onboarding"
-              element={
-                <ProtectedRoute>
-                  <OnboardingFlow />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/spin"
-              element={
-                <ProtectedRoute>
-                  <SpinTab />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/ask-noura"
-              element={
-                <ProtectedRoute>
-                  <AskNouraPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <SettingsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/notifications"
-              element={
-                <ProtectedRoute>
-                  <NotificationsPage />
-                </ProtectedRoute>
-              }
-            />
-
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <AnimatedRoutes />
         </Suspense>
       </SessionGate>
     </BrowserRouter>
   );
 };
 
+/*
+  Split out from AppRouter since useLocation needs to be called
+  inside the Router, and AnimatePresence needs the location to key
+  off of to know when a real route change happened.
+*/
+const AnimatedRoutes = () => {
+  return (
+    <Routes location={location} key={location.pathname}>
+      <Route path="/" element={<RootRoute />} />
+      <Route path="/api/auth/callback" element={<AuthCallbackPage />} />
+
+      <Route
+        path="/register"
+        element={
+          <PublicRoute>
+            <PageTransition>
+              <RegisterForm />
+            </PageTransition>
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <PageTransition>
+              <LoginForm />
+            </PageTransition>
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/verify-otp"
+        element={
+          <PublicRoute>
+            <PageTransition>
+              <OtpForm />
+            </PageTransition>
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/forgot-password"
+        element={
+          <PublicRoute>
+            <PageTransition>
+              <ForgotPasswordForm />
+            </PageTransition>
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/reset-password"
+        element={
+          <PublicRoute>
+            <PageTransition>
+              <ResetPasswordForm />
+            </PageTransition>
+          </PublicRoute>
+        }
+      />
+
+      <Route
+        path="/onboarding"
+        element={
+          <ProtectedRoute>
+            <PageTransition>
+              <OnboardingFlow />
+            </PageTransition>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/spin"
+        element={
+          <ProtectedRoute>
+            <PageTransition>
+              <SpinTab />
+            </PageTransition>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <PageTransition>
+              <DashboardPage />
+            </PageTransition>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ask-noura"
+        element={
+          <ProtectedRoute>
+            <PageTransition>
+              <AskNouraPage />
+            </PageTransition>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <PageTransition>
+              <ProfilePage />
+            </PageTransition>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <PageTransition>
+              <SettingsPage />
+            </PageTransition>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute>
+            <PageTransition>
+              <NotificationsPage />
+            </PageTransition>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
 export default AppRouter;

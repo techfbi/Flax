@@ -66,6 +66,8 @@ export interface FullProfile {
     age_range: string | null
     exact_age: number | null
     water_target_ml: number | null
+    calorie_target_is_manual: boolean
+    water_target_is_manual: boolean
   } | null
 }
 

@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { Send, Trash2 } from "lucide-react";
 import { useNouraChat } from "@/hooks/useChat";
 import { useAuthStore } from "@/store/authStore";
+import { AnimatePresence, motion } from "framer-motion";
 
 /*
   Full screen Noura chat body. No background behind the messages, they
@@ -95,7 +96,8 @@ export const NouraFullChat = () => {
               </p>
               <p className="text-sm text-cocoa-faded max-w-sm">
                 Ask me about meals, ingredients, nutrition, what fits your goal
-                today, or what to eat next. I know what you have logged today.
+                today, or what to eat next. I would be more than glad to journey
+                along with you.
               </p>
             </div>
           </div>
@@ -199,41 +201,52 @@ export const NouraFullChat = () => {
           </button>
         </div>
       </div>
-      {confirmingClear && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div
-            className="w-[90%] max-w-sm rounded-2xl bg-off-white dark:bg-dark-bg
-      p-5 shadow-xl border border-cocoa/10 dark:border-dark-white/10"
+      <AnimatePresence>
+        {confirmingClear && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
           >
-            <h3 className="text-base font-semibold text-cocoa dark:text-dark-white">
-              Clear chat?
-            </h3>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 6 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 6 }}
+              transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+              className="w-[90%] max-w-sm rounded-2xl bg-off-white dark:bg-dark-bg
+p-5 shadow-xl border border-cocoa/10 dark:border-dark-white/10"
+            >
+              <h3 className="text-base font-semibold text-cocoa dark:text-dark-white">
+                Clear chat?
+              </h3>
+              <p className="mt-2 text-sm text-cocoa-faded">
+                This will permanently delete the entire conversation.
+              </p>
 
-            <p className="mt-2 text-sm text-cocoa-faded">
-              This will permanently delete the entire conversation.
-            </p>
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={() => setConfirmingClear(false)}
+                  className="px-4 py-2 rounded-lg text-sm
+        text-cocoa-faded hover:text-cocoa dark:hover:text-dark-white"
+                >
+                  Cancel
+                </button>
 
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={() => setConfirmingClear(false)}
-                className="px-4 py-2 rounded-lg text-sm
-            text-cocoa-faded hover:text-cocoa dark:hover:text-dark-white"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleConfirmClear}
-                disabled={isClearing}
-                className="px-4 py-2 rounded-lg bg-rose-500 text-white text-sm
-            hover:bg-rose-600 disabled:opacity-50"
-              >
-                {isClearing ? "Clearing..." : "Clear chat"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                <button
+                  onClick={handleConfirmClear}
+                  disabled={isClearing}
+                  className="px-4 py-2 rounded-lg bg-rose-500 text-white text-sm
+        hover:bg-rose-600 disabled:opacity-50"
+                >
+                  {isClearing ? "Clearing..." : "Clear chat"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

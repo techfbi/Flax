@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 /*
   Spin tips popup.
   Desktop: stacked modal with 5 tips, two buttons.
@@ -25,11 +26,19 @@ export const SpinTipsPopup = ({ onOk, onDontShow }: SpinTipsPopupProps) => {
   return (
     <>
       {/* Desktop version */}
-      <div
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.18 }}
         className="hidden md:flex fixed inset-0 z-50 items-center
         justify-center bg-black/30 dark:bg-black/50 backdrop-blur-sm"
       >
-        <div
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 6 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 6 }}
+          transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
           className="w-full max-w-md mx-4
           bg-off-white dark:bg-black-surface rounded-2xl overflow-hidden shadow-2xl"
         >
@@ -68,13 +77,24 @@ export const SpinTipsPopup = ({ onOk, onDontShow }: SpinTipsPopupProps) => {
               Do not show again
             </button>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Mobile version: bottom sheet */}
       <div className="md:hidden fixed inset-0 z-50">
-        <div className="absolute inset-0 bg-black/30" onClick={onOk} />
-        <div
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18 }}
+          className="absolute inset-0 bg-black/30"
+          onClick={onOk}
+        />
+        <motion.div
+          initial={{ y: "100%" }}
+          animate={{ y: 0 }}
+          exit={{ y: "100%" }}
+          transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
           className="absolute bottom-0 left-0 right-0
           bg-off-white dark:bg-black-surface rounded-t-3xl overflow-hidden shadow-2xl"
         >
@@ -111,7 +131,7 @@ export const SpinTipsPopup = ({ onOk, onDontShow }: SpinTipsPopupProps) => {
               Do not show again
             </button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </>
   );

@@ -149,6 +149,7 @@ export const DashboardPage = () => {
       return data.data.insights;
     },
     staleTime: 60 * 1000,
+    gcTime: Infinity,
     placeholderData: keepPreviousData,
   });
 
@@ -161,6 +162,7 @@ export const DashboardPage = () => {
       return data.data.insights;
     },
     staleTime: 60 * 1000,
+    gcTime: Infinity,
     placeholderData: keepPreviousData,
   });
 
@@ -173,6 +175,7 @@ export const DashboardPage = () => {
       return data.data.calendar;
     },
     staleTime: 5 * 60 * 1000,
+    gcTime: Infinity,
   });
 
   const shiftCalendarMonth = (delta: number) => {
@@ -756,8 +759,9 @@ export const DashboardPage = () => {
                   )}
                   <p className="text-[11px] text-cocoa-faded mt-3">
                     Filled squares are days you reached 80% or more of your
-                    calorie target. Faded squares are days when target isn't
-                    met.
+                    calorie target. <br />
+                    Filled squares with 🎉 tag are days you hit your calorie
+                    target <br /> Faded squares are days when target isn't met.
                   </p>
                 </ChartCard>
               </div>

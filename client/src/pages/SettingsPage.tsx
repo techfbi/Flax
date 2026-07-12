@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Sun, Moon, Monitor, Bell, BellOff } from "lucide-react";
@@ -12,12 +12,26 @@ import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import type { ApiResponse } from "@/types/apiTypes";
 import { useScreenTier } from "@/hooks/useMediaQuery";
+import { useSpinSound } from "@/hooks/useSpinSound";
 
 /*
   Settings page. Appearance, notifications, account security, and
   account deletion. Health and identity data live on the Profile page
   instead, this page is configuration, not identity.
 */
+
+// Browsers need the VAPID key as a Uint8Array, not the base64url
+// string the server sends. Standard conversion, nothing fancy.
+const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; i++) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+};
 
 const inputClass =
   "w-full bg-surface dark:bg-black-surface border border-cocoa/20 " +
@@ -46,19 +60,37 @@ export const SettingsPage = () => {
   const { clearAuth } = useAuthStore();
   const tier = useScreenTier();
   const navigate = useNavigate();
+  const { enabled: spinSoundEnabled, setEnabled: setSpinSoundEnabled } =
+    useSpinSound();
   const showDeleteAccount = import.meta.env.VITE_SHOW_DELETE_ACCOUNT;
 
   // ---- Notifications ----
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
+  // on mount, ask the browser directly whether a push subscription
+  // already exists, rather than assuming it does not. this is the
+  // actual source of truth, a locally stored flag can drift out of
+  // sync with reality, the browser's own state cannot.
+  useEffect(() => {
+    const checkPushStatus = async () => {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+      try {
+        const registration = await navigator.serviceWorker.getRegistration();
+        const subscription = await registration?.pushManager.getSubscription();
+        setPushEnabled(!!subscription);
+      } catch {
+        // could not determine status, leave it showing as off
+      }
+    };
+    checkPushStatus();
+  }, []);
 
   const togglePush = async () => {
-    if (pushBusy) return;
     setPushBusy(true);
     try {
       if (!pushEnabled) {
         if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-          toast.error("Push notifications are not supported in this browser");
+          toast.error("Push notifications are not supported on this device");
           return;
         }
         const permission = await Notification.requestPermission();
@@ -66,23 +98,33 @@ export const SettingsPage = () => {
           toast.error("Notification permission was not granted");
           return;
         }
-        // NOTE: this expects a service worker registered at /sw.js.
-        // That file does not exist in the client yet, so this will
-        // throw until one is added. Flagging this rather than
-        // pretending it already works, tell me if you want it built.
         const registration = await navigator.serviceWorker.register("/sw.js");
         const { data } = await api.get<ApiResponse<{ publicKey: string }>>(
           "/api/notifications/vapid-key",
         );
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: data.data.publicKey,
+          applicationServerKey: urlBase64ToUint8Array(
+            data.data.publicKey,
+          ) as BufferSource,
         });
-        await api.post("/api/notifications/subscribe", subscription);
+        const subJson = subscription.toJSON();
+        await api.post("/api/notifications/subscribe", {
+          endpoint: subJson.endpoint,
+          p256dh: subJson.keys?.p256dh,
+          auth: subJson.keys?.auth,
+        });
         setPushEnabled(true);
         toast.success("Push notifications enabled");
       } else {
-        await api.delete("/api/notifications/subscribe");
+        const registration = await navigator.serviceWorker.getRegistration();
+        const subscription = await registration?.pushManager.getSubscription();
+        if (subscription) {
+          await api.delete("/api/notifications/subscribe", {
+            data: { endpoint: subscription.endpoint },
+          });
+          await subscription.unsubscribe();
+        }
         setPushEnabled(false);
         toast.success("Push notifications disabled");
       }
@@ -201,7 +243,37 @@ export const SettingsPage = () => {
           >
             <span
               className={`absolute top-0.5 w-5 h-5 rounded-full bg-surface transition-transform
-                ${pushEnabled ? "translate-x-[22px]" : "translate-x-0.5"}`}
+                ${pushEnabled ? "translate-x-[2px]" : "translate-x-[-22px]"}`}
+            />
+          </button>
+        </div>
+      </SectionCard>
+
+      {/* Spin sound toggle */}
+      <SectionCard title="Sound">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-cocoa dark:text-dark-white">
+              Spin sound
+            </p>
+            <p className="text-xs text-cocoa-faded mt-0.5">
+              Play sound effects when spinning for a meal suggestion
+            </p>
+          </div>
+          <button
+            onClick={() => setSpinSoundEnabled(!spinSoundEnabled)}
+            role="switch"
+            aria-checked={spinSoundEnabled}
+            className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${
+              spinSoundEnabled
+                ? "bg-moringa dark:bg-moringa-faded"
+                : "bg-cocoa/20 dark:bg-dark-white/20"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform ${
+                spinSoundEnabled ? "translate-x-[2px]" : "translate-x-[-22px]"
+              }`}
             />
           </button>
         </div>

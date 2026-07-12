@@ -15,6 +15,8 @@ import { useScreenTier } from "@/hooks/useMediaQuery";
 import { useSpinSound } from "@/hooks/useSpinSound";
 import api from "@/lib/api";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useSpinStore } from "@/store/spinStore";
+import { AnimatePresence } from "framer-motion";
 import type {
   ApiResponse,
   SpinResult,
@@ -46,7 +48,7 @@ export const SpinTab = () => {
 
   const [showTips, setShowTips] = useState(false);
   const [tipsChecked, setTipsChecked] = useState(false);
-  const [result, setResult] = useState<SpinResult | null>(null);
+  const { result, setResult } = useSpinStore();
   const [isSpinning, setIsSpinning] = useState(false);
   const [selectedMealType, setSelectedMealType] = useState<MealType | null>(
     null,
@@ -116,7 +118,17 @@ export const SpinTab = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const cycleImages: string[] = [];
+  // after
+  const { data: cycleImages = [] } = useQuery({
+    queryKey: ["spin-cycle-images"],
+    queryFn: async () => {
+      const { data } = await api.get<ApiResponse<{ images: string[] }>>(
+        "/api/spin/cycle-images",
+      );
+      return data.data.images;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
 
   const spinMutation = useMutation({
     mutationFn: async () => {
@@ -437,18 +449,20 @@ export const SpinTab = () => {
     <div
       className={`flex flex-col gap-5 ${tier === "mobile" ? "mt-5" : tier === "desktop" ? "max-w-[1100px]" : ""}`}
     >
-      {showTips && (
-        <SpinTipsPopup
-          onOk={() => {
-            sessionStorage.setItem(TIPS_STORAGE_KEY, "1");
-            setShowTips(false);
-          }}
-          onDontShow={() => {
-            localStorage.setItem(TIPS_STORAGE_KEY, "1");
-            setShowTips(false);
-          }}
-        />
-      )}
+      <AnimatePresence>
+        {showTips && (
+          <SpinTipsPopup
+            onOk={() => {
+              sessionStorage.setItem(TIPS_STORAGE_KEY, "1");
+              setShowTips(false);
+            }}
+            onDontShow={() => {
+              localStorage.setItem(TIPS_STORAGE_KEY, "1");
+              setShowTips(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       <div
         className={`flex gap-6 ${

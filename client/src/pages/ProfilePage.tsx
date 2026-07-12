@@ -12,6 +12,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useAuthStore } from "@/store/authStore";
 import { useTheme } from "@/context/ThemeContext";
 import api from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import type {
   ApiResponse,
   FullProfile,
@@ -22,6 +23,7 @@ import type {
   HealthGoal,
   ActivityLevel,
 } from "@/types/apiTypes";
+import { useScreenTier } from "@/hooks/useMediaQuery";
 
 /*
   Region and biological sex are shown but never editable here. Both
@@ -71,7 +73,7 @@ const inputClass =
   "w-full bg-surface dark:bg-black-surface border border-cocoa/20 " +
   "dark:border-dark-white/20 rounded-lg px-3 py-2 text-base lg:text-sm " +
   "outline-none text-cocoa dark:text-dark-white " +
-  "focus:border-pawpaw dark:focus:border-black-pawpaw";
+  "focus:border-moringa-faded focus:ring-1 focus:ring-moringa-faded/50 ";
 
 const sanitizeNumber = (raw: string): string => {
   const digitsOnly = raw.replace(/[^0-9]/g, "");
@@ -83,7 +85,7 @@ const sanitizeNumber = (raw: string): string => {
 // for the always locked fields inside the edit form (region, sex).
 const InfoRow = ({ label, value }: { label: string; value: string }) => (
   <div>
-    <p className="text-xs font-semibold text-cocoa dark:text-dark-white mb-0.5">
+    <p className="font-heading text-xs lg:text-sm font-semibold text-cocoa dark:text-dark-white mb-0.5">
       {label}
     </p>
     <p className="text-sm text-cocoa-faded">{value}</p>
@@ -95,6 +97,7 @@ export const ProfilePage = () => {
   const queryClient = useQueryClient();
   const { data: profile, isLoading } = useUserProfile();
   const { setUser, user, setAvatarUrl, avatarUrl } = useAuthStore();
+  const tier = useScreenTier();
 
   const { data: dashData } = useQuery({
     queryKey: ["dashboard"],
@@ -155,7 +158,10 @@ export const ProfilePage = () => {
       setEditingName(false);
       setShowAvatarPicker(false);
     },
-    onError: () => toast.error("Could not update profile. Try again."),
+    onError: (error) =>
+      toast.error(
+        getErrorMessage(error, "Could not update profile. Try again."),
+      ),
   });
 
   // ---- Health form, collapsed behind an edit icon. Region and
@@ -205,7 +211,10 @@ export const ProfilePage = () => {
       toast.success("Health profile updated");
       setEditingHealth(false);
     },
-    onError: () => toast.error("Could not update health profile. Try again."),
+    onError: (error) =>
+      toast.error(
+        getErrorMessage(error, "Could not update health profile. Try again."),
+      ),
   });
 
   const saveHealthForm = () => {
@@ -272,7 +281,10 @@ export const ProfilePage = () => {
       queryClient.invalidateQueries({ queryKey: ["water"] });
       toast.success("Target updated");
     },
-    onError: () => toast.error("Could not update target. Try again."),
+    onError: (error) =>
+      toast.error(
+        getErrorMessage(error, "Could not update target. Try again."),
+      ),
   });
 
   // Only the true first load, with nothing cached yet, gets a full
@@ -332,7 +344,7 @@ export const ProfilePage = () => {
       <div className="bg-surface-two dark:bg-black-surface rounded-2xl p-5">
         <div className="flex items-center gap-4">
           <div className="relative shrink-0">
-            <div className="w-16 h-16 rounded-full overflow-hidden bg-cocoa/10 dark:bg-dark-white/10 flex items-center justify-center">
+            <div className="w-[80px] h-[80px] md:w-[100px] md:h-[100px] lg:w-[150px] lg:h-[150px] rounded-full overflow-hidden bg-cocoa/10 dark:bg-dark-white/10 flex items-center justify-center">
               {avatarUrl || profile.avatar_url ? (
                 <img
                   src={avatarUrl ?? profile.avatar_url ?? ""}
@@ -348,10 +360,10 @@ export const ProfilePage = () => {
             <button
               onClick={() => setShowAvatarPicker(true)}
               aria-label="Edit avatar"
-              className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-pawpaw dark:bg-black-pawpaw
+              className="absolute -bottom-[-10px] -right-1 w-6 h-6 lg:w-10 lg:h-10 rounded-full bg-pawpaw dark:bg-black-pawpaw
                 text-surface flex items-center justify-center hover:opacity-90"
             >
-              <Pencil size={11} />
+              <Pencil size={13} />
             </button>
           </div>
 
@@ -406,12 +418,12 @@ export const ProfilePage = () => {
                 </button>
               </div>
             )}
-            <div className="flex items-center gap-2 mt-1.5">
-              <span className="text-[11px] text-cocoa-faded truncate">
+            <div className="flex flex-col mt-1.5">
+              <span className="text-[12px] text-cocoa-faded truncate">
                 {profile.email}
               </span>
-              <span className="text-[11px] text-cocoa-faded">
-                · Member since{" "}
+              <span className="text-[10px] text-cocoa-faded">
+                Member since{" "}
                 {new Date(profile.created_at).toLocaleDateString(undefined, {
                   month: "short",
                   year: "numeric",
@@ -420,8 +432,6 @@ export const ProfilePage = () => {
             </div>
           </div>
         </div>
-
-        <PrivacyNote />
       </div>
 
       <AvatarPickerModal
@@ -443,7 +453,7 @@ export const ProfilePage = () => {
             aria-label="Edit health and goals"
             className="text-cocoa/40 dark:text-dark-white/40 hover:text-cocoa dark:hover:text-dark-white"
           >
-            <Pencil size={15} />
+            {!editingHealth ? <Pencil size={15} /> : "Cancel"}
           </button>
         </div>
 
@@ -540,7 +550,7 @@ export const ProfilePage = () => {
                 }
               />
               <div>
-                <label className="text-xs text-cocoa-faded block mb-1">
+                <label className="font-heading text-xs lg:text-sm text-cocoa-faded block mb-1">
                   Age
                 </label>
                 <input
@@ -561,7 +571,7 @@ export const ProfilePage = () => {
                 </p>
               </div>
               <div>
-                <label className="text-xs text-cocoa-faded block mb-1">
+                <label className="font-heading text-xs lg:text-sm text-cocoa-faded block mb-1">
                   Dietary style
                 </label>
                 <select
@@ -583,7 +593,7 @@ export const ProfilePage = () => {
                 </select>
               </div>
               <div>
-                <label className="text-xs text-cocoa-faded block mb-1">
+                <label className="font-heading text-xs lg:text-sm text-cocoa-faded block mb-1">
                   Health goal
                 </label>
                 <select
@@ -605,7 +615,7 @@ export const ProfilePage = () => {
                 </select>
               </div>
               <div>
-                <label className="text-xs text-cocoa-faded block mb-1">
+                <label className="font-heading text-xs lg:text-sm text-cocoa-faded block mb-1">
                   Activity level
                 </label>
                 <select
@@ -627,7 +637,7 @@ export const ProfilePage = () => {
                 </select>
               </div>
               <div>
-                <label className="text-xs text-cocoa-faded block mb-1">
+                <label className="font-heading text-xs lg:text-sm text-cocoa-faded block mb-1">
                   Height (cm)
                 </label>
                 <input
@@ -644,7 +654,7 @@ export const ProfilePage = () => {
                 />
               </div>
               <div>
-                <label className="text-xs text-cocoa-faded block mb-1">
+                <label className="font-heading text-xs lg:text-sm text-cocoa-faded block mb-1">
                   Weight (kg)
                 </label>
                 <input
@@ -663,7 +673,7 @@ export const ProfilePage = () => {
             </div>
 
             <div className="mb-4">
-              <label className="text-xs text-cocoa-faded block mb-1.5">
+              <label className="font-heading text-xs lg:text-sm text-cocoa-faded block mb-1.5">
                 Allergies
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
@@ -698,7 +708,7 @@ export const ProfilePage = () => {
             </div>
 
             <div className="mb-5">
-              <label className="text-xs text-cocoa-faded block mb-1.5">
+              <label className="font-heading text-xs lg:text-sm text-cocoa-faded block mb-1.5">
                 Health conditions
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
@@ -740,6 +750,14 @@ export const ProfilePage = () => {
             >
               {updateHealthMutation.isPending ? "Saving..." : "Save changes"}
             </button>
+            <div className="mt-5">
+              <p className=" text-xs lg:text-sm text-cocoa-faded block mb-1.5">
+                <b>Notes:</b> Changing either your age, height, weight, health
+                goal, or activity level will change your auto calculated calorie
+                and water targets. If you have manually set targets, they will
+                remain unchanged.
+              </p>
+            </div>
           </>
         )}
       </div>
@@ -756,25 +774,25 @@ export const ProfilePage = () => {
             aria-label="Edit targets"
             className="text-cocoa/40 dark:text-dark-white/40 hover:text-cocoa dark:hover:text-dark-white"
           >
-            <Pencil size={15} />
+            {!editingTargets ? <Pencil size={15} /> : "Cancel"}
           </button>
         </div>
 
-        <div className="flex gap-6 mb-4">
+        <div className="flex flex-col gap-6 mb-4">
           <InfoRow
             label="Calories"
             value={
               profile.health?.calorie_target
-                ? `${profile.health.calorie_target} kcal, manually set`
-                : "Auto calculated"
+                ? `${profile.health.calorie_target} kcal, ${profile.health.calorie_target_is_manual ? "manually set" : "auto calculated"}`
+                : "Not set"
             }
           />
           <InfoRow
             label="Water"
             value={
               profile.health?.water_target_ml
-                ? `${profile.health.water_target_ml} ml, manually set`
-                : "Auto calculated"
+                ? `${profile.health.water_target_ml} ml, ${profile.health.water_target_is_manual ? "manually set" : "auto calculated"}`
+                : "Not set"
             }
           />
         </div>
@@ -783,8 +801,8 @@ export const ProfilePage = () => {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs text-cocoa-faded block mb-1">
-                  Calorie target
+                <label className="font-heading text-xs lg:text-sm text-cocoa-faded block mb-1">
+                  Calorie target (kcal)
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -821,7 +839,7 @@ export const ProfilePage = () => {
               </div>
 
               <div>
-                <label className="text-xs text-cocoa-faded block mb-1">
+                <label className="font-heading text-xs lg:text-sm text-cocoa-faded block mb-1">
                   Water target (ml)
                 </label>
                 <div className="flex gap-2">
@@ -866,6 +884,7 @@ export const ProfilePage = () => {
           </>
         )}
       </div>
+      <PrivacyNote />
     </div>
   );
 
@@ -886,8 +905,15 @@ export const ProfilePage = () => {
             <MobileTopNav />
           </div>
 
-          <div className="flex-1 flex min-h-0 gap-8 px-4 md:px-6 lg:px-8 pt-4 md:pt-20 lg:pt-2 pb-6 overflow-hidden">
-            <div className="flex-1 min-w-0 overflow-y-auto">{mainContent}</div>
+          <div className="flex-1 flex min-h-0 gap-8 px-4 md:px-6 lg:px-8 md:pt-4 lg:pt-2 pb-6 overflow-hidden">
+            <div className="flex-1 min-w-0 overflow-y-auto">
+              {tier === "mobile" && (
+                <p className="mt-20 pb-5 px-2 font-heading font-bold text-base tracking-wide text-cocoa/70 dark:text-dark-white/70 shrink-0">
+                  Profile
+                </p>
+              )}
+              {mainContent}
+            </div>
 
             <div className="hidden lg:flex flex-col w-[340px] shrink-0 pt-2 overflow-y-auto">
               <StreakPanel

@@ -33,6 +33,17 @@ const isToday = (iso: string) => {
   return d.toDateString() === now.toDateString();
 };
 
+const formatFlaggedDate = (iso: string) => {
+  const date = new Date(iso);
+  if (isToday(iso)) {
+    return date.toLocaleTimeString(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+};
+
 const formatFilters = (filters: Record<string, unknown>): string => {
   const mealType =
     typeof filters.meal_type === "string" ? filters.meal_type : null;
@@ -247,7 +258,7 @@ export const SpinHistoryPanel = () => {
                   {meal.food_name}
                 </p>
                 <span className="text-[11px] text-cocoa-faded">
-                  Tap to unflag · {formatTime(meal.created_at)}
+                  Tap to unflag · {formatFlaggedDate(meal.created_at)}
                 </span>
               </button>
             ))}

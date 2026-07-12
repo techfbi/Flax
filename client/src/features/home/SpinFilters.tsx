@@ -3,6 +3,7 @@ import { X, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useRef, useState } from "react";
 import api from "@/lib/api";
+import { useNavigate } from "react-router-dom";
 import type {
   ApiResponse,
   SpinFilters,
@@ -157,6 +158,8 @@ export const SpinFilter = ({
     onTagsChange(selectedTags.filter((t) => t !== tag));
   };
 
+  const navigate = useNavigate();
+
   return (
     <div className="rounded-lg p-5 bg-surface-two dark:bg-dark-bg mt-5 md:mt-7 lg:mt-10">
       <h3 className="font-heading font-semibold text-sm lg:text-base text-cocoa/70 dark:text-dark-sec mb-5">
@@ -207,7 +210,10 @@ export const SpinFilter = ({
                 Allergies
               </p>
               <button
-                onClick={() => (window.location.href = "/profile")}
+                onClick={() => {
+                  toast.info("Redirecting to profile page to edit allergies");
+                  navigate("/profile");
+                }}
                 aria-label="Edit allergies in profile"
                 className="text-cocoa/40 dark:text-dark-white/40
                   hover:text-cocoa dark:hover:text-dark-white transition-colors"
