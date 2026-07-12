@@ -2,6 +2,7 @@ import { pgPool } from "../../config/db.postgres.js";
 import { AppError } from "../../shared/errors.js";
 import { updateWaterStreak } from "../streaks/streak.service.js";
 import type { LogWaterInput } from "./water.schema.js";
+import { getUserTimezone, isTodayOrYesterdayInTimezone } from "../../shared/date.helpers.js";
 
 // ---------------------------------------------------------------------------
 // logWater
@@ -9,10 +10,15 @@ import type { LogWaterInput } from "./water.schema.js";
 // has reached 80% of the user's water target and updates the water streak if so. 
 // The 80% check happens here in application code rather than in SQL because we need the target value from health_profiles in the same logic.
 // ---------------------------------------------------------------------------
-export const logWater = async (
-  userId: string,
-  input: LogWaterInput
-): Promise<{ entry: object; dailyTotal: number; targetMl: number | null; streakUpdated: boolean }> => {
+  export const logWater = async (userId: string, input: LogWaterInput) => {
+  const timezone = await getUserTimezone(userId);
+  if (!isTodayOrYesterdayInTimezone(input.logged_date, timezone)) {
+    throw new AppError(
+      "Water can only be logged for today or yesterday",
+      400,
+      "VALIDATION_ERROR"
+    );
+  }
   const insertResult = await pgPool.query(
     `INSERT INTO water_logs (user_id, amount_ml, logged_date)
      VALUES ($1, $2, $3)

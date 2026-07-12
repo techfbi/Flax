@@ -9,6 +9,7 @@ import { sendPasswordResetEmail, sendOtpEmail, sendWelcomeEmail } from "../../co
 import type { ForgotPasswordInput, ResetPasswordInput } from "./auth.schema.js";
 import type { VerifyOtpInput, ResendOtpInput } from "./auth.schema.js";
 import { exchangeCodeForProfile } from "../../config/google.js";
+import { notifyUser } from "../notifications/notification.service.js";
 
 // ---------------------------------------------------------------------------
 // Set Types
@@ -349,6 +350,13 @@ export const googleAuth = async (code: string): Promise<{ user: SafeUser; tokens
 
     // Fire and forget. never blocks the auth response.
     void sendWelcomeEmail(user.email, user.display_name);
+    void notifyUser(
+      user.id,
+      "welcome",
+      "Welcome to Flax",
+      "Start your daily habit today, log your first meal or a glass of water to get your first streak going.",
+      "/"
+    );
 
     console.log(`[REMOVE LOG LATER] New user created via Google. ${user.id}`);
   }
@@ -604,9 +612,16 @@ export const verifyRegistrationOtp = async (
 
   // Fire and forget. does not block the response or affect registration outcome.
   // at larger scale queueing this email to a background worker would be more robust, but for now this is sufficient.
-  void sendWelcomeEmail(user.email, user.display_name);
+ void sendWelcomeEmail(user.email, user.display_name);
+void notifyUser(
+  user.id,
+  "welcome",
+  "Welcome to Flax",
+  "Start your daily habit today, log your first meal or a glass of water to get your first streak going.",
+  "/"
+);
 
-  return { user, tokens: { accessToken, refreshToken } };
+return { user, tokens: { accessToken, refreshToken } };
 };
 
 // ---------------------------------------------------------------------------

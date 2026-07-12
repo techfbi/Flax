@@ -24,11 +24,11 @@ export const catalogueMealLogSchema = z.object({
 
   meal_type: z.enum(["breakfast", "lunch", "dinner", "snack", "brunch"]),
 
-  logged_date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
-    .optional()
-    .transform((val) => val ?? new Date().toISOString().split("T")[0]),
+ logged_date: z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
+  .optional()
+  .transform((val) => val ?? new Date().toISOString().split("T")[0])
 });
 
 // ---------------------------------------------------------------------------
@@ -53,10 +53,10 @@ export const customMealLogSchema = z.object({
   meal_type: z.enum(["breakfast", "lunch", "dinner", "snack", "brunch"]),
 
   logged_date: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
-    .optional()
-    .transform((val) => val ?? new Date().toISOString().split("T")[0]),
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
+  .optional()
+  .transform((val) => val ?? new Date().toISOString().split("T")[0]),
 
   // Nutrition values are per 100g, matching the catalogue convention.
   // All optional. default to 0 if not provided.

@@ -769,3 +769,19 @@ export const getSpinHistory = async ( userId: string, displayDays: number = 2 ):
 
   return result.rows;
 };
+
+//------------------------------------------------------------------------------
+// Returns a small random sample of verified food image URLs from the
+// user's region, used only to cycle through while the spin frame is
+// still deciding, not the actual landed result. Falls back to an
+// empty array if the catalogue has nothing yet, SpinFrame already
+// handles an empty list by just showing the placeholder.
+export const getCycleImageSample = async (region: string, limit = 8): Promise<string[]> => {
+  const foods = await FoodItem.aggregate([
+    { $match: { region, is_verified: true } },
+    { $sample: { size: limit } },
+    { $project: { image_path: 1 } },
+  ]);
+
+  return foods.map((food) => withImageUrl(food).image_url);
+};

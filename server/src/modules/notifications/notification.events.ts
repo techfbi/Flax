@@ -118,12 +118,19 @@ const checkStreakAtRisk = async (userId: string, localDate: string, localHour: n
 // ---------------------------------------------------------------------------
 export const runScheduledChecks = async (): Promise<void> => {
   const result = await pgPool.query(
-    "SELECT id, timezone FROM users WHERE timezone IS NOT NULL"
-  );
+  "SELECT id, timezone, created_at FROM users WHERE timezone IS NOT NULL"
+);
 
-  for (const user of result.rows) {
-    try {
-      const now = new Date();
+for (const user of result.rows) {
+  try {
+    const now = new Date();
+
+    // New accounts already got an immediate welcome notification at
+    // signup. Give them a full day of breathing room before the
+    // regular nudges start, nobody needs a hydration reminder twenty
+    // minutes after creating their account.
+    const accountAgeMs = now.getTime() - new Date(user.created_at).getTime();
+    if (accountAgeMs < 24 * 60 * 60 * 1000) continue;
       const localParts = new Intl.DateTimeFormat("en-CA", {
         timeZone: user.timezone,
         year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23",

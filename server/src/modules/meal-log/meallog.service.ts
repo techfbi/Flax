@@ -4,6 +4,7 @@ import { AppError } from "../../shared/errors.js";
 import type { CatalogueMealLogInput, CustomMealLogInput, PatchMealLogInput } from "./meallog.schema.js";
 import mongoose from "mongoose";
 import { checkAndUpdateGoalStreak } from "../streaks/streak.service.js";
+import { getUserTimezone, isTodayOrYesterdayInTimezone } from "../../shared/date.helpers.js";
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -49,6 +50,14 @@ export const createCatalogueMealLog = async (
   userId: string,
   input: CatalogueMealLogInput
 ): Promise<MealLogEntry> => {
+  const timezone = await getUserTimezone(userId);
+  if (!isTodayOrYesterdayInTimezone(input.logged_date, timezone)) {
+    throw new AppError(
+      "Meals can only be logged for today or yesterday",
+      400,
+      "VALIDATION_ERROR"
+    );
+  }
   const food = await FoodItem.findById(new mongoose.Types.ObjectId(input.food_ref))
     .select("name calories_per_100g protein_g carbs_g fat_g is_verified")
     .lean();
@@ -119,6 +128,15 @@ export const createCustomMealLog = async (
   userId: string,
   input: CustomMealLogInput
 ): Promise<MealLogEntry> => {
+  const timezone = await getUserTimezone(userId);
+  if (!isTodayOrYesterdayInTimezone(input.logged_date, timezone)) {
+    throw new AppError(
+      "Meals can only be logged for today or yesterday",
+      400,
+      "VALIDATION_ERROR"
+    );
+  }
+  
   // Apply the same scaling formula as catalogue logs.
   const factor = input.quantity_grams / 100;
   const calories  = Math.round(input.calories_per_100g * factor * 100) / 100;

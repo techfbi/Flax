@@ -5,3 +5,4 @@ test-redis.ts
 DEVLOG.md
 bulk-foods.csv
 /client
+/scripts

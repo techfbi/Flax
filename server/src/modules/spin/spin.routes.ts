@@ -14,6 +14,7 @@ import {
   validateMealHandler, 
   unvalidateMealHandler,
   getSpinHistoryHandler,
+  getCycleImagesHandler,
 } from "./spin.controller.js";
 
 export const spinRouter = Router();
@@ -36,6 +37,9 @@ spinRouter.use(authenticate);
 
 // Returns available filter options for the user's region
 spinRouter.get("/filters", getFilters); //GET /api/spin/filters
+
+// Return cycling images
+spinRouter.get("/cycle-images", getCycleImagesHandler); // GET /api/spin/cycle-images
 
 // Spin system
 spinRouter.post("/", spinLimiter, validate(spinRequestSchema), spin); // POST /api/spin

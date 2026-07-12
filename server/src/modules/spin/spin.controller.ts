@@ -3,7 +3,7 @@ import { pgPool } from "../../config/db.postgres.js";
 import { sendSuccess } from "../../shared/response.js";
 import { AppError } from "../../shared/errors.js";
 import { getExcludedFoodRefs, getFoodsForSpin, generateSpinReasoning, SpinFilters, pickFoodByHealthGoal, getValidatedFoodRefs } from "./spin.service.js";
-import { validateMeal, unvalidateMeal, getSpinHistory } from "./spin.service.js";
+import { validateMeal, unvalidateMeal, getSpinHistory, getCycleImageSample } from "./spin.service.js";
 import {
   getAvailableFilters,
   flagMeal,
@@ -42,6 +42,34 @@ export const getFilters = async (
     const filters = await getAvailableFilters(region);
 
     sendSuccess({ res, data: { region, filters } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/// ---------------------------------------------------------------------------
+// Handler for getting a sample of cycle images for the user's region. This is used to display a few example images in the spin UI.
+// ---------------------------------------------------------------------------
+
+export const getCycleImagesHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const result = await pgPool.query(
+      "SELECT region FROM health_profiles WHERE user_id = $1",
+      [req.user!.id]
+    );
+    const region = result.rows[0]?.region;
+
+    if (!region) {
+      sendSuccess({ res, data: { images: [] } });
+      return;
+    }
+
+    const images = await getCycleImageSample(region);
+    sendSuccess({ res, data: { images } });
   } catch (err) {
     next(err);
   }

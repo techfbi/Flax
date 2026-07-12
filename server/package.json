@@ -34,6 +34,7 @@
   "dependencies": {
     "@node-rs/argon2": "^2.0.2",
     "axios": "^1.16.1",
+    "cloudinary": "^2.10.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
@@ -42,6 +43,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.6.1",
+    "openai": "^6.46.0",
     "pg": "^8.20.0",
     "redis": "^5.12.1",
     "resend": "^6.12.3",

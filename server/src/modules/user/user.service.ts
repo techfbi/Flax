@@ -43,6 +43,8 @@ export interface FullProfile {
     age_range: string | null;
     exact_age: number | null;
     water_target_ml: number | null;
+    calorie_target_is_manual: boolean
+    water_target_is_manual: boolean
   } | null;
 }
 
@@ -58,7 +60,7 @@ export const getFullProfile = async (userId: string): Promise<FullProfile> => {
        u.role, u.is_verified, u.provider,u.created_at, u.last_login_at,
        hp.region, hp.dietary_style, hp.health_goal,
        hp.allergies, hp.health_conditions, hp.calorie_target,
-       hp.biological_sex, hp.activity_level, hp.height_cm, hp.weight_kg, hp.age_range, hp.exact_age, hp.water_target_ml
+       hp.biological_sex, hp.activity_level, hp.height_cm, hp.weight_kg, hp.age_range, hp.exact_age, hp.water_target_ml, hp.calorie_target_is_manual, hp.water_target_is_manual
      FROM users u
      LEFT JOIN health_profiles hp ON hp.user_id = u.id
      WHERE u.id = $1 AND u.deleted_at IS NULL`,
@@ -98,6 +100,8 @@ export const getFullProfile = async (userId: string): Promise<FullProfile> => {
           age_range: row.age_range,
           exact_age: row.exact_age,
           water_target_ml: row.water_target_ml,
+          calorie_target_is_manual: row.calorie_target_is_manual,
+          water_target_is_manual: row.water_target_is_manual,
         }
       : null,
   };
@@ -211,12 +215,13 @@ export const updateHealthProfile = async (
   let current: any = {};
   if (shouldRecalculate) {
     const currentResult = await pgPool.query(
-      `SELECT biological_sex, activity_level, height_cm, weight_kg,
-              age_range, exact_age, health_goal,
-              calorie_target, water_target_ml
-       FROM health_profiles WHERE user_id = $1`,
-      [userId]
-    );
+  `SELECT biological_sex, activity_level, height_cm, weight_kg,
+          age_range, exact_age, health_goal,
+          calorie_target, water_target_ml,
+          calorie_target_is_manual, water_target_is_manual
+   FROM health_profiles WHERE user_id = $1`,
+  [userId]
+);
     current = currentResult.rows[0] ?? {};
   }
 
@@ -236,6 +241,8 @@ export const updateHealthProfile = async (
   let newCalorieTarget: number | null | undefined = undefined;
 
 if (input.calorie_target === null) {
+  fields.push(`calorie_target_is_manual = $${paramIndex++}`);
+  values.push(false);
   if (sex && activity && height && weight && ageForCalc) {
     const autoCalorie = calculateCaloricTarget(sex, weight, height, ageForCalc, activity, goal);
     fields.push(`calorie_target = $${paramIndex++}`);
@@ -249,9 +256,11 @@ if (input.calorie_target === null) {
 } else if (input.calorie_target !== undefined) {
   fields.push(`calorie_target = $${paramIndex++}`);
   values.push(input.calorie_target);
+  fields.push(`calorie_target_is_manual = $${paramIndex++}`);
+  values.push(true);
   newCalorieTarget = input.calorie_target;
 } else if (
-  current.calorie_target === null &&
+  !current.calorie_target_is_manual &&
   sex && activity && height && weight && ageForCalc
 ) {
   const autoCalorie = calculateCaloricTarget(sex, weight, height, ageForCalc, activity, goal);
@@ -266,26 +275,30 @@ if (input.calorie_target === null) {
   let newWaterTarget: number | null | undefined = undefined;
 
   if (input.water_target_ml === null) {
-    if (sex && activity) {
-      const autoWater = calculateWaterTarget(sex, activity);
-      fields.push(`water_target_ml = $${paramIndex++}`);
-      values.push(autoWater);
-      newWaterTarget = autoWater;
-    } else {
-      fields.push(`water_target_ml = $${paramIndex++}`);
-      values.push(null);
-      newWaterTarget = null;
-    }
-  } else if (input.water_target_ml !== undefined) {
-    fields.push(`water_target_ml = $${paramIndex++}`);
-    values.push(input.water_target_ml);
-    newWaterTarget = input.water_target_ml;
-  } else if (shouldRecalculate && sex && activity && current.water_target_ml === null) {
+  fields.push(`water_target_is_manual = $${paramIndex++}`);
+  values.push(false);
+  if (sex && activity) {
     const autoWater = calculateWaterTarget(sex, activity);
     fields.push(`water_target_ml = $${paramIndex++}`);
     values.push(autoWater);
     newWaterTarget = autoWater;
+  } else {
+    fields.push(`water_target_ml = $${paramIndex++}`);
+    values.push(null);
+    newWaterTarget = null;
   }
+} else if (input.water_target_ml !== undefined) {
+  fields.push(`water_target_ml = $${paramIndex++}`);
+  values.push(input.water_target_ml);
+  fields.push(`water_target_is_manual = $${paramIndex++}`);
+  values.push(true);
+  newWaterTarget = input.water_target_ml;
+} else if (shouldRecalculate && sex && activity && !current.water_target_is_manual) {
+  const autoWater = calculateWaterTarget(sex, activity);
+  fields.push(`water_target_ml = $${paramIndex++}`);
+  values.push(autoWater);
+  newWaterTarget = autoWater;
+}
 
   // Handle the new fields in the dynamic SET builder
   if (input.biological_sex !== undefined) {
