@@ -1,9 +1,10 @@
 import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, UtensilsCrossed } from "lucide-react";
 import { toast } from "sonner";
 import { WaterLogList } from "./WaterLogList";
 import api from "@/lib/api";
+import { toThumbnail } from "@/lib/images";
 import { SlidingTabs } from "@/components/ui/SlidingTabs";
 import type {
   ApiResponse,
@@ -181,12 +182,27 @@ export const HistoryTab = () => {
                   {entries.map((log) => (
                     <div
                       key={log.id}
-                      className="flex items-center justify-between px-4 py-3
-              rounded-xl bg-cocoa/5 dark:bg-dark-white/5
-              border border-cocoa/5 dark:border-dark-white/5"
+                      className="flex items-center gap-3 px-4 py-3
+    rounded-xl bg-cocoa/5 dark:bg-dark-white/5
+    border border-cocoa/5 dark:border-dark-white/5"
                     >
-                      <div>
-                        <p className="text-sm font-medium text-cocoa dark:text-dark-white">
+                      <div className="w-[50px] h-[50px] lg:w-[70px] lg:h-[70px] rounded-lg overflow-hidden shrink-0 bg-cocoa/8 dark:bg-dark-white/8 flex items-center justify-center">
+                        {log.image_url ? (
+                          <img
+                            src={toThumbnail(log.image_url)}
+                            alt=""
+                            loading="lazy"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <UtensilsCrossed
+                            size={30}
+                            className="text-cocoa-faded mx-2"
+                          />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-cocoa dark:text-dark-white truncate">
                           {log.food_name ?? log.custom_name}
                         </p>
                         <p className="text-[11px] text-cocoa-faded">

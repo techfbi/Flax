@@ -45,6 +45,7 @@ export const SpinTab = () => {
   const tier = useScreenTier();
   const { data: profile } = useUserProfile();
   const { enabled: spinSoundEnabled } = useSpinSound();
+  const [landingImage, setLandingImage] = useState<string | null>(null);
 
   const [showTips, setShowTips] = useState(false);
   const [tipsChecked, setTipsChecked] = useState(false);
@@ -118,7 +119,6 @@ export const SpinTab = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // after
   const { data: cycleImages = [] } = useQuery({
     queryKey: ["spin-cycle-images"],
     queryFn: async () => {
@@ -165,9 +165,11 @@ export const SpinTab = () => {
     },
     onSuccess: (data) => {
       clearSpinWatchdog();
+      setLandingImage(data.food.image_url);
       setTimeout(() => {
         setIsSpinning(false);
         setResult(data);
+        setLandingImage(null);
         if (data.recencyRelaxed === true) {
           toast.message(
             "All current filter matches seen. Showing previous meals",
@@ -474,7 +476,8 @@ export const SpinTab = () => {
         <div className={`${frameWrapperClass} flex flex-col gap-4`}>
           <SpinFrame
             isSpinning={isSpinning}
-            result={result?.food ?? null}
+            result={result}
+            landingImage={landingImage}
             cycleImages={cycleImages}
             soundEnabled={spinSoundEnabled}
           />

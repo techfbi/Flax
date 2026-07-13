@@ -49,6 +49,8 @@ const COLORS = {
   cocoa: "#1C1A17",
   darkWhite: "#E5E7EB",
   blackPawpaw: "#F08959",
+  Protein: "#F43F5E",
+  Carbs: "#8B5CF6",
 };
 
 const formatTrendLabel = (date: string, granularity: "day" | "month") => {
@@ -207,12 +209,12 @@ export const DashboardPage = () => {
     {
       label: "Protein",
       value: insights?.today.protein_g ?? 0,
-      color: COLORS.moringa,
+      color: isDark ? COLORS.blackPawpaw : COLORS.pawpaw,
     },
     {
       label: "Carbs",
       value: insights?.today.carbs_g ?? 0,
-      color: COLORS.pawpaw,
+      color: COLORS.Carbs,
     },
     {
       label: "Fat",
@@ -356,6 +358,10 @@ export const DashboardPage = () => {
                   title="Calorie trend"
                   action={<RangeToggle value={range} onChange={setRange} />}
                 >
+                  <p className="text-cocoa-faded text-[11px] w-full flex justify-end mt-[-14px] mb-4">
+                    This toggle also controls insights
+                  </p>
+
                   <div
                     className={`transition-opacity duration-200 ${insightsFetching ? "opacity-40" : "opacity-100"}`}
                   >
@@ -489,15 +495,11 @@ export const DashboardPage = () => {
                             type="monotone"
                             dataKey="protein_g"
                             name="Protein"
-                            stroke={
-                              isDark ? COLORS.moringaFaded : COLORS.moringa
-                            }
+                            stroke={isDark ? COLORS.blackPawpaw : COLORS.pawpaw}
                             strokeWidth={2}
                             dot={{
                               r: 2,
-                              fill: isDark
-                                ? COLORS.moringaFaded
-                                : COLORS.moringa,
+                              fill: isDark ? COLORS.blackPawpaw : COLORS.pawpaw,
                               strokeWidth: 0,
                             }}
                           />
@@ -505,11 +507,11 @@ export const DashboardPage = () => {
                             type="monotone"
                             dataKey="carbs_g"
                             name="Carbs"
-                            stroke={isDark ? COLORS.blackPawpaw : COLORS.pawpaw}
+                            stroke={isDark ? COLORS.Carbs : COLORS.Carbs}
                             strokeWidth={2}
                             dot={{
                               r: 2,
-                              fill: isDark ? COLORS.blackPawpaw : COLORS.pawpaw,
+                              fill: isDark ? COLORS.Carbs : COLORS.Carbs,
                               strokeWidth: 0,
                             }}
                           />
@@ -538,8 +540,8 @@ export const DashboardPage = () => {
                               className="w-2 h-2 rounded-full"
                               style={{
                                 backgroundColor: [
-                                  isDark ? COLORS.moringaFaded : COLORS.moringa,
                                   isDark ? COLORS.blackPawpaw : COLORS.pawpaw,
+                                  isDark ? COLORS.Carbs : COLORS.Carbs,
                                   isDark ? COLORS.darkWhite : COLORS.cocoa,
                                 ][i],
                               }}
@@ -553,6 +555,95 @@ export const DashboardPage = () => {
                     </div>
                   </div>
                 </ChartCard>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Meal type breakdown, bar list, no pie */}
+                  <ChartCard
+                    title="Where your calories come from"
+                    action={
+                      <span className="text-[11px] text-cocoa-faded capitalize">
+                        {range}
+                      </span>
+                    }
+                  >
+                    {mealTypeEntries.length === 0 ? (
+                      <p className="text-sm text-cocoa-faded py-6 text-center">
+                        No meals logged in this range
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {mealTypeEntries.map(([type, calories]) => (
+                          <div key={type}>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs text-cocoa dark:text-dark-white capitalize">
+                                {type}
+                              </span>
+                              <span className="text-xs font-medium text-cocoa dark:text-dark-white">
+                                {Math.round(calories)} kcal
+                              </span>
+                            </div>
+                            <div className="h-1.5 rounded-full bg-cocoa/10 dark:bg-dark-white/10">
+                              <div
+                                className="h-full rounded-full bg-moringa dark:bg-moringa-faded transition-all"
+                                style={{
+                                  width: `${(calories / maxMealTypeCalories) * 100}%`,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ChartCard>
+
+                  {/* Most logged meals */}
+                  <ChartCard
+                    title="Meals you log most"
+                    action={
+                      <span className="text-[11px] text-cocoa-faded capitalize">
+                        {range}
+                      </span>
+                    }
+                  >
+                    {!insights.most_logged_meals ||
+                    insights.most_logged_meals.length === 0 ? (
+                      <p className="text-sm text-cocoa-faded py-6 text-center">
+                        No meals logged in this range
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {insights.most_logged_meals.map((meal, i) => (
+                          <div
+                            key={meal.name}
+                            className="flex items-center gap-3"
+                          >
+                            <span className="w-4 text-xs font-semibold text-cocoa-faded shrink-0">
+                              {i + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs text-cocoa dark:text-dark-white truncate">
+                                  {meal.name}
+                                </span>
+                                <span className="text-[11px] text-cocoa-faded shrink-0 ml-2">
+                                  {meal.count}x
+                                </span>
+                              </div>
+                              <div className="h-1 rounded-full bg-cocoa/10 dark:bg-dark-white/10">
+                                <div
+                                  className="h-full rounded-full bg-pawpaw dark:bg-black-pawpaw transition-all"
+                                  style={{
+                                    width: `${(meal.count / maxMostLogged) * 100}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </ChartCard>
+                </div>
 
                 {/* Water trend */}
                 <ChartCard
@@ -615,81 +706,6 @@ export const DashboardPage = () => {
                     </ResponsiveContainer>
                   </div>
                 </ChartCard>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {/* Meal type breakdown, bar list, no pie */}
-                  <ChartCard title="Where your calories come from">
-                    {mealTypeEntries.length === 0 ? (
-                      <p className="text-sm text-cocoa-faded py-6 text-center">
-                        No meals logged in this range
-                      </p>
-                    ) : (
-                      <div className="space-y-3">
-                        {mealTypeEntries.map(([type, calories]) => (
-                          <div key={type}>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs text-cocoa dark:text-dark-white capitalize">
-                                {type}
-                              </span>
-                              <span className="text-xs font-medium text-cocoa dark:text-dark-white">
-                                {Math.round(calories)} kcal
-                              </span>
-                            </div>
-                            <div className="h-1.5 rounded-full bg-cocoa/10 dark:bg-dark-white/10">
-                              <div
-                                className="h-full rounded-full bg-moringa dark:bg-moringa-faded transition-all"
-                                style={{
-                                  width: `${(calories / maxMealTypeCalories) * 100}%`,
-                                }}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </ChartCard>
-
-                  {/* Most logged meals */}
-                  <ChartCard title="Meals you log most">
-                    {!insights.most_logged_meals ||
-                    insights.most_logged_meals.length === 0 ? (
-                      <p className="text-sm text-cocoa-faded py-6 text-center">
-                        No meals logged in this range
-                      </p>
-                    ) : (
-                      <div className="space-y-3">
-                        {insights.most_logged_meals.map((meal, i) => (
-                          <div
-                            key={meal.name}
-                            className="flex items-center gap-3"
-                          >
-                            <span className="w-4 text-xs font-semibold text-cocoa-faded shrink-0">
-                              {i + 1}
-                            </span>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="text-xs text-cocoa dark:text-dark-white truncate">
-                                  {meal.name}
-                                </span>
-                                <span className="text-[11px] text-cocoa-faded shrink-0 ml-2">
-                                  {meal.count}x
-                                </span>
-                              </div>
-                              <div className="h-1 rounded-full bg-cocoa/10 dark:bg-dark-white/10">
-                                <div
-                                  className="h-full rounded-full bg-pawpaw dark:bg-black-pawpaw transition-all"
-                                  style={{
-                                    width: `${(meal.count / maxMostLogged) * 100}%`,
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </ChartCard>
-                </div>
 
                 {/* Streak calendar */}
                 <ChartCard

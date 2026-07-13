@@ -7,6 +7,8 @@ import { useSpinStore } from "@/store/spinStore";
 import api from "@/lib/api";
 import { getLocalDateStr } from "@/lib/date";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { toThumbnail } from "@/lib/images";
+import { UtensilsCrossed } from "lucide-react";
 import type {
   ApiResponse,
   MealLogEntry,
@@ -346,16 +348,33 @@ export const LogMealTab = () => {
                   key={food._id}
                   onClick={() => selectCatalogueFood(food)}
                   className="flex items-center justify-between px-4 py-3
-                    cursor-pointer hover:bg-cocoa/5 dark:hover:bg-dark-white/5
-                    border-b border-cocoa/5 dark:border-dark-white/5 last:border-0"
+      cursor-pointer hover:bg-cocoa/5 dark:hover:bg-dark-white/5
+      border-b border-cocoa/5 dark:border-dark-white/5 last:border-0"
                 >
-                  <div>
-                    <p className="text-sm font-medium text-cocoa dark:text-dark-white">
-                      {food.name}
-                    </p>
-                    <p className="text-[10px] text-cocoa-faded">
-                      {food.calories_per_100g} kcal/100g
-                    </p>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-cocoa/8 dark:bg-dark-white/8 flex items-center justify-center">
+                      {food.image_url ? (
+                        <img
+                          src={toThumbnail(food.image_url)}
+                          alt=""
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <UtensilsCrossed
+                          size={14}
+                          className="text-cocoa-faded"
+                        />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-cocoa dark:text-dark-white truncate">
+                        {food.name}
+                      </p>
+                      <p className="text-[10px] text-cocoa-faded">
+                        {food.calories_per_100g} kcal/100g
+                      </p>
+                    </div>
                   </div>
                   <button
                     onClick={(e) => {
@@ -396,7 +415,7 @@ export const LogMealTab = () => {
           border border-cocoa/10 dark:border-dark-white/10"
         >
           {selectedFood && (
-            <p className="text-sm font-semibold text-cocoa dark:text-dark-white mb-3">
+            <p className="text-base font-semibold text-cocoa dark:text-dark-white mb-3">
               {selectedFood.food_name}
             </p>
           )}
@@ -558,14 +577,28 @@ export const LogMealTab = () => {
               </div>
             ) : (
               <>
-                <div>
-                  <p className="text-sm font-medium text-cocoa dark:text-dark-white">
-                    {log.food_name ?? log.custom_name}
-                  </p>
-                  <p className="text-[11px] text-cocoa-faded capitalize">
-                    {log.meal_type} · {log.quantity_grams}g ·{" "}
-                    {Math.round(log.calories)} kcal
-                  </p>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-[50px] h-[50px] lg:w-[70px] lg:h-[70px] rounded-lg overflow-hidden shrink-0 bg-cocoa/8 dark:bg-dark-white/8 flex items-center justify-center">
+                    {log.image_url ? (
+                      <img
+                        src={toThumbnail(log.image_url)}
+                        alt=""
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <UtensilsCrossed size={30} className="text-cocoa-faded" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-cocoa dark:text-dark-white truncate">
+                      {log.food_name ?? log.custom_name}
+                    </p>
+                    <p className="text-[11px] text-cocoa-faded capitalize">
+                      {log.meal_type} · {log.quantity_grams}g ·{" "}
+                      {Math.round(log.calories)} kcal
+                    </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button

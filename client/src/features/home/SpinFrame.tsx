@@ -1,55 +1,55 @@
 import { useRef, useEffect, useState } from "react";
-import type { Food } from "@/types/apiTypes";
+import type { SpinResult } from "@/types/apiTypes";
+import { toThumbnail } from "@/lib/images";
 
 interface SpinFrameProps {
   isSpinning: boolean;
-  result: Food | null;
+  result: SpinResult | null;
+  landingImage: string | null;
   cycleImages: string[];
   soundEnabled: boolean;
 }
 
 /*
-  Slot machine frame.
-  Fixed square frame with moringa-faded border.
-  During spin: images cycle rapidly, blurring at high speed, sharpening as they slow.
-  On land: scale-up + glow pulse animation fires.
-  Default (never spun): shows "Spin to get a suggestion" placeholder text.
+  Slot machine frame, two phases.
 
-  cycleImages: array of image URLs to cycle through during spin.
-  These are pre-loaded food images from the backend.
-  result: the final landed food. Its image is shown after spin completes.
+  Phase one starts the instant isSpinning goes true, sound included,
+  a fast constant tick through cycleImages, since the real answer is
+  not known yet, this is intentionally indeterminate.
 
-  Sound: spinStart.mp3 plays on spin start, loops during cycling.
-         spinLand.mp3 plays on landing.
-  Place sounds at: public/sounds/spinStart.mp3 and public/sounds/spinLand.mp3.
-  Duration: cycling ~3 seconds total, decelerating over the last ~1 second.
+  Phase two begins once landingImage actually arrives from the API,
+  and only after a minimum phase one duration has passed so it never
+  looks like it barely started. It appends the true landing image to
+  the end of the same growing strip and plays one long, decelerating
+  transition from wherever phase one left off straight onto it. No
+  restart, no swap, the strip is one continuous motion the whole time.
 */
 
-//const FRAME_SIZE = 300;
-const SPIN_DURATION_MS = 3000;
-const CYCLE_START_INTERVAL = 80;
-const CYCLE_END_INTERVAL = 500;
+const TICK_MS = 130; // phase one, speed per frame
+const MIN_PHASE_ONE_MS = 900; // never commit to landing before this
+const FINAL_TRANSITION_MS = 1800; // phase two, the decelerating glide
+const BLUR_CLEAR_MS = 1300; // sharpens before phase two fully stops
 
 export const SpinFrame = ({
   isSpinning,
   result,
+  landingImage,
   cycleImages,
   soundEnabled,
 }: SpinFrameProps) => {
-  const [displayImage, setDisplayImage] = useState<string | null>(
-    "./images/randomImage.png",
-  );
-  const [blur, setBlur] = useState(0);
+  const [reel, setReel] = useState<string[]>(["/images/randomImage.png"]);
+  const [targetIndex, setTargetIndex] = useState(0);
+  const [transitionMs, setTransitionMs] = useState(0);
+  const [blurred, setBlurred] = useState(false);
   const [landed, setLanded] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const frameRef = useRef(0);
+
   const spinSoundRef = useRef<HTMLAudioElement | null>(null);
   const landSoundRef = useRef<HTMLAudioElement | null>(null);
-
-  //Added this ref to track previous spinning state
   const wasSpinningRef = useRef(isSpinning);
+  const tickIntervalRef = useRef<number | null>(null);
+  const phaseOneStartRef = useRef(0);
+  const committedRef = useRef(false);
 
-  // Create audio objects for the spin and landing sounds.
   useEffect(() => {
     spinSoundRef.current = new Audio("/sounds/spinning.mp3");
     landSoundRef.current = new Audio("/sounds/matchFound.mp3");
@@ -58,79 +58,123 @@ export const SpinFrame = ({
     landSoundRef.current.muted = !soundEnabled;
   }, []);
 
-  // Keep both elements in sync if the setting changes mid session,
-  // e.g. toggled in Settings while a spin is in progress.
   useEffect(() => {
     if (spinSoundRef.current) spinSoundRef.current.muted = !soundEnabled;
     if (landSoundRef.current) landSoundRef.current.muted = !soundEnabled;
   }, [soundEnabled]);
 
-  /* Preload sounds. */
-  useEffect(() => {
-    if (isSpinning && cycleImages.length > 0) {
-      setLanded(false);
-      frameRef.current = 0;
+  const clearTick = () => {
+    if (tickIntervalRef.current !== null) {
+      window.clearInterval(tickIntervalRef.current);
+      tickIntervalRef.current = null;
+    }
+  };
 
+  // Phase one, starts the instant a spin begins, does not wait on
+  // anything from the network.
+  useEffect(() => {
+    if (
+      isSpinning &&
+      tickIntervalRef.current === null &&
+      cycleImages.length > 0
+    ) {
+      committedRef.current = false;
+      phaseOneStartRef.current = Date.now();
+      setBlurred(true);
+      cycleImages.forEach((src) => {
+        const preload = new Image();
+        preload.src = toThumbnail(src, 300);
+      });
+      setReel([cycleImages[0]]);
+      setTargetIndex(0);
+      setTransitionMs(0);
+
+      spinSoundRef.current!.currentTime = 0;
       spinSoundRef.current?.play().catch(() => {
-        // Autoplay may be blocked by the browser.
+        // Autoplay may still be blocked in rare cases, nothing to do.
       });
 
-      const startTime = Date.now();
-      let currentInterval = CYCLE_START_INTERVAL;
-
-      const cycle = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / SPIN_DURATION_MS, 1);
-
-        // Gradually increase the interval to simulate deceleration.
-        currentInterval =
-          CYCLE_START_INTERVAL +
-          (CYCLE_END_INTERVAL - CYCLE_START_INTERVAL) * progress;
-
-        // Blur is strongest at the start and fades as the spin slows.
-        const blurPx = Math.round((1 - progress) * 6);
-        setBlur(blurPx);
-
-        frameRef.current = (frameRef.current + 1) % cycleImages.length;
-        setDisplayImage(cycleImages[frameRef.current]);
-
-        if (progress < 1) {
-          intervalRef.current = setTimeout(cycle, currentInterval);
-        }
-      };
-
-      intervalRef.current = setTimeout(cycle, currentInterval);
+      let i = 0;
+      tickIntervalRef.current = window.setInterval(() => {
+        i++;
+        setReel((prev) => [...prev, cycleImages[i % cycleImages.length]]);
+        setTargetIndex(i);
+        setTransitionMs(TICK_MS);
+      }, TICK_MS);
     }
-
-    // Determine whether the spin has just ended. This is true when the previous
-    // state was spinning and the current state is not.
-    const justEnded = wasSpinningRef.current === true && isSpinning === false;
 
     if (!isSpinning) {
-      if (intervalRef.current) clearTimeout(intervalRef.current);
-      setBlur(0);
-
-      // Only play the landing sound and trigger the landing animation if the
-      // spin has genuinely finished and a result is available.
-      if (result && justEnded) {
-        setDisplayImage(result.image_url);
-        setLanded(true);
-        spinSoundRef.current?.pause();
-        if (spinSoundRef.current) spinSoundRef.current.currentTime = 0;
-        landSoundRef.current?.play().catch(() => {});
-
-        // Clear the landing animation state after it completes.
-        setTimeout(() => setLanded(false), 800);
-      }
+      clearTick();
     }
 
-    // Update the ref to the current spinning state for the next render.
-    wasSpinningRef.current = isSpinning;
-
     return () => {
-      if (intervalRef.current) clearTimeout(intervalRef.current);
+      if (!isSpinning) clearTick();
     };
-  }, [isSpinning, result, cycleImages]);
+  }, [isSpinning, cycleImages]);
+
+  // Phase two, commits to the real landing image once it is known and
+  // enough time has passed for phase one to have felt real.
+  useEffect(() => {
+    if (
+      isSpinning &&
+      landingImage &&
+      !committedRef.current &&
+      tickIntervalRef.current !== null
+    ) {
+      const elapsed = Date.now() - phaseOneStartRef.current;
+      const wait = Math.max(0, MIN_PHASE_ONE_MS - elapsed);
+
+      window.setTimeout(() => {
+        if (!isSpinning) return;
+        committedRef.current = true;
+        clearTick();
+
+        setReel((prev) => {
+          const finalReel = [...prev, ...cycleImages, landingImage];
+          setTargetIndex(finalReel.length - 1);
+          return finalReel;
+        });
+        setTransitionMs(FINAL_TRANSITION_MS);
+        setTimeout(() => setBlurred(false), BLUR_CLEAR_MS);
+      }, wait);
+    }
+  }, [isSpinning, landingImage, cycleImages]);
+
+  // Start downloading the real landing image the instant we know what
+  // it is, well before phase two ever needs to show it. By the time
+  // the transition actually reaches that frame, it is already sitting
+  // in the browser's cache instead of racing the animation.
+  useEffect(() => {
+    if (!landingImage) return;
+    const preload = new Image();
+    preload.src = toThumbnail(landingImage, 300);
+  }, [landingImage]);
+
+  // Landing.
+  useEffect(() => {
+    const justEnded = wasSpinningRef.current === true && isSpinning === false;
+
+    if (justEnded && result) {
+      setLanded(true);
+      spinSoundRef.current?.pause();
+      if (spinSoundRef.current) spinSoundRef.current.currentTime = 0;
+      landSoundRef.current?.play().catch(() => {});
+      setTimeout(() => setLanded(false), 800);
+    }
+
+    if (!isSpinning) {
+      clearTick();
+      setBlurred(false);
+      setTransitionMs(0);
+      setTargetIndex(0);
+      setReel([result?.food.image_url ?? "/images/randomImage.png"]);
+    }
+
+    wasSpinningRef.current = isSpinning;
+  }, [isSpinning, result]);
+
+  const frameCount = reel.length;
+  const restingTranslate = `-${(targetIndex / frameCount) * 100}%`;
 
   return (
     <div
@@ -146,26 +190,34 @@ export const SpinFrame = ({
           : "0 0 0 rgba(0,0,0,0)",
       }}
     >
-      {displayImage ? (
-        <img
-          src={displayImage}
-          alt="Food suggestion"
-          className="w-full h-full object-cover"
-          style={{
-            filter: blur > 0 ? `blur(${blur}px)` : "none",
-            transition: "filter 0.1s linear",
-          }}
-        />
-      ) : (
-        <div
-          className="w-full h-full flex items-center justify-center
-          bg-moringa/10 dark:bg-moringa-faded/10"
-        >
-          <p className="text-sm text-cocoa-faded text-center px-6">
-            Spin to get a suggestion
-          </p>
-        </div>
-      )}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          height: `${frameCount * 100}%`,
+          transform: `translateY(${restingTranslate})`,
+          transition:
+            transitionMs > 0
+              ? `transform ${transitionMs}ms ${
+                  transitionMs === FINAL_TRANSITION_MS
+                    ? "cubic-bezier(0.12, 0.83, 0.34, 1)"
+                    : "linear"
+                }`
+              : "none",
+          filter: blurred ? "blur(8px)" : "blur(0px)",
+          willChange: "transform, filter",
+        }}
+      >
+        {reel.map((src, i) => (
+          <img
+            key={`${src}-${i}`}
+            src={toThumbnail(src, 300)}
+            alt=""
+            className="w-full object-cover"
+            style={{ height: `${100 / frameCount}%`, flexShrink: 0 }}
+          />
+        ))}
+      </div>
     </div>
   );
 };

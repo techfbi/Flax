@@ -168,6 +168,7 @@ export interface MealLogEntry {
   fat_g: number
   source: string
   created_at: string
+  image_url: string | null
 }
 
 /*
