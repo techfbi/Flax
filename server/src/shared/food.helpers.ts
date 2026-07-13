@@ -6,6 +6,11 @@ import { env } from "../config/env.js";
 //
 // To migrate image hosting. we change MEDIA_BASE_URL in .env only. No database changes needed ever.
 export const buildImageUrl = (imagePath: string): string => {
+  // Already a full URL, Cloudinary or otherwise, use it as is.
+  // Only prefix MEDIA_BASE_URL onto genuinely relative paths.
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+    return imagePath;
+  }
   return `${env.MEDIA_BASE_URL}/${imagePath}`;
 };
 

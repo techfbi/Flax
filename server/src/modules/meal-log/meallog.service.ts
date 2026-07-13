@@ -4,6 +4,7 @@ import { AppError } from "../../shared/errors.js";
 import type { CatalogueMealLogInput, CustomMealLogInput, PatchMealLogInput } from "./meallog.schema.js";
 import mongoose from "mongoose";
 import { checkAndUpdateGoalStreak } from "../streaks/streak.service.js";
+import { withImageUrl } from "../../shared/food.helpers.js";
 import { getUserTimezone, isTodayOrYesterdayInTimezone } from "../../shared/date.helpers.js";
 // ---------------------------------------------------------------------------
 // Types
@@ -22,6 +23,7 @@ export interface MealLogEntry {
   fat_g: number;
   source: string;
   created_at: string;
+  image_url: string | null;
 }
 
 export interface DashboardData {
@@ -203,7 +205,33 @@ export const getMealLogs = async (
     [userId, targetDate]
   );
 
-  return result.rows;
+  const logs = result.rows;
+
+  // Postgres only ever stored a text snapshot of the food's name, the
+  // actual food document, and its image, live in Mongo. Custom meals
+  // have no food_ref at all and simply get no image, the frontend
+  // shows a plain icon for those instead.
+  const foodRefs = [...new Set(logs.map((log) => log.food_ref).filter(Boolean))];
+
+  let imageByFoodRef = new Map<string, string>();
+  if (foodRefs.length > 0) {
+    const foods = await FoodItem.find({
+      _id: { $in: foodRefs.map((id) => new mongoose.Types.ObjectId(id)) },
+    })
+      .select("image_path")
+      .lean();
+
+    imageByFoodRef = new Map(
+      foods.map((food) => [
+        String(food._id),
+        withImageUrl(food as { image_path: string }).image_url,
+      ])
+    );
+  }
+  return logs.map((log) => ({
+    ...log,
+    image_url: log.food_ref ? (imageByFoodRef.get(log.food_ref) ?? null) : null,
+  }));
 };
 
 // ---------------------------------------------------------------------------
