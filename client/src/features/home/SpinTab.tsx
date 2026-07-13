@@ -14,6 +14,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useScreenTier } from "@/hooks/useMediaQuery";
 import { useSpinSound } from "@/hooks/useSpinSound";
 import api from "@/lib/api";
+import { getErrorMessage } from "@/lib/errors";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useSpinStore } from "@/store/spinStore";
 import { AnimatePresence } from "framer-motion";
@@ -195,9 +196,7 @@ export const SpinTab = () => {
       toast.error(
         timedOut
           ? "Something went wrong. That took too long, please try again."
-          : axiosErr?.response?.status === 404
-            ? "No meals found for your filters. Try adjusting your filters."
-            : "Could not spin. Try again.",
+          : getErrorMessage(err, "Could not spin. Try again."),
       );
     },
   });
