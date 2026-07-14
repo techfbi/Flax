@@ -165,7 +165,7 @@ api.interceptors.response.use(
         '/verify-otp',
         '/forgot-password',
         '/reset-password',
-        '/auth/callback',
+        '/api/auth/callback',
       ].includes(window.location.pathname);
 
       // TOKEN_REUSED or TOKEN_EXPIRED → session expired → go to login
@@ -177,10 +177,16 @@ api.interceptors.response.use(
         return Promise.reject(refreshError);
       }
 
-      // All other codes (INVALID_TOKEN, NO_TOKEN, or any other) → go to landing
-      // This covers cases where the refresh token cookie is missing or invalid.
-      if (window.location.pathname !== '/') {
-        window.location.replace('/');
+      // NO_TOKEN or INVALID_TOKEN → genuinely not logged in → go to landing.
+      // Anything else, an unrecognized 5xx or a response shape with no
+      // code at all, is not a confirmed auth failure, fail silently
+      // instead, matching the contract documented at the top of this file.
+      const NOT_LOGGED_IN_CODES = new Set(['NO_TOKEN', 'INVALID_TOKEN']);
+      if (refreshCode && NOT_LOGGED_IN_CODES.has(refreshCode)) {
+        if (!isOnLoginPage) {
+          window.location.replace('/');
+        }
+        return Promise.reject(refreshError);
       }
       return Promise.reject(refreshError);
     }

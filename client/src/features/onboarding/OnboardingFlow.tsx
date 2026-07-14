@@ -1051,17 +1051,19 @@ const OnboardingFlow = () => {
           {/* Content above overlay */}
           <div className="relative z-10 flex flex-col h-full p-8">
             {/* Logo */}
-            <img
-              src={
-                resolvedTheme === "dark"
-                  ? "/images/logoDark.png"
-                  : "/images/logoLight.png"
-              }
-              alt="Flax"
-              width={72}
-              height={35}
-              className="h-[35px] w-auto object-contain"
-            />
+            <a aria-label="Flax home">
+              <img
+                src={
+                  resolvedTheme === "dark"
+                    ? "/images/logoDark.png"
+                    : "/images/logoLight.png"
+                }
+                alt="Flax"
+                width={72}
+                height={35}
+                className="h-[35px] w-auto object-contain"
+              />
+            </a>
 
             {/* Heading + items pushed to bottom */}
             <div className="flex flex-col justify-end flex-1 pb-4">

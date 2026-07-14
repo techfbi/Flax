@@ -14,6 +14,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useScreenTier } from "@/hooks/useMediaQuery";
 import { useSpinSound } from "@/hooks/useSpinSound";
 import api from "@/lib/api";
+import type { SpinFrameHandle } from "./SpinFrame";
 import { getErrorMessage } from "@/lib/errors";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useSpinStore } from "@/store/spinStore";
@@ -47,6 +48,8 @@ export const SpinTab = () => {
   const { data: profile } = useUserProfile();
   const { enabled: spinSoundEnabled } = useSpinSound();
   const [landingImage, setLandingImage] = useState<string | null>(null);
+  const pendingDataRef = useRef<SpinResult | null>(null);
+  const spinFrameRef = useRef<SpinFrameHandle>(null);
 
   const [showTips, setShowTips] = useState(false);
   const [tipsChecked, setTipsChecked] = useState(false);
@@ -166,18 +169,12 @@ export const SpinTab = () => {
     },
     onSuccess: (data) => {
       clearSpinWatchdog();
+      pendingDataRef.current = data;
       setLandingImage(data.food.image_url);
-      setTimeout(() => {
-        setIsSpinning(false);
-        setResult(data);
-        setLandingImage(null);
-        if (data.recencyRelaxed === true) {
-          toast.message(
-            "All current filter matches seen. Showing previous meals",
-          );
-        }
-        queryClient.invalidateQueries({ queryKey: ["spin-history"] });
-      }, 3000);
+      // isSpinning stays true here on purpose, SpinFrame calls
+      // handleSpinLanded itself once its own animation genuinely
+      // finishes, this used to be a fixed timer racing against that
+      // animation instead of waiting for it.
     },
     onError: (err: unknown) => {
       clearSpinWatchdog();
@@ -231,6 +228,19 @@ export const SpinTab = () => {
     },
     onError: () => toast.error("Something went wrong, please try again."),
   });
+
+  const handleSpinLanded = () => {
+    const data = pendingDataRef.current;
+    if (!data) return;
+    setIsSpinning(false);
+    setResult(data);
+    setLandingImage(null);
+    pendingDataRef.current = null;
+    if (data.recencyRelaxed === true) {
+      toast.message("All current filter matches seen. Showing previous meals");
+    }
+    queryClient.invalidateQueries({ queryKey: ["spin-history"] });
+  };
 
   const handleLogMeal = () => {
     if (!result) return;
@@ -431,7 +441,10 @@ export const SpinTab = () => {
       className={`w-[200px] lg:max-w-[300px] ${tier === "mobile" ? "mx-auto" : ""}`}
     >
       <button
-        onClick={() => spinMutation.mutate()}
+        onClick={() => {
+          spinFrameRef.current?.primeAudio();
+          spinMutation.mutate();
+        }}
         disabled={isSpinning}
         className="w-full py-3 lg:py-4 rounded-xl text-sm font-bold
           bg-pawpaw dark:bg-black-pawpaw text-surface
@@ -474,11 +487,13 @@ export const SpinTab = () => {
       >
         <div className={`${frameWrapperClass} flex flex-col gap-4`}>
           <SpinFrame
+            ref={spinFrameRef}
             isSpinning={isSpinning}
             result={result}
             landingImage={landingImage}
             cycleImages={cycleImages}
             soundEnabled={spinSoundEnabled}
+            onLandingComplete={handleSpinLanded}
           />
           {actionButtons}
         </div>
