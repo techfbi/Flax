@@ -10,8 +10,8 @@ const groq = new Groq({ apiKey: env.GROQ_API_KEY });
 // Model configuration
 // We create fallback chain to handle failure of the primary model gracefully. if the primary fails, we try the fallback before giving up completely.
 // ---------------------------------------------------------------------------
-const PRIMARY_MODEL = "llama-3.3-70b-versatile";
-const FALLBACK_MODEL = "llama-3.1-8b-instant";
+const PRIMARY_MODEL = "openai/gpt-oss-120b";
+const FALLBACK_MODEL = "qwen/qwen3.6-27b";
 
 // ---------------------------------------------------------------------------
 // generateText
