@@ -4,7 +4,6 @@ import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import type { ApiResponse, AuthUser, FullProfile } from "@/types/apiTypes";
 import { motion, useReducedMotion } from "framer-motion";
-import { useUserProfile } from "@/hooks/useUserProfile";
 import { useLocation } from "react-router-dom";
 
 /* Lazy pages */
@@ -136,18 +135,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
 };
 
-const RequireOnboarding = ({ children }: { children: React.ReactNode }) => {
-  const { data: profile, isLoading } = useUserProfile();
-
-  // only block on the true first load with nothing cached yet
-  if (isLoading && !profile) return <PageLoader />;
-
-  const incomplete = !profile?.health || !profile.health.health_goal;
-  if (incomplete) return <Navigate to="/onboarding" replace />;
-
-  return <>{children}</>;
-};
-
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading, pendingNavigation } = useAuthStore();
   const location = useLocation();
@@ -167,17 +154,9 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 
 /* "/" serves landing for unauthenticated, homepage for authenticated */
 const RootRoute = () => {
-  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
-  const { data: profile, isLoading: profileLoading } = useUserProfile();
-
-  if (authLoading) return <PageLoader />;
-  if (!isAuthenticated) return <LandingPage />;
-  if (profileLoading && !profile) return <PageLoader />;
-
-  const incomplete = !profile?.health || !profile.health.health_goal;
-  if (incomplete) return <Navigate to="/onboarding" replace />;
-
-  return <HomePage />;
+  const { isAuthenticated, isLoading } = useAuthStore();
+  if (isLoading) return <PageLoader />;
+  return isAuthenticated ? <HomePage /> : <LandingPage />;
 };
 
 /*
@@ -356,11 +335,9 @@ const AnimatedRoutes = () => {
         path="/spin"
         element={
           <ProtectedRoute>
-            <RequireOnboarding>
-              <PageTransition>
-                <SpinTab />
-              </PageTransition>
-            </RequireOnboarding>
+            <PageTransition>
+              <SpinTab />
+            </PageTransition>
           </ProtectedRoute>
         }
       />
@@ -368,11 +345,9 @@ const AnimatedRoutes = () => {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <RequireOnboarding>
-              <PageTransition>
-                <DashboardPage />
-              </PageTransition>
-            </RequireOnboarding>
+            <PageTransition>
+              <DashboardPage />
+            </PageTransition>
           </ProtectedRoute>
         }
       />
@@ -380,11 +355,9 @@ const AnimatedRoutes = () => {
         path="/ask-noura"
         element={
           <ProtectedRoute>
-            <RequireOnboarding>
-              <PageTransition>
-                <AskNouraPage />
-              </PageTransition>
-            </RequireOnboarding>
+            <PageTransition>
+              <AskNouraPage />
+            </PageTransition>
           </ProtectedRoute>
         }
       />
@@ -392,11 +365,9 @@ const AnimatedRoutes = () => {
         path="/profile"
         element={
           <ProtectedRoute>
-            <RequireOnboarding>
-              <PageTransition>
-                <ProfilePage />
-              </PageTransition>
-            </RequireOnboarding>
+            <PageTransition>
+              <ProfilePage />
+            </PageTransition>
           </ProtectedRoute>
         }
       />
@@ -404,11 +375,9 @@ const AnimatedRoutes = () => {
         path="/settings"
         element={
           <ProtectedRoute>
-            <RequireOnboarding>
-              <PageTransition>
-                <SettingsPage />
-              </PageTransition>
-            </RequireOnboarding>
+            <PageTransition>
+              <SettingsPage />
+            </PageTransition>
           </ProtectedRoute>
         }
       />
@@ -416,11 +385,9 @@ const AnimatedRoutes = () => {
         path="/notifications"
         element={
           <ProtectedRoute>
-            <RequireOnboarding>
-              <PageTransition>
-                <NotificationsPage />
-              </PageTransition>
-            </RequireOnboarding>
+            <PageTransition>
+              <NotificationsPage />
+            </PageTransition>
           </ProtectedRoute>
         }
       />

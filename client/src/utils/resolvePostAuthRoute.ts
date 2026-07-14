@@ -24,7 +24,7 @@ export const resolvePostAuthRoute = async (
     /* Store avatar while we have the profile */
     useAuthStore.getState().setAvatarUrl(profile.avatar_url)
 
-    if (!profile.health || !profile.health.health_goal) {
+    if (!profile.health || !profile.health.region) {
       return '/onboarding'
     }
     return '/'

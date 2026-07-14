@@ -17,10 +17,7 @@ const AuthCallbackPage = () => {
 
     const code = params.get("code");
     if (!code) {
-      navigate("/login", {
-        state: { error: "Google sign-in was cancelled." },
-        replace: true,
-      });
+      navigate("/login?authError=google_cancelled", { replace: true });
       return;
     }
 
@@ -52,14 +49,10 @@ const AuthCallbackPage = () => {
         setPendingNavigation(false);
         const status = (err as { response?: { status?: number } })?.response
           ?.status;
-        const message =
-          status === 409
-            ? "This Google account is linked to an existing email. Please log in with your password instead."
-            : "Google sign-in failed. Try again.";
-        navigate("/login", {
-          state: { error: message },
-          replace: true,
-        });
+        const errorCode =
+          status === 409 ? "google_email_exists" : "google_failed";
+
+        navigate(`/login?authError=${errorCode}`, { replace: true });
       }
     };
 

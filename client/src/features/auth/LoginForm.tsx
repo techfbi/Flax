@@ -43,11 +43,20 @@ const LoginForm = () => {
   const { setAuth, setPendingNavigation } = useAuthStore();
   const [apiError, setApiError] = useState("");
   const location = useLocation();
-  const locationError =
-    (location.state as { error?: string } | null)?.error ?? "";
+  const [searchParams, setSearchParams] = useSearchParams();
+  const authErrorCode = searchParams.get("authError");
+  const AUTH_ERROR_MESSAGES: Record<string, string> = {
+    google_email_exists:
+      "This Google account is linked to an existing email. Please log in with your password instead.",
+    google_failed: "Google sign-in failed. Try again.",
+    google_cancelled: "Google sign-in was cancelled.",
+  };
+
+  const locationError = authErrorCode
+    ? (AUTH_ERROR_MESSAGES[authErrorCode] ?? "")
+    : "";
   const [displayLocationError, setDisplayLocationError] =
     useState(locationError);
-  const [searchParams] = useSearchParams();
   const sessionExpired = searchParams.get("session") === "expired";
   const passwordReset = searchParams.get("resetPassword") === "true";
 
@@ -67,10 +76,7 @@ const LoginForm = () => {
     setDisplayLocationError(locationError);
 
     // Remove it from the history entry
-    navigate(location.pathname, {
-      replace: true,
-      state: null,
-    });
+    setSearchParams({}, { replace: true });
   }, [locationError, navigate, location.pathname]);
 
   // useeffect to reset the displaylocation error i.e error from google so it wont persist
@@ -81,7 +87,7 @@ const LoginForm = () => {
       setDisplayLocationError("");
     }, 10000); // 10 seconds
     return () => clearTimeout(timer);
-  }, []);
+  }, [displayLocationError]);
 
   // Afunction to handle all error messages
   const message = (() => {
