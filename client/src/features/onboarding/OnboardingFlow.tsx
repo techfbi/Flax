@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { handleApiError } from "@/utils/handleApiError";
+import { useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import type {
   HealthGoal,
@@ -570,6 +571,7 @@ const SelectField = ({
 
 /* ── Main component ──────────────────────────────────────────── */
 const OnboardingFlow = () => {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { resolvedTheme } = useTheme();
 
@@ -702,8 +704,11 @@ const OnboardingFlow = () => {
       });
       /* Clear saved step, onboarding complete */
       localStorage.removeItem(STEP_STORAGE_KEY);
-      // No flag to update, onboarding completion is determined by
-      // whether health profile exists (checked via resolvePostAuthRoute on login)
+      // Refresh the cached profile before navigating, RequireOnboarding and
+      // RootRoute both read this same cache to decide if onboarding is
+      // done, without this they would still see the old, incomplete
+      // version for a moment and send the user right back here.
+      await queryClient.invalidateQueries({ queryKey: ["user-profile"] });
       navigate("/", { replace: true });
     } catch (err) {
       setApiError(handleApiError(err));
