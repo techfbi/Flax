@@ -12,6 +12,7 @@ import { sendSuccess } from "../../shared/response.js";
 import type { RegisterInput, LoginInput, ForgotPasswordInput, ResetPasswordInput } from "./auth.schema.js";
 import { verifyRegistrationOtp, resendOtp, googleAuth } from "./auth.service.js";
 import type { VerifyOtpInput, ResendOtpInput, GoogleAuthInput } from "./auth.schema.js";
+import { AppError } from "../../shared/errors.js";
 
 // ---------------------------------------------------------------------------
 // Cookie configuration
@@ -116,9 +117,12 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
     const rawToken = req.cookies[REFRESH_COOKIE_NAME] as string | undefined;
 
     if (!rawToken) {
-      // No cookie, user is not logged in or cookie was cleared
-      throw new Error("No refresh token provided");
-    }
+  // No cookie, user is not logged in or cookie was cleared. A clean
+  // 401 with a real code, not an unhandled exception, since the
+  // frontend specifically checks for NO_TOKEN to recognize this as
+  // an expected logged out state, not a server fault.
+  throw new AppError("No refresh token provided", 401, "NO_TOKEN");
+}
 
     const tokens = await refreshTokens(rawToken);
 

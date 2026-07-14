@@ -1,8 +1,6 @@
 //This code is a safe environment variable validator using Zod.
 //It checks whether all our .env variables exist and are valid BEFORE our app starts.
-import dotenv from "dotenv";
 import { z } from "zod";
-dotenv.config();
 
 //This creates a validation blueprint. What environment variables should exist and what rules they must follow.
 const envSchema = z.object({

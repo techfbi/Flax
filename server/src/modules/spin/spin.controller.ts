@@ -154,7 +154,6 @@ export const unflagMealHandler = async (
 export const spin = async ( req: Request, res: Response, next: NextFunction ): Promise<void> => {
   try {
     const userId = req.user!.id;
-    console.log("[REMOVE LOG LATER: The spin req body: ", req.body)
 
     // ---------------------------------------------------------------------------
     // Step 1. Get user profile data needed for filtering and Groq context
