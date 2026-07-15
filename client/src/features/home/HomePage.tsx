@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Bell, Sun, Moon } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -26,7 +26,8 @@ import type {
   WaterData,
   StreakData,
 } from "@/types/apiTypes";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 type Tab = "goal" | "pantry" | "logintake" | "history";
 
@@ -63,6 +64,14 @@ const HomePage = () => {
     staleTime: 30 * 1000,
   });
   const unreadCount = notifData?.unreadCount ?? 0;
+  const navigate = useNavigate();
+  const { data: profile, isLoading: profileLoading } = useUserProfile();
+
+  useEffect(() => {
+    if (profileLoading || !profile) return;
+    const incomplete = !profile.health || !profile.health.health_goal;
+    if (incomplete) navigate("/onboarding", { replace: true });
+  }, [profile, profileLoading, navigate]);
 
   const firstName = user?.display_name?.split(" ")[0] ?? "User";
 

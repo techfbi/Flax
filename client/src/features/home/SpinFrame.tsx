@@ -197,9 +197,26 @@ export const SpinFrame = forwardRef<SpinFrameHandle, SpinFrameProps>(
         setTransitionMs(0);
         setTargetIndex(0);
         setReel([result?.food.image_url ?? "/images/randomImage.png"]);
+        // Always stop the spin sound here, not only in the landing
+        // handler. If the spin errored or timed out before ever
+        // committing to a real landing, transitionend never fires, and
+        // this sound had nothing else that would ever pause it.
+        spinSoundRef.current?.pause();
+        if (spinSoundRef.current) spinSoundRef.current.currentTime = 0;
       }
       wasSpinningRef.current = isSpinning;
     }, [isSpinning, result]);
+
+    // Preload cycle images the moment they are available, not only when
+    // a spin starts. This gives the browser the entire time between page
+    // load and the first tap to fetch and cache them, so the very first
+    // spin does not show blank frames while they are still downloading.
+    useEffect(() => {
+      cycleImages.forEach((src) => {
+        const preload = new Image();
+        preload.src = toThumbnail(src, 300);
+      });
+    }, [cycleImages]);
 
     const frameCount = reel.length;
     const restingTranslate = `-${(targetIndex / frameCount) * 100}%`;
