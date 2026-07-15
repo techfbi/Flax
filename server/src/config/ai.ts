@@ -11,7 +11,24 @@ const groq = new Groq({ apiKey: env.GROQ_API_KEY });
 // We create fallback chain to handle failure of the primary model gracefully. if the primary fails, we try the fallback before giving up completely.
 // ---------------------------------------------------------------------------
 const PRIMARY_MODEL = "openai/gpt-oss-120b";
-const FALLBACK_MODEL = "qwen/qwen3.6-27b";
+const FALLBACK_MODEL = "llama-3.1-8b-instant";
+
+//-------------------------------------------------------------------------------------
+// Reasoning capable models like Qwen and gpt-oss include their raw
+// thinking process wrapped in think tags before the real answer,
+// Llama never did this so nothing previously needed to handle it.
+// If the block is properly closed, strip it and keep what follows.
+// If it is opened but never closed, the token budget ran out before
+// the model ever reached a real answer, there is nothing usable to
+// return, treat it the same as an empty response so the fallback
+// chain actually kicks in instead of showing a truncated trace.
+//--------------------------------------------------------------------------
+const stripThinkTags = (text: string): string => {
+  const closed = text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+  if (closed) return closed;
+  if (/<think>/i.test(text)) return "";
+  return text.trim();
+};
 
 // ---------------------------------------------------------------------------
 // generateText
@@ -36,7 +53,7 @@ export const generateText = async (
       temperature,
     });
 
-    const text = response.choices[0]?.message?.content?.trim() ?? "";
+    const text = stripThinkTags(response.choices[0]?.message?.content?.trim() ?? "");
 
     if (!text) {
       throw new Error("Primary model returned empty response");
@@ -64,7 +81,7 @@ export const generateText = async (
       temperature,
     });
 
-    const text = response.choices[0]?.message?.content?.trim() ?? "";
+    const text = stripThinkTags(response.choices[0]?.message?.content?.trim() ?? "");
 
     if (!text) {
       throw new Error("Fallback model returned empty response");
@@ -116,7 +133,7 @@ export const generateChatCompletion = async (
       temperature: 0.6,
     });
 
-    const text = response.choices[0]?.message?.content?.trim() ?? "";
+    const text = stripThinkTags(response.choices[0]?.message?.content?.trim() ?? "");
 
     if (!text) throw new Error("Primary model returned empty response");
 
@@ -135,11 +152,11 @@ export const generateChatCompletion = async (
     const response = await groq.chat.completions.create({
       model: FALLBACK_MODEL,
       messages,
-      max_tokens: 800,
+      max_tokens: 1200,
       temperature: 0.6,
     });
 
-    const text = response.choices[0]?.message?.content?.trim() ?? "";
+    const text = stripThinkTags(response.choices[0]?.message?.content?.trim() ?? "");
 
     if (!text) throw new Error("Fallback model returned empty response");
 

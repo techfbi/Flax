@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS users (
   avatar_url    TEXT,
   is_verified   BOOLEAN NOT NULL DEFAULT FALSE,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  timezone      TEXT
+  timezone      TEXT,
   last_login_at TIMESTAMPTZ,
   deleted_at    TIMESTAMPTZ                  -- NULL means active, timestamp means soft-deleted
 );
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS spin_history (
   filters_applied  JSONB NOT NULL DEFAULT '[]',
   was_accepted     BOOLEAN NOT NULL DEFAULT TRUE,
   rejection_reason TEXT,                     -- NULL if the user accepted the spin result
-  result_description TEXT
+  result_description TEXT,
   spun_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

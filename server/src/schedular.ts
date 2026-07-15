@@ -1,7 +1,7 @@
 import { runScheduledChecks } from "./modules/notifications/notification.events.js";
 import { cleanupOldSpinHistory } from "./modules/spin/spin.service.js";
 
-const CHECK_INTERVAL_MS = 15 * 60 * 1000;
+const CHECK_INTERVAL_MS = 30 * 60 * 1000;
 const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 export const startScheduler = (): void => {

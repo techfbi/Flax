@@ -553,7 +553,7 @@ export const generateSpinReasoning = async (
   - goal matching
   Choose whichever aspect best fits the meal and user context.
 
-  Avoid repeating common phrases such as:
+  Avoid repeating common phrases, for example the below if Nigeian. such as:
   "start your day"
   "provide energy"
   "support muscle growth"
@@ -570,7 +570,7 @@ export const generateSpinReasoning = async (
   Do not make medical claims.
   Respond with ONLY the explanation text. no labels, no bullet points, no greeting, no sign-off, no emoji, no unnecessary hyphen, no medical diagnosis, no dangerous instructions/self harm advice, no hateful content, no explicit sexual context.`;
 
-  const { text } = await generateText(prompt, 300, 0.7);
+  const { text } = await generateText(prompt, 700, 0.7);
 
   if (!text) {
     // Both models failed. use hard fallback.
