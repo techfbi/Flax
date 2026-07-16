@@ -362,7 +362,6 @@ const MobileStreakCard = ({
   level,
   target,
   type,
-  hasStreak,
   status,
   onRestore,
 }: {

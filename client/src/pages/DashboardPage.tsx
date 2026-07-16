@@ -50,7 +50,8 @@ const COLORS = {
   darkWhite: "#E5E7EB",
   blackPawpaw: "#F08959",
   Protein: "#F43F5E",
-  Carbs: "#8B5CF6",
+  Carbs: "#E9B949",
+  fat: "#E9B949",
 };
 
 const formatTrendLabel = (date: string, granularity: "day" | "month") => {
@@ -219,7 +220,7 @@ export const DashboardPage = () => {
     {
       label: "Fat",
       value: insights?.today.fat_g ?? 0,
-      color: isDark ? COLORS.darkWhite : COLORS.cocoa,
+      color: isDark ? "#9CA3AF" : COLORS.cocoa,
     },
   ];
   const maxMacro = Math.max(...macroBars.map((m) => m.value), 1);

@@ -4,7 +4,6 @@ import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import type { ApiResponse, AuthUser, FullProfile } from "@/types/apiTypes";
 import { motion, useReducedMotion } from "framer-motion";
-import { useLocation } from "react-router-dom";
 
 /* Lazy pages */
 const LandingPage = lazy(() => import("@/features/landing/LandingPage"));
@@ -137,17 +136,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading, pendingNavigation } = useAuthStore();
-  const location = useLocation();
-  console.log(
-    "PublicRoute render, state:",
-    location.state,
-    "isLoading:",
-    isLoading,
-    "pendingNavigation:",
-    pendingNavigation,
-    "isAuthenticated:",
-    isAuthenticated,
-  );
   if (isLoading || pendingNavigation) return <PageLoader />;
   return !isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
 };
