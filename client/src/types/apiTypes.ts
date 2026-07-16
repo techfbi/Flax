@@ -109,6 +109,7 @@ export interface Food {
   protein_g: number
   carbs_g: number
   fat_g: number
+  serving_sizes: { label: string; grams: number }[]
 }
 
 /*
@@ -299,4 +300,12 @@ export interface StreakCalendarData {
   month: string
   calorie_target: number | null
   days: { date: string; calories: number; met_goal: boolean; exceeded: boolean; is_future: boolean }[]
+}
+
+export interface NutritionEstimate {
+  calories: number
+  protein_g: number
+  carbs_g: number
+  fat_g: number
+  estimated_grams?: number
 }

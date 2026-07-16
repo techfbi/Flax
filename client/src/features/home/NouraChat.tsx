@@ -100,6 +100,13 @@ export const NouraChat = () => {
     retryMessage,
   } = useNouraChat();
 
+  // input focus
+  useEffect(() => {
+    if (!isSending) {
+      inputRef.current?.focus();
+    }
+  }, [isSending]);
+
   return (
     <div className="bg-surface-two dark:bg-black-surface rounded-2xl flex flex-col overflow-hidden lg:flex-1 lg:min-h-0 max-h-[500px] lg:max-h-none">
       <style>{`

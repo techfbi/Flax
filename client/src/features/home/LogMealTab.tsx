@@ -9,6 +9,11 @@ import { getLocalDateStr } from "@/lib/date";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { toThumbnail } from "@/lib/images";
 import { UtensilsCrossed } from "lucide-react";
+import { ServingSizePicker } from "@/components/ui/ServingSizePicker";
+import { getErrorMessage } from "@/lib/errors";
+import type { NutritionEstimate } from "@/types/apiTypes";
+import { CustomQuantityPicker } from "@/components/ui/CustomQuantityPicker";
+import { useTheme } from "@/context/ThemeContext";
 import type {
   ApiResponse,
   MealLogEntry,
@@ -45,6 +50,10 @@ interface CatalogueSelection {
   food_ref: string;
   food_name: string;
   calories_per_100g?: number;
+  protein_g?: number;
+  carbs_g?: number;
+  fat_g?: number;
+  serving_sizes?: { label: string; grams: number }[];
 }
 
 // Picks a sensible default meal type from the current hour so the form
@@ -89,8 +98,10 @@ const QuantityInput = forwardRef<
 QuantityInput.displayName = "QuantityInput";
 
 export const LogMealTab = () => {
+  const { resolvedTheme } = useTheme();
   const queryClient = useQueryClient();
   const { prefillMeal, clearPrefillMeal } = useSpinStore();
+  const [estimating, setEstimating] = useState(false);
 
   const [mode, setMode] = useState<"catalogue" | "custom">("catalogue");
   const [searchQ, setSearchQ] = useState("");
@@ -104,6 +115,8 @@ export const LogMealTab = () => {
     carbs_g: "",
     fat_g: "",
   });
+  const [customIsGrams, setCustomIsGrams] = useState(true);
+  const [customDescription, setCustomDescription] = useState("");
   const [quantityInput, setQuantityInput] = useState("100");
   const [mealType, setMealType] = useState<MealType>(defaultMealTypeForNow());
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -120,15 +133,46 @@ export const LogMealTab = () => {
   useEffect(() => {
     if (!prefillMeal) return;
     setMode("catalogue");
+    // Set the basic selection immediately so the form opens right away,
+    // do not make the person wait on a network call before they see
+    // anything, then fill in the full nutrition and serving sizes once
+    // that request resolves, upgrading the same selection in place.
     setSelectedFood({
       food_ref: prefillMeal.food_ref,
       food_name: prefillMeal.food_name,
     });
     if (prefillMeal.meal_type) setMealType(prefillMeal.meal_type);
     setQuantityInput("100");
+
+    const foodRef = prefillMeal.food_ref;
     clearPrefillMeal();
-    // Autofocus the quantity field so the user can type straight away,
-    // this is the whole point of the prefill flow.
+
+    api
+      .get<ApiResponse<{ food: Food }>>(`/api/foods/${foodRef}`)
+      .then(({ data }) => {
+        const food = data.data.food;
+        setSelectedFood((current) => {
+          // Only apply this if the person has not since picked a
+          // different food while the request was in flight.
+          if (!current || current.food_ref !== foodRef) return current;
+          return {
+            food_ref: food._id,
+            food_name: food.name,
+            calories_per_100g: food.calories_per_100g,
+            protein_g: food.protein_g,
+            carbs_g: food.carbs_g,
+            fat_g: food.fat_g,
+            serving_sizes: food.serving_sizes,
+          };
+        });
+      })
+      .catch(() => {
+        // Full details failed to load, the basic selection set above
+        // still works fine, this just means the plain grams input
+        // shows instead of the picker for this one, same as it did
+        // before this fix existed, not a regression.
+      });
+
     requestAnimationFrame(() => {
       quantityRef.current?.focus();
       quantityRef.current?.select();
@@ -165,6 +209,10 @@ export const LogMealTab = () => {
       food_ref: food._id,
       food_name: food.name,
       calories_per_100g: food.calories_per_100g,
+      protein_g: food.protein_g,
+      carbs_g: food.carbs_g,
+      fat_g: food.fat_g,
+      serving_sizes: food.serving_sizes,
     });
     setSearchQ("");
     requestAnimationFrame(() => {
@@ -183,6 +231,8 @@ export const LogMealTab = () => {
       fat_g: "",
     });
     setQuantityInput("100");
+    setCustomIsGrams(true);
+    setCustomDescription("");
     setMealType(defaultMealTypeForNow());
   };
 
@@ -278,6 +328,41 @@ export const LogMealTab = () => {
     onError: () => toast.error("Could not remove meal. Try again."),
   });
 
+  const estimateMutation = useMutation({
+    mutationFn: async () => {
+      const body: Record<string, unknown> = { name: customName.trim() };
+      if (customIsGrams) {
+        body.grams = parseInt(quantityInput, 10) || 0;
+      } else {
+        body.quantity_description = customDescription;
+      }
+      const { data } = await api.post<
+        ApiResponse<{ estimate: NutritionEstimate }>
+      >("/api/meal-logs/estimate", body);
+      return data.data.estimate;
+    },
+    onMutate: () => setEstimating(true),
+    onSuccess: (estimate) => {
+      const grams = customIsGrams
+        ? parseInt(quantityInput, 10) || 100
+        : (estimate.estimated_grams ?? 100);
+
+      if (!customIsGrams) setQuantityInput(String(grams));
+
+      const scale = 100 / grams;
+      setCustomNutrition({
+        calories_per_100g: String(Math.round(estimate.calories * scale)),
+        protein_g: String(Math.round(estimate.protein_g * scale * 10) / 10),
+        carbs_g: String(Math.round(estimate.carbs_g * scale * 10) / 10),
+        fat_g: String(Math.round(estimate.fat_g * scale * 10) / 10),
+      });
+      toast.success("Noura filled in an estimate, review before logging");
+    },
+    onError: (err) =>
+      toast.error(getErrorMessage(err, "Could not estimate nutrition")),
+    onSettled: () => setEstimating(false),
+  });
+
   const canSubmit =
     mode === "catalogue"
       ? !!selectedFood && (parseInt(quantityInput, 10) || 0) >= 10
@@ -298,7 +383,24 @@ export const LogMealTab = () => {
           {(["catalogue", "custom"] as const).map((m) => (
             <button
               key={m}
-              onClick={() => setMode(m)}
+              onClick={() => {
+                setMode(m);
+                if (m === "custom") {
+                  // Leaving catalogue selection behind on purpose, what gets
+                  // logged here depends entirely on the name typed below, a
+                  // leftover catalogue pick has no business feeding this form.
+                  setSelectedFood(null);
+                } else {
+                  setCustomName("");
+                  setCustomNutrition({
+                    calories_per_100g: "",
+                    protein_g: "",
+                    carbs_g: "",
+                    fat_g: "",
+                  });
+                }
+                setQuantityInput("100");
+              }}
               className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-colors
                 ${
                   mode === m
@@ -348,8 +450,8 @@ export const LogMealTab = () => {
                   key={food._id}
                   onClick={() => selectCatalogueFood(food)}
                   className="flex items-center justify-between px-4 py-3
-      cursor-pointer hover:bg-cocoa/5 dark:hover:bg-dark-white/5
-      border-b border-cocoa/5 dark:border-dark-white/5 last:border-0"
+                    cursor-pointer hover:bg-cocoa/5 dark:hover:bg-dark-white/5
+                    border-b border-cocoa/5 dark:border-dark-white/5 last:border-0"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-cocoa/8 dark:bg-dark-white/8 flex items-center justify-center">
@@ -393,7 +495,7 @@ export const LogMealTab = () => {
         </div>
       ) : (
         <div className="mb-4">
-          <label className="text-xs text-cocoa-faded block mb-1">
+          <label className="font-heading text-xs md:text-sm text-cocoa-faded block mb-1">
             Meal name
           </label>
           <input
@@ -414,26 +516,15 @@ export const LogMealTab = () => {
           className="mb-6 p-4 rounded-2xl bg-cocoa/5 dark:bg-dark-white/5
           border border-cocoa/10 dark:border-dark-white/10"
         >
-          {selectedFood && (
+          {mode === "catalogue" && selectedFood && (
             <p className="text-base font-semibold text-cocoa dark:text-dark-white mb-3">
               {selectedFood.food_name}
             </p>
           )}
 
-          <div className="flex gap-3 mb-3">
-            <div className="flex-1">
-              <label className="text-xs text-cocoa-faded block mb-1">
-                Quantity (g)
-              </label>
-              <QuantityInput
-                ref={quantityRef}
-                value={quantityInput}
-                onChange={setQuantityInput}
-                className={inputClass}
-              />
-            </div>
-            <div className="flex-1">
-              <label className="text-xs text-cocoa-faded block mb-1">
+          <div className="flex flex-col gap-3 mb-3">
+            <div className="w-full">
+              <label className="font-heading text-xs md:text-sm text-cocoa-faded block mb-1">
                 Meal type
               </label>
               <select
@@ -448,11 +539,87 @@ export const LogMealTab = () => {
                 ))}
               </select>
             </div>
+
+            <div className="w-full">
+              {mode === "catalogue" ? (
+                selectedFood?.serving_sizes &&
+                selectedFood.serving_sizes.length > 0 ? (
+                  <ServingSizePicker
+                    servingSizes={selectedFood.serving_sizes}
+                    caloriesPer100g={selectedFood.calories_per_100g ?? 0}
+                    proteinPer100g={selectedFood.protein_g ?? 0}
+                    carbsPer100g={selectedFood.carbs_g ?? 0}
+                    fatPer100g={selectedFood.fat_g ?? 0}
+                    onGramsChange={(grams) => setQuantityInput(String(grams))}
+                  />
+                ) : (
+                  <>
+                    <label className="font-heading text-xs md:text-sm text-cocoa-faded block mb-1">
+                      Quantity (g)
+                    </label>
+                    <QuantityInput
+                      ref={quantityRef}
+                      value={quantityInput}
+                      onChange={setQuantityInput}
+                      className={inputClass}
+                    />
+                  </>
+                )
+              ) : (
+                <CustomQuantityPicker
+                  onQuantityChange={(result) => {
+                    if ("grams" in result) {
+                      setCustomIsGrams(true);
+                      setCustomDescription("");
+                      setQuantityInput(String(result.grams));
+                    } else {
+                      setCustomIsGrams(false);
+                      setCustomDescription(result.description);
+                      // Grams are unknown until Noura estimates them for this
+                      // exact description, clearing this blocks Save meal from
+                      // submitting a stale or made up number in the meantime.
+                      setQuantityInput("");
+                    }
+                  }}
+                />
+              )}
+            </div>
           </div>
 
           {/* Optional nutrition, custom mode only */}
           {mode === "custom" && (
             <div className="mb-3">
+              <div className="mb-3 p-3 rounded-xl bg-moringa/5 dark:bg-moringa-faded/10 border border-moringa/15 dark:border-moringa-faded/20">
+                <p className="inline-flex items-center gap-1 font-heading text-xs md:text-sm text-cocoa dark:text-dark-white font-medium mb-1">
+                  <span>Log with Noura</span>
+
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill={resolvedTheme === "dark" ? "#9CA3AF" : "#E8623C"}
+                  >
+                    <path d="M12 2L13.5 10.5L22 12L13.5 13.5L12 22L10.5 13.5L2 12L10.5 10.5L12 2Z" />
+                  </svg>
+                </p>
+                <p className="text-[11px] lg:text-xs text-cocoa-faded mb-2.5">
+                  Provide the meal name and quantity, let Noura do the estimate.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => estimateMutation.mutate()}
+                  disabled={
+                    estimating ||
+                    customName.trim().length === 0 ||
+                    (customIsGrams && (parseInt(quantityInput, 10) || 0) < 10)
+                  }
+                  className="w-full py-2 rounded-lg bg-moringa dark:bg-moringa-faded
+                text-surface text-xs font-semibold disabled:opacity-40"
+                >
+                  {estimating ? "Estimating..." : "Get aggregate"}
+                </button>
+              </div>
+
               <p className="text-xs text-cocoa-faded mb-2">
                 Nutrition per 100g, optional. Leave blank if unknown.
               </p>

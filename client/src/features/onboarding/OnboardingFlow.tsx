@@ -11,6 +11,8 @@ import type {
   ActivityLevel,
   BiologicalSex,
   AgeRange,
+  ApiResponse,
+  FullProfile,
 } from "@/types/apiTypes";
 import { ConveyorTicker } from "@/components/ui/ConveyorTicker";
 
@@ -687,7 +689,9 @@ const OnboardingFlow = () => {
     setApiError("");
     setSubmitting(true);
     try {
-      await api.patch("/api/users/health", {
+      const { data: response } = await api.patch<
+        ApiResponse<{ profile: FullProfile }>
+      >("/api/users/health", {
         /*
     Only include health_goal if user selected one.
     Sending null causes backend enum validation to fail.
@@ -708,7 +712,8 @@ const OnboardingFlow = () => {
       // RootRoute both read this same cache to decide if onboarding is
       // done, without this they would still see the old, incomplete
       // version for a moment and send the user right back here.
-      await queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+      queryClient.setQueryData(["user-profile"], response.data.profile);
+
       navigate("/", { replace: true });
     } catch (err) {
       setApiError(handleApiError(err));

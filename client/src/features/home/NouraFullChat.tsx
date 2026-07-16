@@ -68,6 +68,13 @@ export const NouraFullChat = () => {
     setConfirmingClear(false);
   };
 
+  // add near the other hooks in the component
+  useEffect(() => {
+    if (!isSending) {
+      inputRef.current?.focus();
+    }
+  }, [isSending]);
+
   return (
     <div className="flex flex-col h-full min-h-0 w-full max-w-[720px] mx-auto relative">
       {localMessages.length > 0 && (

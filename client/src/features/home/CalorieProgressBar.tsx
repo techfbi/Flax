@@ -16,10 +16,10 @@ const MEAL_ORDER: Record<string, number> = {
 
 const MEAL_COLORS: Record<string, string> = {
   breakfast: "#E8623C",
-  brunch: "#2F5D4B",
-  lunch: "#D4522E",
-  dinner: "#7FB096",
-  snack: "#F59E0B",
+  brunch: "#EE7F5D",
+  lunch: "#D84E28",
+  dinner: "#BC3F1E",
+  snack: "#943118",
 };
 
 const MEAL_LABELS: Record<string, string> = {

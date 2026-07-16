@@ -109,11 +109,6 @@ export const SpinFrame = forwardRef<SpinFrameHandle, SpinFrameProps>(
         setTargetIndex(0);
         setTransitionMs(0);
 
-        cycleImages.forEach((src) => {
-          const preload = new Image();
-          preload.src = toThumbnail(src, 300);
-        });
-
         spinSoundRef.current!.currentTime = 0;
         spinSoundRef.current?.play().catch(() => {});
 

@@ -197,8 +197,8 @@ const HomePage = () => {
                   {unreadCount > 0 && (
                     <span
                       className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full
-    bg-pawpaw text-surface text-[10px] font-bold
-    flex items-center justify-center"
+                      bg-pawpaw text-surface text-[10px] font-bold
+                      flex items-center justify-center"
                     >
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
@@ -287,7 +287,7 @@ const HomePage = () => {
               </div>
 
               {/* Tab bar */}
-              <div className="relative mt-4  flex bg-cocoa/4 dark:bg-dark-white/4 rounded-t-2xl shrink-0 md:mt-0 lg:mt-5">
+              <div className="relative mt-4 mx-[-16px] md:mx-0  flex bg-cocoa/4 dark:bg-dark-white/4 rounded-t-2xl shrink-0 md:mt-0 lg:mt-5">
                 {tabs.map((tab) => (
                   <button
                     key={tab.key}
@@ -314,7 +314,7 @@ const HomePage = () => {
 
               {/* Tab content */}
               <div
-                className="bg-surface-two dark:bg-black-surface
+                className="bg-surface-two dark:bg-black-surface mx-[-16px] md:mx-0
                     rounded-b-2xl rounded-tr-2xl lg:flex-1 lg:min-h-0 lg:overflow-y-auto min-h-[calc(100vh-330px)] md:min-h-[calc(100vh-150px)]"
               >
                 {activeTab === "goal" && (
@@ -382,7 +382,7 @@ const MobileStreakCard = ({
   return (
     <div className="bg-surface-two dark:bg-black-surface rounded-2xl px-4 py-3 shadow-md">
       <div className="flex items-center gap-2 mb-2">
-        {hasStreak ? (
+        {status === "ongoing" ? (
           <span className="text-xl">{icon}</span>
         ) : (
           <span className="text-xl opacity-15 dark:opacity-10">{icon}</span>
@@ -392,38 +392,44 @@ const MobileStreakCard = ({
             {label}
           </p>
           <p className="font-heading font-bold text-sm text-cocoa dark:text-dark-white">
-            {status === "ongoing"
-              ? `${days} ${days === 1 ? "day" : "days"}`
-              : "No streak"}
-            {status === "restorable" && (
+            {status === "ongoing" ? (
+              `${days} ${days === 1 ? "day" : "days"}`
+            ) : status === "restorable" ? (
               <button
                 onClick={onRestore}
                 className="text-[10px] font-semibold text-rose-500 underline decoration-dotted"
               >
-                Restore?
+                Restore Streak?
               </button>
+            ) : (
+              "No streak"
             )}
           </p>
         </div>
       </div>
       <div className="mb-1 flex w-full justify-between items-center shrink-0">
         <p className="text-[12px] text-cocoa-faded font-medium">
-          {type === "calorie" ? "Today's calorie" : "Hydration level"}
+          {type === "calorie" ? (
+            "Today's calorie"
+          ) : (
+            <p className="text-xs font-bold text-cocoa dark:text-dark-white">
+              {level}
+              <span className="text-cocoa-faded font-normal">
+                {" "}
+                / {target}ml
+              </span>
+            </p>
+          )}
         </p>
         <p className="text-[12px] text-cocoa-faded font-bold">{pct}%</p>
       </div>
-      {type === "calorie" ? (
-        <div className="h-1.5 rounded-full bg-cocoa/10 dark:bg-dark-white/10">
+      {type === "calorie" && (
+        <div className="h-1.5 rounded-full bg-cocoa/10 dark:bg-dark-white/10 mb-1.5">
           <div
             className="h-full rounded-full bg-pawpaw dark:bg-black-pawpaw transition-all"
             style={{ width: `${pct}%` }}
           />
         </div>
-      ) : (
-        <p className="text-xs font-bold text-cocoa dark:text-dark-white">
-          {level}
-          <span className="text-cocoa-faded font-normal"> / {target}ml</span>
-        </p>
       )}
     </div>
   );
