@@ -90,6 +90,37 @@ export const patchMealLogSchema = z
     }
   );
 
+  // ---------------------------------------------------------------------------
+// Estimate schema, for the Log with Noura flow. Just a name and a
+// quantity, the AI fills in the rest.
+// ---------------------------------------------------------------------------
+export const estimateNutritionSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, "Meal name is required")
+      .max(100, "Meal name cannot exceed 100 characters")
+      .transform((val) => val.trim()),
+
+    grams: z
+      .number()
+      .int("Quantity must be a whole number")
+      .min(10, "Quantity must be at least 10 grams")
+      .max(3000, "Quantity cannot exceed 3000 grams")
+      .optional(),
+
+    quantity_description: z
+      .string()
+      .min(1, "Quantity description cannot be empty")
+      .max(100, "Quantity description cannot exceed 100 characters")
+      .transform((val) => val.trim())
+      .optional(),
+  })
+  .refine((data) => data.grams !== undefined || data.quantity_description !== undefined, {
+    message: "Provide either an exact gram amount or a quantity description",
+  });
+
+export type EstimateNutritionInput = z.infer<typeof estimateNutritionSchema>;
 export type PatchMealLogInput = z.infer<typeof patchMealLogSchema>;
 export type CatalogueMealLogInput = z.infer<typeof catalogueMealLogSchema>;
 export type CustomMealLogInput = z.infer<typeof customMealLogSchema>;

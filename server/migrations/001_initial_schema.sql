@@ -60,8 +60,8 @@ CREATE TABLE IF NOT EXISTS health_profiles (
   water_target_ml   INTEGER,
   height_cm      INTEGER,
   weight_kg      NUMERIC(5,1),
-  calorie_target_is_manual BOOLEAN NOT NULL DEFAULT false;
-  water_target_is_manual BOOLEAN NOT NULL DEFAULT false;
+  calorie_target_is_manual BOOLEAN NOT NULL DEFAULT false,
+  water_target_is_manual BOOLEAN NOT NULL DEFAULT false,
   age_range  TEXT,
   exact_age  INTEGER,
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()

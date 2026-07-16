@@ -785,16 +785,3 @@ export const getCycleImageSample = async (region: string, limit = 8): Promise<st
 
   return foods.map((food) => withImageUrl(food).image_url);
 };
-
-
-//-----------------------------------------------------------------------------------
-// Removes spin history older than 48 hours. Nothing in the app ever
-// reads past that window, getExcludedFoodRefs above only looks at
-// the last 48 hours, and the history tab only ever shows Today and
-// Yesterday, so this is pure cleanup, not a behavior change.
-export const cleanupOldSpinHistory = async (): Promise<void> => {
-  const result = await pgPool.query(
-    `DELETE FROM spin_history WHERE spun_at < NOW() - INTERVAL '48 hours'`
-  );
-  console.log(`[REMOVE LOG LATER]Spin cleanup, removed ${result.rowCount} spin history rows older than 48 hours`);
-};

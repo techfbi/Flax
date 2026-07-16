@@ -14,6 +14,8 @@ import {
   customMealLogSchema,
   patchMealLogSchema,
 } from "./meallog.schema.js";
+import { estimateNutritionSchema } from "./meallog.schema.js";
+import { estimateNutrition } from "./nutritionEstimate.service.js";
 import { getInsights, getStreakCalendar } from "./insights.service.js";
 
 // ---------------------------------------------------------------------------
@@ -229,6 +231,36 @@ export const getStreakCalendarHandler = async (
     }
     const calendar = await getStreakCalendar(req.user!.id, month);
     sendSuccess({ res, data: { calendar } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ---------------------------------------------------------------------------
+// POST /api/meal-logs/estimate
+// Log with Noura. Given a meal name and a quantity in grams, returns
+// an estimated calories and macro breakdown for that exact portion.
+// ---------------------------------------------------------------------------
+export const estimateNutritionHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const parsed = estimateNutritionSchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw new AppError(
+        parsed.error.issues[0]?.message ?? "Invalid request data",
+        400,
+        "VALIDATION_ERROR"
+      );
+    }
+
+   const estimate = await estimateNutrition(parsed.data.name, {
+      grams: parsed.data.grams,
+      quantity_description: parsed.data.quantity_description,
+    });
+    sendSuccess({ res, data: { estimate } });
   } catch (err) {
     next(err);
   }

@@ -17,6 +17,7 @@ export interface IFoodItem extends Document {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
+  serving_sizes: { label: string; grams: number }[];
   is_verified: boolean;
   usda_ref: string | null;
   createdAt: Date;
@@ -95,6 +96,16 @@ const FoodItemSchema = new Schema<IFoodItem>(
       type: Number,
       required: true,
       min: 0,
+    },
+    serving_sizes: {
+      type: [
+        {
+          label: { type: String, required: true },
+          grams: { type: Number, required: true },
+          _id: false,
+        },
+      ],
+      default: [],
     },
     is_verified: {
       type: Boolean,

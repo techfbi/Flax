@@ -57,9 +57,9 @@ export const searchFoods = async ( req: Request, res: Response, next: NextFuncti
     };
 
     const foods = await FoodItem.find(query)
-      .select("name regional_names description image_path meal_types tags allergen_tags calories_per_100g protein_g carbs_g fat_g")
-      .limit(limit)
-      .lean();
+    .select("name regional_names description image_path meal_types tags allergen_tags calories_per_100g protein_g carbs_g fat_g serving_sizes")
+    .limit(limit)
+    .lean();
 
     // Attach full image URLs using the same helper the spin module uses
     // so image URL construction is consistent across the entire app.
@@ -79,6 +79,41 @@ export const searchFoods = async ( req: Request, res: Response, next: NextFuncti
         region,
       },
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ---------------------------------------------------------------------------
+// GET /api/foods/:id
+//
+// Fetches one food by id, full nutrition and serving sizes included.
+// Used when a food is selected somewhere that only carries its id and
+// name, like a spin result or spin history, so that screen can still
+// show the full picker instead of falling back to plain grams.
+// ---------------------------------------------------------------------------
+export const getFoodById = async ( req: Request, res: Response, next: NextFunction ): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    if (typeof id !== "string" || !mongoose.Types.ObjectId.isValid(id)) {
+      throw new Error("Invalid id");
+    }
+
+    const food = await FoodItem.findById(id)
+      .select("name regional_names description image_path meal_types tags allergen_tags calories_per_100g protein_g carbs_g fat_g serving_sizes")
+      .lean();
+
+    if (!food) {
+      throw new AppError("Food not found.", 404, "FOOD_NOT_FOUND");
+    }
+
+    const result = withImageUrl({
+      ...food,
+      _id: (food._id as mongoose.Types.ObjectId).toString(),
+    });
+
+    sendSuccess({ res, data: { food: result } });
   } catch (err) {
     next(err);
   }
