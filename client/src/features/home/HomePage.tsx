@@ -75,7 +75,7 @@ const HomePage = () => {
 
   const firstName = user?.display_name?.split(" ")[0] ?? "User";
 
-  const { data: dashData } = useQuery({
+  const { data: dashData, isLoading: dashLoading } = useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
       const { data } = await api.get<ApiResponse<{ dashboard: DashboardData }>>(
@@ -86,7 +86,11 @@ const HomePage = () => {
     staleTime: 60 * 1000,
   });
 
-  const { data: waterData, refetch: refetchWater } = useQuery({
+  const {
+    data: waterData,
+    isLoading: waterLoading,
+    refetch: refetchWater,
+  } = useQuery({
     queryKey: ["water", "today"],
     queryFn: async () => {
       const today = new Date().toISOString().split("T")[0];
@@ -271,6 +275,7 @@ const HomePage = () => {
                   type="calorie"
                   hasStreak={hasStreak}
                   status={goalStatus}
+                  isLoading={dashLoading && !dashData}
                   onRestore={() => restoreMutation.mutate("goal")}
                 />
                 <MobileStreakCard
@@ -282,6 +287,7 @@ const HomePage = () => {
                   type="water"
                   hasStreak={hasStreak}
                   status={waterStatus}
+                  isLoading={waterLoading && !waterData}
                   onRestore={() => restoreMutation.mutate("water")}
                 />
               </div>
@@ -320,6 +326,7 @@ const HomePage = () => {
                 {activeTab === "goal" && (
                   <GoalTab
                     dashData={dashData}
+                    dashLoading={dashLoading}
                     waterData={waterData}
                     onRefetchWater={refetchWater}
                     onLogMealClick={() => setActiveTab("logintake")}
@@ -363,6 +370,7 @@ const MobileStreakCard = ({
   target,
   type,
   status,
+  isLoading,
   onRestore,
 }: {
   icon: React.ReactNode;
@@ -373,6 +381,7 @@ const MobileStreakCard = ({
   type: "calorie" | "water";
   hasStreak: boolean;
   status: "ongoing" | "restorable" | "ended" | "not_started";
+  isLoading?: boolean;
   onRestore: () => void;
 }) => {
   const pct =
@@ -410,23 +419,31 @@ const MobileStreakCard = ({
         <p className="text-[12px] text-cocoa-faded font-medium">
           {type === "calorie" ? (
             "Today's calorie"
+          ) : isLoading ? (
+            <span className="inline-block w-20 h-3.5 rounded bg-cocoa/10 dark:bg-dark-white/10 animate-pulse" />
           ) : (
-            <p className="text-xs font-bold text-cocoa dark:text-dark-white">
+            <span className="text-xs font-bold text-cocoa dark:text-dark-white">
               {level}
               <span className="text-cocoa-faded font-normal">
                 {" "}
                 / {target}ml
               </span>
-            </p>
+            </span>
           )}
         </p>
-        <p className="text-[12px] text-cocoa-faded font-bold">{pct}%</p>
+        {isLoading ? (
+          <span className="inline-block w-7 h-3 rounded bg-cocoa/10 dark:bg-dark-white/10 animate-pulse" />
+        ) : (
+          <p className="text-[12px] text-cocoa-faded font-bold">{pct}%</p>
+        )}
       </div>
       {type === "calorie" && (
-        <div className="h-1.5 rounded-full bg-cocoa/10 dark:bg-dark-white/10 mb-1.5">
+        <div className="h-1.5 rounded-full bg-cocoa/10 dark:bg-dark-white/10 mb-1.5 overflow-hidden">
           <div
-            className="h-full rounded-full bg-pawpaw dark:bg-black-pawpaw transition-all"
-            style={{ width: `${pct}%` }}
+            className={`h-full rounded-full bg-pawpaw dark:bg-black-pawpaw transition-all ${
+              isLoading ? "animate-pulse w-1/3" : ""
+            }`}
+            style={isLoading ? undefined : { width: `${pct}%` }}
           />
         </div>
       )}

@@ -359,7 +359,7 @@ export const DashboardPage = () => {
                   title="Calorie trend"
                   action={<RangeToggle value={range} onChange={setRange} />}
                 >
-                  <p className="text-cocoa-faded text-[11px] w-full flex justify-end mt-[-14px] mb-4">
+                  <p className="text-cocoa-faded text-[9px] lg:text-[11px] w-full flex justify-end mt-[-14px] mb-4">
                     This toggle also controls insights
                   </p>
 

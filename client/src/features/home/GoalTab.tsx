@@ -11,6 +11,7 @@ import type {
 
 interface GoalTabProps {
   dashData: DashboardData | undefined;
+  dashLoading: boolean;
   waterData: WaterData | undefined;
   onRefetchWater: () => void;
   onLogMealClick: () => void;
@@ -37,6 +38,7 @@ const legend = [
 */
 export const GoalTab = ({
   dashData,
+  dashLoading,
   waterData,
   onRefetchWater,
   onLogMealClick,
@@ -89,9 +91,13 @@ export const GoalTab = ({
         <div className="space-y-1 md:flex md:flex-wrap md:items-center md:justify-between md:gap-[2px] lg:justify-start lg:gap-7 lg:flex-nowrap lg:shrink-1">
           <p className=" w-fit shrink-0 font-heading text-xs lg:text-sm text-cocoa/60 dark:text-dark-white/60">
             Daily Target:{" "}
-            <span className="font-body font-bold text-pawpaw dark:text-black-pawpaw/80 text-[0.9rem] md:text-[1rem] ">
-              {calTarget.toLocaleString()} kcal
-            </span>
+            {dashLoading && !dashData ? (
+              <span className="inline-block w-14 h-3.5 rounded bg-cocoa/10 dark:bg-dark-white/10 animate-pulse align-middle" />
+            ) : (
+              <span className="font-body font-bold text-pawpaw dark:text-black-pawpaw/80 text-[0.9rem] md:text-[1rem] ">
+                {calTarget.toLocaleString()} kcal
+              </span>
+            )}
           </p>
 
           <p className=" w-fit flex gap-1 shrink-1 font-heading text-xs lg:text-sm text-cocoa/60 dark:text-dark-white/60">

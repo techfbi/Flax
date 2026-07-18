@@ -1,8 +1,9 @@
 import { useRef, useState, useEffect } from "react";
 import { Send, Trash2 } from "lucide-react";
-import { useNouraChat } from "@/hooks/useChat";
+import { useNouraChatContext } from "@/context/NouraChatContext";
 import { useAuthStore } from "@/store/authStore";
 import { AnimatePresence, motion } from "framer-motion";
+import { NouraMarkdown } from "@/components/ui/NouraMarkdown";
 
 /*
   Full screen Noura chat body. No background behind the messages, they
@@ -41,7 +42,12 @@ export const NouraFullChat = () => {
     clearChat,
     isClearing,
     retryMessage,
-  } = useNouraChat();
+  } = useNouraChatContext();
+
+  useEffect(() => {
+    scrollToBottom(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (streamingText === null) return;
@@ -124,7 +130,7 @@ export const NouraFullChat = () => {
       }
       ${msg.status === "failed" ? "opacity-60" : ""}`}
             >
-              {msg.content}
+              <NouraMarkdown text={msg.content} />
             </div>
             {msg.status === "failed" && (
               <div className="flex items-center gap-2 mt-1 mr-1">
@@ -164,7 +170,7 @@ export const NouraFullChat = () => {
         {streamingText !== null && (
           <div className="flex justify-start">
             <div className="rounded-2xl rounded-tl-sm px-4 py-3 max-w-[75%] text-sm bg-[rgba(47,93,75,0.14)] dark:bg-[#4d4d4d] text-cocoa dark:text-dark-white leading-relaxed">
-              {displayed}
+              <NouraMarkdown text={displayed} />
               <span className="inline-block w-px h-3.5 bg-moringa dark:bg-moringa-faded ml-0.5 align-middle animate-pulse" />
             </div>
           </div>

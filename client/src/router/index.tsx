@@ -4,6 +4,7 @@ import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import type { ApiResponse, AuthUser, FullProfile } from "@/types/apiTypes";
 import { motion, useReducedMotion } from "framer-motion";
+import { NouraChatProvider } from "@/context/NouraChatContext";
 
 /* Lazy pages */
 const LandingPage = lazy(() => import("@/features/landing/LandingPage"));
@@ -239,9 +240,11 @@ const AppRouter = () => {
   return (
     <BrowserRouter>
       <SessionGate>
-        <Suspense fallback={<PageLoader />}>
-          <AnimatedRoutes />
-        </Suspense>
+        <NouraChatProvider>
+          <Suspense fallback={<PageLoader />}>
+            <AnimatedRoutes />
+          </Suspense>
+        </NouraChatProvider>
       </SessionGate>
     </BrowserRouter>
   );

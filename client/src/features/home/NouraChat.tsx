@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Send } from "lucide-react";
-import { useNouraChat } from "@/hooks/useChat";
-
+import { useNouraChatContext } from "@/context/NouraChatContext";
+import { NouraMarkdown } from "@/components/ui/NouraMarkdown";
 /*
   Noura chat widget, shown in the homepage right column. Logic lives in
   useNouraChat so the full page version at /ask-noura behaves exactly
@@ -31,25 +31,33 @@ const ThinkingIndicator = () => (
 const StreamingMessage = ({
   text,
   onDone,
+  scrollToBottom,
 }: {
   text: string;
   onDone: () => void;
+  scrollToBottom: (force?: boolean) => void;
 }) => {
   const indexRef = useRef(0);
-
-  return <TypingText text={text} onDone={onDone} indexRef={indexRef} />;
+  return (
+    <TypingText
+      text={text}
+      onDone={onDone}
+      indexRef={indexRef}
+      scrollToBottom={scrollToBottom}
+    />
+  );
 };
 
-// Split out so the interval effect resets cleanly whenever a new
-// streaming message starts, same behavior as the original inline version.
 const TypingText = ({
   text,
   onDone,
   indexRef,
+  scrollToBottom,
 }: {
   text: string;
   onDone: () => void;
   indexRef: React.MutableRefObject<number>;
+  scrollToBottom: (force?: boolean) => void;
 }) => {
   const [displayed, setDisplayed] = useState("");
 
@@ -60,6 +68,10 @@ const TypingText = ({
       if (indexRef.current < text.length) {
         setDisplayed(text.slice(0, indexRef.current + 1));
         indexRef.current++;
+        // Keeps the growing bubble in view for every character typed,
+        // matching what the full chat page already does, this file's own
+        // copy of the reveal logic was just missing this one call.
+        scrollToBottom(true);
       } else {
         clearInterval(interval);
         onDone();
@@ -75,7 +87,7 @@ const TypingText = ({
       bg-[rgba(47,93,75,0.14)] dark:bg-[#4d4d4d]
       text-cocoa dark:text-dark-white leading-relaxed"
     >
-      {displayed}
+      <NouraMarkdown text={displayed} />
       <span className="inline-block w-px h-3.5 bg-moringa dark:bg-moringa-faded ml-0.5 align-middle animate-pulse" />
     </div>
   );
@@ -98,7 +110,13 @@ export const NouraChat = () => {
     showDefault,
     isSending,
     retryMessage,
-  } = useNouraChat();
+    scrollToBottom,
+  } = useNouraChatContext();
+
+  useEffect(() => {
+    scrollToBottom(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // input focus
   useEffect(() => {
@@ -165,7 +183,7 @@ export const NouraChat = () => {
       }
       ${msg.status === "failed" ? "opacity-60" : ""}`}
             >
-              {msg.content}
+              <NouraMarkdown text={msg.content} />
             </div>
             {msg.status === "failed" && (
               <div className="flex items-center gap-2 mt-1 mr-1">
@@ -187,7 +205,11 @@ export const NouraChat = () => {
 
         {streamingText !== null && (
           <div className="flex justify-start">
-            <StreamingMessage text={streamingText} onDone={handleStreamDone} />
+            <StreamingMessage
+              text={streamingText}
+              onDone={handleStreamDone}
+              scrollToBottom={scrollToBottom}
+            />
           </div>
         )}
       </div>

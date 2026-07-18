@@ -176,11 +176,12 @@ useEffect(() => {
       clearThinkingDelay();
       thinkingDelayRef.current = window.setTimeout(() => setIsThinking(true), 1000);
       sendTimeoutRef.current = window.setTimeout(() => {
-        sendControllerRef.current?.abort();
-        setLocalMessages((prev) =>
-          prev.map((m) => (m.id === id ? { ...m, status: "failed" } : m)),
-        );
-      }, SEND_TIMEOUT_MS);
+  sendControllerRef.current?.abort();
+  setIsThinking(false);
+  setLocalMessages((prev) =>
+    prev.map((m) => (m.id === id ? { ...m, status: "failed" } : m)),
+  );
+}, SEND_TIMEOUT_MS);
     },
     onSuccess: ({ id, reply }) => {
       clearSendWatchdog();
@@ -194,13 +195,15 @@ useEffect(() => {
     onError: (err: unknown, variables) => {
       clearSendWatchdog();
       clearThinkingDelay();
+      setIsThinking(false);
       const code = (err as { code?: string })?.code;
 
-      // The watchdog already reset state before this fires, nothing
-      // left to do for a cancellation caused by our own abort.
+      // The watchdog already marked the message failed before this
+      // fires, for a cancellation caused by our own abort there is
+      // nothing left to update on the message itself, resetting
+      // isThinking above still needs to happen either way though.
       if (code === "ERR_CANCELED") return;
 
-      setIsThinking(false);
       setLocalMessages((prev) =>
         prev.map((m) =>
           m.id === variables.id ? { ...m, status: "failed" } : m,

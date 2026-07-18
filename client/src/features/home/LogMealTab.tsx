@@ -14,6 +14,7 @@ import { getErrorMessage } from "@/lib/errors";
 import type { NutritionEstimate } from "@/types/apiTypes";
 import { CustomQuantityPicker } from "@/components/ui/CustomQuantityPicker";
 import { useTheme } from "@/context/ThemeContext";
+import { ScanMealTab } from "./scanMealTab";
 import type {
   ApiResponse,
   MealLogEntry,
@@ -103,7 +104,9 @@ export const LogMealTab = () => {
   const { prefillMeal, clearPrefillMeal } = useSpinStore();
   const [estimating, setEstimating] = useState(false);
 
-  const [mode, setMode] = useState<"catalogue" | "custom">("catalogue");
+  const [mode, setMode] = useState<"catalogue" | "custom" | "scan">(
+    "catalogue",
+  );
   const [searchQ, setSearchQ] = useState("");
   const [selectedFood, setSelectedFood] = useState<CatalogueSelection | null>(
     null,
@@ -115,6 +118,7 @@ export const LogMealTab = () => {
     carbs_g: "",
     fat_g: "",
   });
+  const [customDescriptionExtra, setCustomDescriptionExtra] = useState("");
   const [customIsGrams, setCustomIsGrams] = useState(true);
   const [customDescription, setCustomDescription] = useState("");
   const [quantityInput, setQuantityInput] = useState("100");
@@ -331,6 +335,9 @@ export const LogMealTab = () => {
   const estimateMutation = useMutation({
     mutationFn: async () => {
       const body: Record<string, unknown> = { name: customName.trim() };
+      if (customDescriptionExtra.trim())
+        body.description = customDescriptionExtra.trim();
+
       if (customIsGrams) {
         body.grams = parseInt(quantityInput, 10) || 0;
       } else {
@@ -379,18 +386,15 @@ export const LogMealTab = () => {
     <div className="p-5">
       <div className="flex items-center mb-4">
         {/* Catalogue vs custom toggle */}
-        <div className="flex bg-cocoa/5 dark:bg-dark-white/5 rounded-full p-1">
-          {(["catalogue", "custom"] as const).map((m) => (
+        <div className="flex bg-cocoa/5 dark:bg-dark-white/5 rounded-full p-1 flex-wrap">
+          {(["catalogue", "custom", "scan"] as const).map((m) => (
             <button
               key={m}
               onClick={() => {
                 setMode(m);
                 if (m === "custom") {
-                  // Leaving catalogue selection behind on purpose, what gets
-                  // logged here depends entirely on the name typed below, a
-                  // leftover catalogue pick has no business feeding this form.
                   setSelectedFood(null);
-                } else {
+                } else if (m === "catalogue") {
                   setCustomName("");
                   setCustomNutrition({
                     calories_per_100g: "",
@@ -402,18 +406,43 @@ export const LogMealTab = () => {
                 setQuantityInput("100");
               }}
               className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-colors
-                ${
-                  mode === m
-                    ? "bg-pawpaw dark:bg-black-pawpaw text-surface"
-                    : "text-cocoa/60 dark:text-dark-white/60"
-                }`}
+        ${
+          mode === m
+            ? "bg-pawpaw dark:bg-black-pawpaw text-surface"
+            : "text-cocoa/60 dark:text-dark-white/60"
+        }`}
             >
-              {m === "catalogue" ? "From catalogue" : "Custom meal"}
+              {m === "catalogue"
+                ? "From catalogue"
+                : m === "custom"
+                  ? "Custom meal"
+                  : "Scan a meal"}
             </button>
           ))}
         </div>
       </div>
 
+      {mode === "scan" && (
+        <div className="mb-6">
+          <div className="mb-3">
+            <label className="text-xs lg:text-sm font-heading text-cocoa-faded block mb-1">
+              Meal type
+            </label>
+            <select
+              value={mealType}
+              onChange={(e) => setMealType(e.target.value as MealType)}
+              className={`${inputClass} capitalize max-w-[200px]`}
+            >
+              {MEAL_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+          <ScanMealTab mealType={mealType} />
+        </div>
+      )}
       {mode === "catalogue" ? (
         <div className="relative mb-4">
           <div
@@ -508,7 +537,6 @@ export const LogMealTab = () => {
           />
         </div>
       )}
-
       {/* Shared form: only shows once a catalogue food is picked, or
       always in custom mode since the name field above is the trigger */}
       {(selectedFood || mode === "custom") && (
@@ -605,6 +633,14 @@ export const LogMealTab = () => {
                 <p className="text-[11px] lg:text-xs text-cocoa-faded mb-2.5">
                   Provide the meal name and quantity, let Noura do the estimate.
                 </p>
+                <textarea
+                  value={customDescriptionExtra}
+                  onChange={(e) => setCustomDescriptionExtra(e.target.value)}
+                  placeholder="Add any detail that helps, optional"
+                  maxLength={300}
+                  rows={2}
+                  className={`${inputClass} w-full resize-none mb-2`}
+                />
                 <button
                   type="button"
                   onClick={() => estimateMutation.mutate()}
@@ -626,28 +662,68 @@ export const LogMealTab = () => {
               <div className="grid grid-cols-2 gap-2">
                 {(
                   [
-                    ["calories_per_100g", "Calories"],
-                    ["protein_g", "Protein g"],
-                    ["carbs_g", "Carbs g"],
-                    ["fat_g", "Fat g"],
+                    ["calories_per_100g", "Calories per 100g"],
+                    ["protein_g", "Protein g per 100g"],
+                    ["carbs_g", "Carbs g per 100g"],
+                    ["fat_g", "Fat g per 100g"],
                   ] as const
                 ).map(([key, label]) => (
-                  <input
-                    key={key}
-                    type="text"
-                    inputMode="decimal"
-                    value={customNutrition[key]}
-                    onChange={(e) =>
-                      setCustomNutrition((prev) => ({
-                        ...prev,
-                        [key]: e.target.value.replace(/[^0-9.]/g, ""),
-                      }))
-                    }
-                    placeholder={label}
-                    className={inputClass}
-                  />
+                  <div key={key}>
+                    <label className="font-heading text-xs md:text-sm text-cocoa-faded block mb-1">
+                      {label}
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={customNutrition[key]}
+                      onChange={(e) =>
+                        setCustomNutrition((prev) => ({
+                          ...prev,
+                          [key]: e.target.value.replace(/[^0-9.]/g, ""),
+                        }))
+                      }
+                      placeholder="0"
+                      className={inputClass}
+                    />
+                  </div>
                 ))}
               </div>
+
+              {(customNutrition.calories_per_100g ||
+                customNutrition.protein_g ||
+                customNutrition.carbs_g ||
+                customNutrition.fat_g) && (
+                <p className="text-xs md:text-sm text-cocoa-faded mt-2">
+                  Total for {parseInt(quantityInput, 10) || 0}g:{" "}
+                  {Math.round(
+                    ((parseFloat(customNutrition.calories_per_100g) || 0) *
+                      (parseInt(quantityInput, 10) || 0)) /
+                      100,
+                  )}{" "}
+                  kcal ·{" "}
+                  {Math.round(
+                    (((parseFloat(customNutrition.protein_g) || 0) *
+                      (parseInt(quantityInput, 10) || 0)) /
+                      100) *
+                      10,
+                  ) / 10}
+                  g protein ·{" "}
+                  {Math.round(
+                    (((parseFloat(customNutrition.carbs_g) || 0) *
+                      (parseInt(quantityInput, 10) || 0)) /
+                      100) *
+                      10,
+                  ) / 10}
+                  g carbs ·{" "}
+                  {Math.round(
+                    (((parseFloat(customNutrition.fat_g) || 0) *
+                      (parseInt(quantityInput, 10) || 0)) /
+                      100) *
+                      10,
+                  ) / 10}
+                  g fat
+                </p>
+              )}
             </div>
           )}
 
@@ -672,7 +748,6 @@ export const LogMealTab = () => {
           </div>
         </div>
       )}
-
       {isLoading && (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -683,13 +758,11 @@ export const LogMealTab = () => {
           ))}
         </div>
       )}
-
       {!isLoading && (!logs || logs.length === 0) && !selectedFood && (
         <p className="text-sm text-cocoa-faded text-center py-8">
           No meals logged today. Search above or add a custom meal.
         </p>
       )}
-
       <div className="space-y-2">
         {logs?.map((log) => (
           <div
