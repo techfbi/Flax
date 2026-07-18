@@ -52,7 +52,16 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "20kb" })); // Limit JSON body to 20kb to prevent abuse. We don't expect large payloads in this app, so 20kb is a reasonable limit. 
+// The scan endpoint accepts a real photo, base64 encoded, which needs
+// real room well past the 20kb default. Excluded here so it gets its
+// own separate, larger, but still explicitly capped limit applied
+// directly on that one route in meallog.routes.ts. Every other
+// endpoint in this app keeps the small default, which is what
+// actually guards against abuse everywhere else.
+app.use((req, res, next) => {
+  if (req.path === "/api/meal-logs/scan") return next();
+  express.json({ limit: "20kb" })(req, res, next);
+});
 app.use(express.urlencoded({ extended: true, limit: "20kb" })); // Allows form submission
 app.use(cookieParser());
 

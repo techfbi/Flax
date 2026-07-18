@@ -28,3 +28,7 @@ export const isTodayOrYesterdayInTimezone = (
 
   return dateStr === todayStr || dateStr === yesterdayStr;
 };
+
+export const getLocalDateInTimezone = (timezone: string): string => {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date());
+};

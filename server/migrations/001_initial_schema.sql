@@ -224,6 +224,13 @@ CREATE TABLE water_target_history (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE meal_scan_usage (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  scan_date DATE NOT NULL,
+  count INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, scan_date)
+);
+
 CREATE INDEX idx_water_target_history_user_date
   ON water_target_history (user_id, effective_from);
 

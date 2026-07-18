@@ -17,6 +17,10 @@ import {
 import { estimateNutritionSchema } from "./meallog.schema.js";
 import { estimateNutrition } from "./nutritionEstimate.service.js";
 import { getInsights, getStreakCalendar } from "./insights.service.js";
+import { scanMealSchema } from "./meallog.schema.js";
+import { scanMealImage } from "./visionProviders/index.js";
+import { claimScanUsage, refundScanUsage, getScanUsage, DAILY_SCAN_LIMIT } from "./scanUsage.service.js";
+import { getUserTimezone, getLocalDateInTimezone } from "../../shared/date.helpers.js";
 
 // ---------------------------------------------------------------------------
 // POST /api/meal-logs
@@ -256,11 +260,102 @@ export const estimateNutritionHandler = async (
       );
     }
 
-   const estimate = await estimateNutrition(parsed.data.name, {
+   const estimate = await estimateNutrition(
+    parsed.data.name,
+    {
       grams: parsed.data.grams,
       quantity_description: parsed.data.quantity_description,
-    });
+    },
+    parsed.data.description,
+  );
     sendSuccess({ res, data: { estimate } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ---------------------------------------------------------------------------
+// POST /api/meal-logs/scan
+// Photographs a plate, identifies every distinct food on it, returns
+// an editable estimate per item. Rate limited to a small number of
+// scans per real day per user, this is a paid vision call underneath.
+// ---------------------------------------------------------------------------
+export const scanMealHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const parsed = scanMealSchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw new AppError(
+        parsed.error.issues[0]?.message ?? "Invalid request data",
+        400,
+        "VALIDATION_ERROR"
+      );
+    }
+
+    const timezone = await getUserTimezone(req.user!.id);
+    const localDate = getLocalDateInTimezone(timezone);
+    const allowed = await claimScanUsage(req.user!.id, localDate);
+
+if (!allowed) {
+  throw new AppError(
+    `You've used all ${DAILY_SCAN_LIMIT} of your meal scans for today. Try again tomorrow, or log this one manually.`,
+    429,
+    "SCAN_LIMIT_REACHED"
+  );
+}
+
+let items, providerUsed;
+try {
+  ({ items, providerUsed } = await scanMealImage(
+    parsed.data.image,
+    parsed.data.mime_type,
+    parsed.data.description,
+  ));
+} catch (err) {
+  // A genuine system failure, every provider was unreachable or
+  // erroring, not the user's fault, give the scan back. A legitimate
+  // empty result, food genuinely not identifiable, is not caught
+  // here at all, that already returned successfully above and
+  // correctly still counts as a used scan.
+  await refundScanUsage(req.user!.id, localDate);
+  throw err;
+}
+console.log(`[REMOVE LOG LATER] [vision] scan completed via ${providerUsed}`);
+
+    // Convert the AI's totals for the estimated portion into the per
+    // 100g convention the rest of the app already stores everything
+    // in, so this slots straight into customMealLogSchema unchanged.
+    const results = items.map((item) => ({
+      name: item.name,
+      portion_grams: item.portion_grams,
+      calories_per_100g: Math.round(item.calories / (item.portion_grams / 100)),
+      protein_g: Math.round((item.protein_g / (item.portion_grams / 100)) * 10) / 10,
+      carbs_g: Math.round((item.carbs_g / (item.portion_grams / 100)) * 10) / 10,
+      fat_g: Math.round((item.fat_g / (item.portion_grams / 100)) * 10) / 10,
+      confidence: item.confidence,
+    }));
+
+    sendSuccess({ res, data: { items: results } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+// new handler
+export const getScanUsageHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const timezone = await getUserTimezone(req.user!.id);
+    const localDate = getLocalDateInTimezone(timezone);
+    const usage = await getScanUsage(req.user!.id, localDate);
+    sendSuccess({ res, data: usage });
   } catch (err) {
     next(err);
   }

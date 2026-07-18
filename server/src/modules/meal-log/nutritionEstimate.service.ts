@@ -17,9 +17,14 @@ cooking, portioning, and serving practices, especially for Nigerian
 and West African dishes.
 `;
 
-const buildPromptForGrams = (name: string, grams: number): string => `
+const buildPromptForGrams = (
+  name: string,
+  grams: number,
+  description?: string,
+): string => `
 ${DIETITIAN_FRAMING}
 Estimate the nutrition for exactly ${grams}g of "${name}".
+${description ? `The user also described this meal as: "${description}". Use this for extra context, especially if the name alone is ambiguous.` : ""}
 
 How to approach this:
 1. If this is a well known, well documented food or dish, base your
@@ -44,14 +49,14 @@ like this example:
 All four values are totals for the exact ${grams}g portion, not per 100g.
 `;
 
-const buildPromptForDescription = (name: string, description: string): string => `
+const buildPromptForDescription = (name: string, quantityDescription: string, description?: string): string => `
 ${DIETITIAN_FRAMING}
-A person has described their portion of "${name}" as "${description}",
+A person has described their portion of "${name}" as "${quantityDescription}",
 not as a weight. You do not know the exact grams yet, that is part of
-what you need to determine.
+what you need to determine. ${description ? `The user also described this meal as: "${description}". Use this for extra context, especially if the name alone is ambiguous.` : ""}
 
 How to approach this:
-1. Think about what "${description}" of "${name}" actually looks like
+1. Think about what "${quantityDescription}" of "${name}" actually looks like
    and weighs in real life. The same descriptive unit means different
    things for different foods, a scoop of a dense swallow like eba
    or amala weighs far more than a scoop of a leafy or liquid dish,
@@ -70,7 +75,7 @@ Return ONLY a JSON object, no markdown, no explanation, shaped exactly
 like this example:
 {"estimated_grams": 180, "calories": 320, "protein_g": 12.5, "carbs_g": 45.2, "fat_g": 8.1}
 estimated_grams is your best real world estimate of the total weight
-"${description}" of this specific food represents. The remaining four
+"${quantityDescription}" of this specific food represents. The remaining four
 values are totals for that estimated portion, not per 100g.
 `;
 
@@ -98,13 +103,14 @@ const parseEstimate = (raw: string, requireEstimatedGrams: boolean): NutritionEs
 
 export const estimateNutrition = async (
   name: string,
-  quantity: { grams?: number; quantity_description?: string }
+  quantity: { grams?: number; quantity_description?: string },
+  description?: string,
 ): Promise<NutritionEstimate> => {
   try {
     const usingDescription = quantity.grams === undefined;
     const prompt = usingDescription
-      ? buildPromptForDescription(name, quantity.quantity_description!)
-      : buildPromptForGrams(name, quantity.grams!);
+      ? buildPromptForDescription(name, quantity.quantity_description!, description)
+      : buildPromptForGrams(name, quantity.grams!, description);
 
     const { text } = await generateText(prompt, 250, 0.3);
     return parseEstimate(text, usingDescription);

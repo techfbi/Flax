@@ -109,6 +109,11 @@ export const estimateNutritionSchema = z
       .max(3000, "Quantity cannot exceed 3000 grams")
       .optional(),
 
+    description: z
+      .string()
+      .max(300, "Description cannot exceed 300 characters")
+      .optional(),
+
     quantity_description: z
       .string()
       .min(1, "Quantity description cannot be empty")
@@ -119,6 +124,24 @@ export const estimateNutritionSchema = z
   .refine((data) => data.grams !== undefined || data.quantity_description !== undefined, {
     message: "Provide either an exact gram amount or a quantity description",
   });
+
+  // Base64 text runs roughly a third longer than the raw bytes it
+// encodes, this keeps the ceiling here consistent with the 8mb body
+// limit on the route itself, a second, independent layer, not just
+// the same guard restated.
+const MAX_IMAGE_BASE64_LENGTH = 8 * 1024 * 1024 * 1.4;
+
+export const scanMealSchema = z.object({
+  image: z
+    .string()
+    .min(1, "Image is required")
+    .max(MAX_IMAGE_BASE64_LENGTH, "Image is too large, please use photo lesser than 8mb"),
+  mime_type: z.enum(["image/jpeg", "image/png", "image/webp"]).default("image/jpeg"),
+  description: z
+  .string()
+  .max(300, "Description cannot exceed 300 characters")
+  .optional(),
+});
 
 export type EstimateNutritionInput = z.infer<typeof estimateNutritionSchema>;
 export type PatchMealLogInput = z.infer<typeof patchMealLogSchema>;
