@@ -6,7 +6,6 @@ import api from "@/lib/api";
 import { getErrorMessage } from "@/lib/errors";
 import { getLocalDateStr } from "@/lib/date";
 import type { ApiResponse, MealLogEntry, MealType } from "@/types/apiTypes";
-import { useTheme } from "@/context/ThemeContext";
 
 interface ScannedItem {
   name: string;
@@ -47,7 +46,6 @@ const inputClass =
   "focus:border-moringa-faded focus:ring-1 focus:ring-moringa-faded/50";
 
 export const ScanMealTab = ({ mealType }: ScanMealTabProps) => {
-  const { resolvedTheme } = useTheme();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -173,6 +171,14 @@ export const ScanMealTab = ({ mealType }: ScanMealTabProps) => {
       toast.error(getErrorMessage(err, "Could not recalculate, try again")),
   });
 
+  const resetScan = () => {
+    setPreviewUrl(null);
+    setImageData(null);
+    setFileTooLarge(false);
+    setDescription("");
+    setItems([]);
+  };
+
   const logItemMutation = useMutation({
     mutationFn: async (item: ScannedItem) => {
       await api.post<ApiResponse<{ log: MealLogEntry }>>("/api/meal-logs", {
@@ -189,8 +195,19 @@ export const ScanMealTab = ({ mealType }: ScanMealTabProps) => {
     onSuccess: (_data, item) => {
       queryClient.invalidateQueries({ queryKey: ["meal-logs"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      setItems((prev) => prev.filter((i) => i !== item));
       toast.success(`${item.name} logged`);
+
+      setItems((prev) => {
+        const remaining = prev.filter((i) => i !== item);
+        // Only reset the whole screen once every identified item has
+        // been logged one by one, a single item being logged should
+        // just remove that card and leave the rest, and the photo, as
+        // they were.
+        if (remaining.length === 0) {
+          resetScan();
+        }
+        return remaining;
+      });
     },
     onError: (err) =>
       toast.error(getErrorMessage(err, "Could not log this meal")),
@@ -237,7 +254,7 @@ export const ScanMealTab = ({ mealType }: ScanMealTabProps) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["meal-logs"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      setItems([]);
+      resetScan();
       toast.success("Logged everything together");
     },
     onError: (err) =>
@@ -257,7 +274,7 @@ export const ScanMealTab = ({ mealType }: ScanMealTabProps) => {
   return (
     <div>
       {usage && (
-        <p className="text-[11px] text-cocoa-faded mb-2">
+        <p className="text-xs lg:text-[13px] italic text-cocoa-faded mb-2">
           {usage.remaining} of {usage.limit} scans left today
         </p>
       )}
@@ -329,13 +346,12 @@ export const ScanMealTab = ({ mealType }: ScanMealTabProps) => {
                 </>
               ) : (
                 <p className="inline-flex items-center gap-1">
-                  <span>Scan with Noura</span>
-
+                  Scan with Noura{" "}
                   <svg
                     width="18"
                     height="18"
                     viewBox="0 0 24 24"
-                    fill={resolvedTheme === "dark" ? "#9CA3AF" : "#E8623C"}
+                    fill="#E8623C"
                   >
                     <path d="M12 2L13.5 10.5L22 12L13.5 13.5L12 22L10.5 13.5L2 12L10.5 10.5L12 2Z" />
                   </svg>
@@ -344,13 +360,7 @@ export const ScanMealTab = ({ mealType }: ScanMealTabProps) => {
             </button>
             <button
               type="button"
-              onClick={() => {
-                setPreviewUrl(null);
-                setImageData(null);
-                setFileTooLarge(false);
-                setDescription("");
-                setItems([]);
-              }}
+              onClick={resetScan}
               disabled={!canRetake}
               title={
                 !canRetake

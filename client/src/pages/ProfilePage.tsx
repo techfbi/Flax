@@ -62,6 +62,17 @@ const ACTIVITY_LEVELS: ActivityLevel[] = [
   "very_active",
   "extremely_active",
 ];
+// Standard medical allergens that map directly to allergen_tags in the food
+// catalogue. These are the only values the spin filter checks against.
+const ALLERGENS = [
+  "gluten",
+  "dairy",
+  "eggs",
+  "fish",
+  "shellfish",
+  "soy",
+  "peanuts",
+];
 
 const labelize = (value: string) =>
   value
@@ -176,7 +187,6 @@ export const ProfilePage = () => {
     weight_kg: "",
     exact_age: "",
   });
-  const [allergyInput, setAllergyInput] = useState("");
   const [conditionInput, setConditionInput] = useState("");
   const [allergies, setAllergies] = useState<string[]>([]);
   const [conditions, setConditions] = useState<string[]>([]);
@@ -231,17 +241,6 @@ export const ProfilePage = () => {
     if (health.weight_kg) body.weight_kg = Number(health.weight_kg);
     if (health.exact_age) body.exact_age = Number(health.exact_age);
     updateHealthMutation.mutate(body);
-  };
-
-  const addAllergy = () => {
-    const v = allergyInput.trim();
-    if (!v || allergies.includes(v)) return;
-    if (allergies.length >= 20) {
-      toast.error("Maximum 20 allergies allowed");
-      return;
-    }
-    setAllergies((prev) => [...prev, v]);
-    setAllergyInput("");
   };
 
   const addCondition = () => {
@@ -686,6 +685,7 @@ export const ProfilePage = () => {
                   >
                     {a}
                     <button
+                      type="button"
                       onClick={() =>
                         setAllergies((prev) => prev.filter((x) => x !== a))
                       }
@@ -695,16 +695,29 @@ export const ProfilePage = () => {
                   </span>
                 ))}
               </div>
-              <input
-                type="text"
-                value={allergyInput}
-                onChange={(e) => setAllergyInput(e.target.value)}
-                onKeyDown={(e) =>
-                  e.key === "Enter" && (e.preventDefault(), addAllergy())
-                }
-                placeholder="Add an allergy and press Enter"
-                className={inputClass}
-              />
+              <select
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v && !allergies.includes(v)) {
+                    setAllergies((prev) => [...prev, v]);
+                  }
+                  e.target.value = "";
+                }}
+                defaultValue=""
+                className="w-full bg-surface dark:bg-black-surface
+                  border border-cocoa/20 dark:border-dark-white/20
+                  rounded-lg px-3 py-1.5 text-sm text-cocoa dark:text-dark-white
+                  outline-none appearance-none cursor-pointer"
+              >
+                <option value="" disabled>
+                  Select an allergy
+                </option>
+                {ALLERGENS.filter((a) => !allergies.includes(a)).map((a) => (
+                  <option key={a} value={a}>
+                    {a.charAt(0).toUpperCase() + a.slice(1)}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="mb-5">

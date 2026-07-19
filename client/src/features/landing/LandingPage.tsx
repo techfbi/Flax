@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  Camera,
+  MessageSquare,
+  Sparkles,
+  Brain,
+} from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { Navbar } from "@/components/layout/Navbar";
 import { line, curveMonotoneX } from "d3-shape";
@@ -213,6 +219,37 @@ const WaterChart = () => {
   );
 };
 
+/* ── Noura capability thread data ────────────────────────────── */
+// Four things Noura actually does inside the app, in the order a user
+// would naturally discover them. Icons render with currentColor via
+// lucide, so they pick up the text color classes applied where used.
+const NOURA_CAPABILITIES = [
+  {
+    icon: Camera,
+    title: "Scan a plate",
+    description:
+      "Point your camera at what's in front of you. Noura identifies every item and works out the calories and macros before you've picked up a fork.",
+  },
+  {
+    icon: MessageSquare,
+    title: "Ask anything",
+    description:
+      "Wondering if a dish fits your goal, or how your week's gone. Noura already knows your profile, so the answer is actually about you.",
+  },
+  {
+    icon: Sparkles,
+    title: "Estimate on the fly",
+    description:
+      "No dish is too local or too homemade. Describe it and Noura works out the nutrition, no database required.",
+  },
+  {
+    icon: Brain,
+    title: "Explain the why",
+    description:
+      "Every meal Noura suggests comes with a reason, so you're never just trusting a random pick.",
+  },
+];
+
 /* ── Main component ──────────────────────────────────────────── */
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -257,11 +294,12 @@ const LandingPage = () => {
             </h1>
 
             <p className="mt-5 text-sm md:text-base text-cocoa dark:text-dark-white leading-relaxed max-w-md">
-              <strong>Flax</strong> learns your goal and suggests meals that
-              fits it. It keeps you honest about water, calories, and
-              consistency. And when you have questions,
-              <strong> Noura</strong>, your AI nutrition assistant is there to
-              answer them.
+              <strong>Flax</strong> learns your goal and helps you stay on track
+              with it, meal by meal, glass by glass. Log what you eat, keep tabs
+              on your water, and build the kind of consistency that actually
+              sticks. And whenever you're unsure,
+              <strong> Noura</strong>, your AI nutrition assistant, is right
+              there with an answer built around you.
             </p>
 
             {/* Get Started — moringa filled, no bottom margin so it touches the section edge */}
@@ -331,9 +369,9 @@ const LandingPage = () => {
                   What you eat adds up faster than you think
                 </h3>
                 <p className="text-sm text-surface/80 leading-relaxed">
-                  A meal here, a snack there, it's easy to lose track. Logging
-                  takes seconds when it's actually built for how you eat, not a
-                  generic database.
+                  A meal here, a snack there, it's easy to lose track. Log from
+                  a regional catalogue, describe something custom, or let Noura
+                  estimate it for you, whichever way you actually eat.
                 </p>
               </div>
             </ScrollRevealItem>
@@ -343,10 +381,10 @@ const LandingPage = () => {
               <div>
                 <div className="w-14 h-14 rounded-full bg-[#D89A2D] flex items-center justify-center mb-6 shadow-sm">
                   <img
-                    src="/images/waterDrop.png"
+                    src="/images/cupWhite.svg"
                     alt="water drop"
-                    width={32}
-                    height={32}
+                    width={28}
+                    height={28}
                     className="object-contain"
                   />
                 </div>
@@ -355,8 +393,8 @@ const LandingPage = () => {
                 </h3>
                 <p className="text-sm text-surface/80 leading-relaxed">
                   Water affects energy, appetite, and how your body actually
-                  uses what you eat. Most people fall short without ever
-                  realizing it.
+                  uses what you eat. Flax calculates a target built for your
+                  body, so you're working toward a real number, not a guess.
                 </p>
               </div>
             </ScrollRevealItem>
@@ -388,8 +426,9 @@ const LandingPage = () => {
               <p className="text-sm md:text-base text-cocoa dark:text-dark-white leading-relaxed text-center">
                 Tell flax your goal once,{" "}
                 <strong>lose weight, gain muscle, eat better</strong>, whatever
-                it is, and every suggestion, every target, every streak is built
-                around getting you there. No spreadsheets, no guesswork.
+                it is, and every target, every log, every streak is calculated
+                around getting you there. No spreadsheets, no guesswork, just
+                numbers that actually apply to you.
               </p>
             </div>
           </div>
@@ -635,10 +674,17 @@ const LandingPage = () => {
           Section bg: moringa (light) / moringa (dark) same dark green both
           Logo: white circle, pawpaw 4-point star inside
           Underline accent below "Meet Noura" in pawpaw
+
+          Below the logo: a single threaded diagram carries all four
+          Noura capabilities. Horizontal on md+ (icons in a row, line
+          running left to right through their centers). Vertical on
+          mobile (icons stacked, line running top to bottom). A soft
+          pulse rides the line on a loop in both orientations, built
+          with native SVG animateMotion, no animation library needed.
       ══════════════════════════════════════════════════════════ */}
       <section
         id="noura"
-        className="bg-moringa dark:bg-moringa-faded/50 py-10 px-6 my-10"
+        className="bg-moringa dark:bg-moringa-faded/50 py-16 px-6 my-10 overflow-hidden"
       >
         <ScrollReveal>
           <div className="max-w-6xl mx-auto">
@@ -655,43 +701,164 @@ const LandingPage = () => {
               <div className="w-16 h-1 rounded-full bg-pawpaw dark:bg-black-pawpaw" />
             </div>
 
-            <div className="flex flex-col md:flex-row md:items-center md:gap-12">
-              {/* Left copy — centered on mobile, left on desktop */}
-              <div className="flex-1 flex justify-center">
-                <div className="max-w-sm text-center md:text-left">
-                  <h3 className="font-heading text-1xl md:text-2xl lg:text-3xl font-bold text-surface mb-4 leading-snug">
-                    An{" "}
-                    <span className="text-pawpaw dark:text-black-pawpaw">
-                      assistant
-                    </span>{" "}
-                    that actually knows your day
-                  </h3>
-                  <p className="text-sm text-surface/80 leading-relaxed">
-                    Ask Noura why a meal fits your goal, what to eat before a
-                    workout, or how your week is going. She sees your profile
-                    and your logs, so the answers are about you, not a generic
-                    FAQ.
-                  </p>
-                </div>
+            {/* Big centered headline + one-line subhead */}
+            <div className="text-center max-w-xl mx-auto mb-16 md:mb-20">
+              <h3 className="font-heading text-1xl md:text-3xl font-bold text-surface leading-snug mb-4">
+                One assistant,{" "}
+                <span className="text-pawpaw dark:text-black-pawpaw">
+                  different capabilities
+                </span>
+              </h3>
+              <p className="text-sm md:text-base text-surface/75 leading-relaxed">
+                Noura sees your profile and your logs, so every answer,
+                estimate, and suggestion is actually about you.
+              </p>
+            </div>
+
+            {/* ── Threaded capability diagram ─────────────────────── */}
+            <ScrollRevealGroup className="relative">
+              {/* Desktop / tablet — horizontal thread */}
+              <div className="hidden md:grid grid-cols-4 relative">
+                <svg
+                  className="hidden md:block absolute left-0 right-0 top-7 w-full h-1 pointer-events-none"
+                  viewBox="0 0 100 4"
+                  preserveAspectRatio="none"
+                >
+                  {/* Faint static thread, always visible */}
+                  <line
+                    x1="12.5"
+                    y1="2"
+                    x2="87.5"
+                    y2="2"
+                    strokeWidth="1.5"
+                    className="stroke-surface/25"
+                  />
+                  {/* Invisible motion path, same coordinates as the line above */}
+                  <path
+                    id="nouraFlowDesktop"
+                    d="M12.5,2 L87.5,2"
+                    fill="none"
+                    stroke="none"
+                  />
+                  {/* Soft trailing glow */}
+                  <circle
+                    r="2.4"
+                    className="fill-pawpaw/30 dark:fill-black-pawpaw/30"
+                  >
+                    <animateMotion
+                      dur="4.5s"
+                      repeatCount="indefinite"
+                      begin="-0.2s"
+                    >
+                      <mpath href="#nouraFlowDesktop" />
+                    </animateMotion>
+                  </circle>
+                  {/* Bright leading pulse */}
+                  <circle
+                    r="1.3"
+                    className="fill-pawpaw dark:fill-black-pawpaw"
+                  >
+                    <animateMotion dur="4.5s" repeatCount="indefinite">
+                      <mpath href="#nouraFlowDesktop" />
+                    </animateMotion>
+                  </circle>
+                </svg>
+
+                {NOURA_CAPABILITIES.map(
+                  ({ icon: Icon, title, description }) => (
+                    <ScrollRevealItem
+                      key={title}
+                      className="flex flex-col items-center text-center px-3"
+                    >
+                      <div className="w-14 h-14 rounded-full bg-surface/15 border border-surface/25 backdrop-blur-sm flex items-center justify-center mb-4 relative z-10 transition-transform duration-300 hover:scale-110 hover:bg-surface/25">
+                        <Icon
+                          size={24}
+                          className="text-surface"
+                          strokeWidth={1.75}
+                        />
+                      </div>
+                      <p className="font-heading font-bold text-sm text-surface mb-1.5">
+                        {title}
+                      </p>
+                      <p className="text-xs text-surface/70 leading-relaxed max-w-[200px]">
+                        {description}
+                      </p>
+                    </ScrollRevealItem>
+                  ),
+                )}
               </div>
 
-              {/* Right: Noura chat image */}
-              <div className="flex-1 flex justify-center md:justify-end mt-8 md:mt-0">
-                <div className="relative w-full max-w-[380px] h-[360px]">
-                  <div className="absolute bottom-0 w-full h-[200px] md:h-[220px] lg:h-[280px] rounded-2xl bg-moringa-card" />
-                  <img
-                    src={
-                      resolvedTheme === "dark"
-                        ? "/images/nouraDark1.png"
-                        : "/images/nouraLight1.png"
-                    }
-                    alt="Noura chat conversation"
-                    className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[300px] md:h-[320px] lg:h-[380px] w-auto z-10"
-                    draggable={false}
+              {/* Mobile — vertical thread */}
+              <div className="md:hidden relative">
+                <svg
+                  className="md:hidden absolute top-0 bottom-0 left-7 w-1 h-full pointer-events-none"
+                  viewBox="0 0 4 100"
+                  preserveAspectRatio="none"
+                >
+                  <line
+                    x1="2"
+                    y1="12.5"
+                    x2="2"
+                    y2="87.5"
+                    strokeWidth="0.5"
+                    className="stroke-surface/25"
                   />
+                  <path
+                    id="nouraFlowMobile"
+                    d="M2,12.5 L2,87.5"
+                    fill="none"
+                    stroke="none"
+                  />
+                  <circle
+                    r="2.4"
+                    className="fill-pawpaw/30 dark:fill-black-pawpaw/30"
+                  >
+                    <animateMotion
+                      dur="4.5s"
+                      repeatCount="indefinite"
+                      begin="-0.2s"
+                    >
+                      <mpath href="#nouraFlowMobile" />
+                    </animateMotion>
+                  </circle>
+                  <circle
+                    r="1.3"
+                    className="fill-pawpaw dark:fill-black-pawpaw"
+                  >
+                    <animateMotion dur="4.5s" repeatCount="indefinite">
+                      <mpath href="#nouraFlowMobile" />
+                    </animateMotion>
+                  </circle>
+                </svg>
+
+                <div className="flex flex-col gap-10">
+                  {NOURA_CAPABILITIES.map(
+                    ({ icon: Icon, title, description }) => (
+                      <ScrollRevealItem
+                        key={title}
+                        className="flex items-start gap-5 relative"
+                      >
+                        <div className="w-14 h-14 shrink-0 rounded-full bg-surface/15 border border-surface/25 backdrop-blur-sm flex items-center justify-center relative z-10">
+                          <Icon
+                            size={22}
+                            className="text-surface"
+                            strokeWidth={1.75}
+                          />
+                        </div>
+                        <div className="pt-2">
+                          <p className="font-heading font-bold text-sm text-surface mb-1">
+                            {title}
+                          </p>
+                          <p className="text-xs text-surface/70 leading-relaxed">
+                            {description}
+                          </p>
+                        </div>
+                      </ScrollRevealItem>
+                    ),
+                  )}
                 </div>
               </div>
-            </div>
+            </ScrollRevealGroup>
           </div>
         </ScrollReveal>
       </section>
@@ -703,114 +870,104 @@ const LandingPage = () => {
       ══════════════════════════════════════════════════════════ */}
       <section id="how-it-works" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <ScrollReveal>
-            <h2 className="font-heading text-1xl md:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-3">
-              How it works
-            </h2>
-            <p className="text-center text-xs md:text-sm font-bold text-cocoa-faded mb-12">
-              From sign up to your first streak
-            </p>
-          </ScrollReveal>
+          <h2 className="font-heading text-1xl md:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-3">
+            How it works
+          </h2>
+          <p className="text-center text-xs md:text-sm font-bold text-cocoa-faded mb-12">
+            From sign up to your first streak
+          </p>
 
-          <ScrollRevealGroup className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
+          <div className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
             {/* Card 1 — Set your goal, moringa circle */}
-            <ScrollRevealItem className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
+            <div className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
+              <div className="w-12 h-12 rounded-full bg-moringa-faded flex items-center justify-center shrink-0">
+                <img
+                  src="/images/targetHit.png"
+                  alt="target hit"
+                  width={32}
+                  height={32}
+                  className="object-contain"
+                />
+              </div>
               <div>
-                <div className="w-12 h-12 rounded-full bg-moringa-faded flex items-center justify-center shrink-0">
+                <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
+                  Set your goal
+                </p>
+                <p className="text-sm text-cocoa-faded leading-relaxed">
+                  Region, diet, allergies, and what you're working toward. Two
+                  minutes, skip anything you're not ready to share.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 2 — Get a suggestion, pawpaw circle */}
+            <div className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
+              <div className="w-12 h-12 rounded-full bg-pawpaw dak:bg-black-pawpaw flex items-center justify-center shrink-0">
+                <img
+                  src="/images/arrowSpin.png"
+                  alt="spin"
+                  width={32}
+                  height={32}
+                  className="object-contain"
+                />
+              </div>
+              <div>
+                <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
+                  Get a suggestion
+                </p>
+                <p className="text-sm text-cocoa-faded leading-relaxed">
+                  Spin for a meal that fits your goal and what's already in your
+                  kitchen. Noura also tells you why the meal was picked.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 3 — Log it in seconds, black circle */}
+            <div className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
+              <div className="w-12 h-12 rounded-full bg-cocoa dark:bg-dark-bg flex items-center justify-center shrink-0">
+                <img
+                  src="/images/log.png"
+                  alt="log"
+                  width={30}
+                  height={30}
+                  className="object-contain"
+                />
+              </div>
+              <div>
+                <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
+                  Log it in seconds
+                </p>
+                <p className="text-sm text-cocoa-faded leading-relaxed">
+                  From the catalogue, your own custom entry, or a quick photo
+                  Noura reads for you. No nutrition database memorized required.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 4 — Watch your streak grow, yellow circle */}
+            <div className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
+              <div className="w-12 h-12 rounded-full bg-[#FEF3C7] flex items-center justify-center shrink-0">
+                <span className="text-2xl">
                   <img
-                    src="/images/targetHit.png"
-                    alt="target hit"
+                    src="/images/fire.png"
+                    alt="fire"
                     width={32}
                     height={32}
                     className="object-contain"
                   />
-                </div>
-                <div>
-                  <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
-                    Set your goal
-                  </p>
-                  <p className="text-sm text-cocoa-faded leading-relaxed">
-                    Region, diet, allergies, and what you're working toward. Two
-                    minutes, skip anything you're not ready to share.
-                  </p>
-                </div>
+                </span>
               </div>
-            </ScrollRevealItem>
-
-            <ScrollRevealItem className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
-              {/* Card 2 — Get a suggestion, pawpaw circle */}
               <div>
-                <div className="w-12 h-12 rounded-full bg-pawpaw dak:bg-black-pawpaw flex items-center justify-center shrink-0">
-                  <img
-                    src="/images/arrowSpin.png"
-                    alt="spin"
-                    width={32}
-                    height={32}
-                    className="object-contain"
-                  />
-                </div>
-                <div>
-                  <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
-                    Get a suggestion
-                  </p>
-                  <p className="text-sm text-cocoa-faded leading-relaxed">
-                    Spin for a meal that fits your goal and what's already in
-                    your kitchen. Noura also tells you why the meal was picked.
-                  </p>
-                </div>
+                <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
+                  Watch your streak grow
+                </p>
+                <p className="text-sm text-cocoa-faded leading-relaxed">
+                  Every day you hit your goal counts. Consistency, not
+                  perfection.
+                </p>
               </div>
-            </ScrollRevealItem>
-
-            <ScrollRevealItem className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
-              {/* Card 3 — Log it in seconds, black circle */}
-              <div>
-                <div className="w-12 h-12 rounded-full bg-cocoa dark:bg-dark-bg flex items-center justify-center shrink-0">
-                  <img
-                    src="/images/log.png"
-                    alt="log"
-                    width={30}
-                    height={30}
-                    className="object-contain"
-                  />
-                </div>
-                <div>
-                  <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
-                    Log it in seconds
-                  </p>
-                  <p className="text-sm text-cocoa-faded leading-relaxed">
-                    From the catalogue or your own way. No nutrition database
-                    memorized required.
-                  </p>
-                </div>
-              </div>
-            </ScrollRevealItem>
-
-            <ScrollRevealItem className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
-              {/* Card 4 — Watch your streak grow, yellow circle */}
-              <div>
-                <div className="w-12 h-12 rounded-full bg-[#FEF3C7] flex items-center justify-center shrink-0">
-                  <span className="text-2xl">
-                    <img
-                      src="/images/fire.png"
-                      alt="fire"
-                      width={32}
-                      height={32}
-                      className="object-contain"
-                    />
-                  </span>
-                </div>
-                <div>
-                  <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
-                    Watch your streak grow
-                  </p>
-                  <p className="text-sm text-cocoa-faded leading-relaxed">
-                    Every day you hit your goal counts. Consistency, not
-                    perfection.
-                  </p>
-                </div>
-              </div>
-            </ScrollRevealItem>
-          </ScrollRevealGroup>
+            </div>
+          </div>
         </div>
       </section>
 

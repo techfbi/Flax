@@ -13,7 +13,6 @@ import { ServingSizePicker } from "@/components/ui/ServingSizePicker";
 import { getErrorMessage } from "@/lib/errors";
 import type { NutritionEstimate } from "@/types/apiTypes";
 import { CustomQuantityPicker } from "@/components/ui/CustomQuantityPicker";
-import { useTheme } from "@/context/ThemeContext";
 import { ScanMealTab } from "./scanMealTab";
 import type {
   ApiResponse,
@@ -99,7 +98,6 @@ const QuantityInput = forwardRef<
 QuantityInput.displayName = "QuantityInput";
 
 export const LogMealTab = () => {
-  const { resolvedTheme } = useTheme();
   const queryClient = useQueryClient();
   const { prefillMeal, clearPrefillMeal } = useSpinStore();
   const [estimating, setEstimating] = useState(false);
@@ -625,7 +623,7 @@ export const LogMealTab = () => {
                     width="18"
                     height="18"
                     viewBox="0 0 24 24"
-                    fill={resolvedTheme === "dark" ? "#9CA3AF" : "#E8623C"}
+                    fill="#E8623C"
                   >
                     <path d="M12 2L13.5 10.5L22 12L13.5 13.5L12 22L10.5 13.5L2 12L10.5 10.5L12 2Z" />
                   </svg>
