@@ -15,6 +15,7 @@ import { foodRouter } from "./modules/foods/food.routes.js";
 import { waterRouter } from "./modules/water/water.routes.js";
 import { streakRouter } from "./modules/streaks/streak.routes.js";
 import { notificationRouter } from "./modules/notifications/notification.routes.js";
+import { runScheduledChecksHandler } from "./modules/notifications/scheduler.controller.js";
 
 export const app = express();
 
@@ -85,6 +86,7 @@ app.use("/api/foods", foodRouter);
 app.use("/api/streaks", streakRouter);
 app.use("/api/water", waterRouter);
 app.use("/api/notifications", notificationRouter);
+app.post("/internal/run-scheduled-checks", runScheduledChecksHandler);
 
 app.use((_req, res) => {
   res.status(404).json({

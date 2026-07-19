@@ -26,6 +26,7 @@ const envSchema = z.object({
   VAPID_EMAIL:       z.string().email(),
   GROQ_API_KEY: z.string().min(1),
   GEMINI_API_KEY: z.string().min(1),
+  SCHEDULER_SECRET: z.string().min(1), // this is what proves a request to the new endpoint actually came from our scheduled trigger and not a stranger who found the URL.
   // Controls whether email OTP verification is required on registration.
   // Set to "false" in development to test with non-existing emails freely.Set to "true" in production.
   REQUIRE_EMAIL_VERIFICATION: z
