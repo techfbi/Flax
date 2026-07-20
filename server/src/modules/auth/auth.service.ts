@@ -250,7 +250,7 @@ export const refreshTokens = async (rawToken: string): Promise<TokenPair> => {
 
     // Revoke the entire familyId
     await pgPool.query(
-      "UPDATE refresh_tokens SET is_revoked = TRUE WHERE family_id = $1",
+      "UPDATE refresh_tokens SET is_revoked = TRUE, revoked_at = NOW() WHERE family_id = $1",
       [storedToken.family_id]
     );
 
@@ -285,7 +285,7 @@ export const refreshTokens = async (rawToken: string): Promise<TokenPair> => {
 
   // Revoke the current token, it is single use
   await pgPool.query(
-    "UPDATE refresh_tokens SET is_revoked = TRUE WHERE id = $1",
+    "UPDATE refresh_tokens SET is_revoked = TRUE, revoked_at = NOW() WHERE id = $1",
     [storedToken.id]
   );
 
@@ -396,7 +396,7 @@ export const logoutUser = async (rawToken: string): Promise<void> => {
   const tokenHash = hashToken(rawToken);
 
   await pgPool.query(
-    "UPDATE refresh_tokens SET is_revoked = TRUE WHERE token_hash = $1",
+    "UPDATE refresh_tokens SET is_revoked = TRUE, revoked_at = NOW() WHERE token_hash = $1",
     [tokenHash]
   );
 }
@@ -504,7 +504,7 @@ export const resetPassword = async (input: ResetPasswordInput): Promise<void> =>
   // Revoke ALL refresh tokens for this user across all devices and families.
   // After a password reset, every existing session is invalid. The user must log in again with their new password.
   await pgPool.query(
-    "UPDATE refresh_tokens SET is_revoked = TRUE WHERE user_id = $1",
+    "UPDATE refresh_tokens SET is_revoked = TRUE, revoked_at = NOW() WHERE user_id = $1",
     [resetToken.user_id]
   );
 

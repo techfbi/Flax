@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
   token_hash TEXT NOT NULL UNIQUE,
   family_id  TEXT NOT NULL,
   is_revoked BOOLEAN NOT NULL DEFAULT FALSE,
+  revoked_at TIMESTAMPTZ,
   expires_at TIMESTAMPTZ NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
