@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { env } from "../../../config/env.js";
 import { buildScanPrompt } from "./prompt.js";
-import type { VisionProvider, ScannedFoodItem } from "./types.js";
+import type { VisionProvider, ScanResult } from "./types.js";
 
 const ai = new GoogleGenAI({
   apiKey: env.GEMINI_API_KEY,
@@ -9,29 +9,40 @@ const ai = new GoogleGenAI({
 });
 
 const SCAN_RESPONSE_SCHEMA = {
-  type: "array",
-  description: "List of distinct identified food items.",
-  items: {
-    type: "object",
-    properties: {
-      name: { type: "string" },
-      portion_grams: { type: "number" },
-      calories: { type: "number" },
-      protein_g: { type: "number" },
-      carbs_g: { type: "number" },
-      fat_g: { type: "number" },
-      confidence: { type: "number" },
+  type: "object",
+  description:
+    "Whether the image shows food at all, judged independently of any user description, plus the identified items if it does.",
+  properties: {
+    image_shows_food: { type: "boolean" },
+    items: {
+      type: "array",
+      description: "List of distinct identified food items. Empty if image_shows_food is false.",
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          visual_evidence: { type: "string" },
+          portion_grams: { type: "number" },
+          calories: { type: "number" },
+          protein_g: { type: "number" },
+          carbs_g: { type: "number" },
+          fat_g: { type: "number" },
+          confidence: { type: "number" },
+        },
+        required: [
+          "name",
+          "visual_evidence",
+          "portion_grams",
+          "calories",
+          "protein_g",
+          "carbs_g",
+          "fat_g",
+          "confidence",
+        ],
+      },
     },
-    required: [
-      "name",
-      "portion_grams",
-      "calories",
-      "protein_g",
-      "carbs_g",
-      "fat_g",
-      "confidence",
-    ],
   },
+  required: ["image_shows_food", "items"],
 };
 
 const makeGeminiVisionProvider = (
@@ -49,6 +60,10 @@ const makeGeminiVisionProvider = (
       config: {
         responseMimeType: "application/json",
         responseSchema: SCAN_RESPONSE_SCHEMA,
+        // Lower than the SDK default. This is a grounding task, not a
+        // creative one, less sampling variance means less room for the
+        // model to drift toward the text description instead of the image.
+        temperature: 0.2,
       },
     });
 
@@ -56,7 +71,14 @@ const makeGeminiVisionProvider = (
       throw new Error(`${name} returned an empty or invalid generation text block.`);
     }
 
-    return JSON.parse(result.text) as ScannedFoodItem[];
+    const parsed = JSON.parse(result.text) as ScanResult;
+
+    // Defense in depth, same rule enforced in parseScanResponse for the
+    // Groq path. A false judgement always wins over a populated items array.
+    return {
+      image_shows_food: parsed.image_shows_food,
+      items: parsed.image_shows_food ? parsed.items : [],
+    };
   },
 });
 

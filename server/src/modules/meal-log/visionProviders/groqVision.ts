@@ -23,7 +23,7 @@ const makeGroqVisionProvider = (name: string, model: string): VisionProvider => 
         },
       ],
       max_tokens: 1800,
-      temperature: 0.3,
+      temperature: 0.2,
     });
     const text = response.choices[0]?.message?.content ?? "";
     return parseScanResponse(text);

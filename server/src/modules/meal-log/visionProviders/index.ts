@@ -19,7 +19,7 @@ export const scanMealImage = async (
 
   for (const provider of VISION_PROVIDERS) {
     try {
-      const items = await provider.scanMeal(imageBase64, mimeType, description);
+      const result = await provider.scanMeal(imageBase64, mimeType, description);
       // A provider that answered, even with zero items found, gave a
       // real answer, not a failure. This used to fall through to the
       // next provider on an empty result too, which is wrong, a photo
@@ -27,6 +27,13 @@ export const scanMealImage = async (
       // retried through three more providers hoping one of them
       // invents something that is not there. This was also the whole
       // reason a non food scan took noticeably longer than it should.
+      //
+      // image_shows_food is the explicit version of that same idea.
+      // Every provider now judges it before touching the description,
+      // so items is only ever non empty when that judgement was true.
+      // Enforced again here, defense in depth, so a provider bug
+      // upstream can never leak a hallucinated item through this layer.
+      const items = result.image_shows_food ? result.items : [];
       return { items, providerUsed: provider.name };
     } catch (err) {
       errors.push(
