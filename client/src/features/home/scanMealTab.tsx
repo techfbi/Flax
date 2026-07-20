@@ -289,7 +289,7 @@ export const ScanMealTab = ({ mealType }: ScanMealTabProps) => {
             hover:border-moringa-faded transition-colors disabled:opacity-40 disabled:hover:border-cocoa/20"
         >
           <Camera size={28} />
-          <span className="text-sm font-medium">
+          <span className="text-xs lg:text-sm font-medium">
             {usage?.remaining === 0 ? (
               <p className="text-rose-500">No scans left today</p>
             ) : (
@@ -381,7 +381,6 @@ export const ScanMealTab = ({ mealType }: ScanMealTabProps) => {
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         onChange={handleFileSelect}
         className="hidden"
       />

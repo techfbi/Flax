@@ -916,8 +916,9 @@ const LandingPage = () => {
                   Get a suggestion
                 </p>
                 <p className="text-sm text-cocoa-faded leading-relaxed">
-                  Spin for a meal that fits your goal and what's already in your
-                  kitchen. Noura also tells you why the meal was picked.
+                  You ran out of ideas? Spin for a meal that fits your goal and
+                  what's already in your kitchen. Noura also tells you why the
+                  meal was picked.
                 </p>
               </div>
             </div>

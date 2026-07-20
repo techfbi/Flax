@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, UtensilsCrossed } from "lucide-react";
 import { toast } from "sonner";
@@ -42,7 +42,6 @@ export const HistoryTab = () => {
   const today = toDateStr(new Date());
   const [selectedDate, setSelectedDate] = useState(today);
   const [view, setView] = useState<View>("meals");
-  const dateInputRef = useRef<HTMLInputElement>(null);
   const MEAL_TYPE_ORDER: MealType[] = [
     "breakfast",
     "brunch",
@@ -60,17 +59,6 @@ export const HistoryTab = () => {
       return;
     }
     setSelectedDate(next);
-  };
-
-  // Clicking the date label opens the browser's native date picker,
-  // which sits invisibly on top of the label. Picking a date there
-  // updates selectedDate directly, no custom calendar UI to maintain.
-  const openPicker = () => {
-    if (dateInputRef.current?.showPicker) {
-      dateInputRef.current.showPicker();
-    } else {
-      dateInputRef.current?.click();
-    }
   };
 
   const { data: logs, isLoading: mealsLoading } = useQuery({
@@ -108,23 +96,21 @@ export const HistoryTab = () => {
         </button>
 
         <div className="relative">
-          <button
-            onClick={openPicker}
+          <span
             className="text-sm font-bold text-cocoa dark:text-dark-white
-              underline decoration-dotted underline-offset-4"
+              underline decoration-dotted underline-offset-4 pointer-events-none"
           >
             {formatLabel(selectedDate)}
-          </button>
+          </span>
           <input
-            ref={dateInputRef}
             type="date"
             value={selectedDate}
             max={today}
             onChange={(e) => {
               if (e.target.value) setSelectedDate(e.target.value);
             }}
-            className="absolute inset-0 opacity-0 pointer-events-none"
-            tabIndex={-1}
+            aria-label="Choose date"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           />
         </div>
 

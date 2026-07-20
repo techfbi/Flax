@@ -521,19 +521,21 @@ export const LogMealTab = () => {
           )}
         </div>
       ) : (
-        <div className="mb-4">
-          <label className="font-heading text-xs md:text-sm text-cocoa-faded block mb-1">
-            Meal name
-          </label>
-          <input
-            type="text"
-            value={customName}
-            onChange={(e) => setCustomName(e.target.value)}
-            placeholder="e.g. Mum's jollof rice"
-            maxLength={100}
-            className={inputClass}
-          />
-        </div>
+        mode !== "scan" && (
+          <div className="mb-4">
+            <label className="font-heading text-xs md:text-sm text-cocoa-faded block mb-1">
+              Meal name
+            </label>
+            <input
+              type="text"
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              placeholder="e.g. Mum's jollof rice"
+              maxLength={100}
+              className={inputClass}
+            />
+          </div>
+        )
       )}
       {/* Shared form: only shows once a catalogue food is picked, or
       always in custom mode since the name field above is the trigger */}

@@ -730,7 +730,7 @@ const OnboardingFlow = () => {
         return (
           <>
             <p className="text-xs text-cocoa-faded mb-5">
-              A few details to personalize your suggestions
+              A few details to personalize your experience
             </p>
             <h2 className="font-heading text-xl font-bold text-cocoa dark:text-dark-white mb-6">
               Whats your{" "}
@@ -773,7 +773,7 @@ const OnboardingFlow = () => {
         return (
           <>
             <p className="text-xs text-cocoa-faded mb-1">
-              A few details to personalize your suggestions
+              A few details to personalize your experience
             </p>
             <h2 className="font-heading text-xl font-bold text-cocoa dark:text-dark-white mb-6">
               Are you currently following a{" "}
@@ -827,7 +827,7 @@ const OnboardingFlow = () => {
         return (
           <>
             <p className="text-xs text-cocoa-faded mb-2">
-              A few details to personalize your suggestions
+              A few details to personalize your experience
             </p>
             <h2 className="font-heading text-xl font-bold text-cocoa dark:text-dark-white mb-6">
               Activity status
@@ -910,7 +910,7 @@ const OnboardingFlow = () => {
         return (
           <>
             <p className="text-xs text-cocoa-faded mb-2">
-              A few details to personalize your suggestions
+              A few details to personalize your experience
             </p>
             <h2 className="font-heading text-xl font-bold text-cocoa dark:text-dark-white mb-6">
               A bit about you
