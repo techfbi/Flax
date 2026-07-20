@@ -8,6 +8,7 @@ import type {
   DashboardData,
   WaterData,
 } from "@/types/apiTypes";
+import { useTheme } from "@/context/ThemeContext";
 
 interface GoalTabProps {
   dashData: DashboardData | undefined;
@@ -16,20 +17,6 @@ interface GoalTabProps {
   onRefetchWater: () => void;
   onLogMealClick: () => void;
 }
-
-const COLORS = {
-  Calorie: "#7FB096",
-  Protein: "#F43F5E",
-  Carbs: "#8B5CF6",
-  Fat: "#F59E0B",
-};
-
-const legend = [
-  { label: "Calorie", color: COLORS.Calorie },
-  { label: "Carbs", color: COLORS.Carbs },
-  { label: "Fat", color: COLORS.Fat },
-  { label: "Protein", color: COLORS.Protein },
-];
 
 /*
   Goal tab content.
@@ -43,6 +30,21 @@ export const GoalTab = ({
   onRefetchWater,
   onLogMealClick,
 }: GoalTabProps) => {
+  const { resolvedTheme } = useTheme();
+  const COLORS = {
+    Calorie: "#7FB096",
+    Protein: "#F43F5E",
+    Carbs: resolvedTheme === "dark" ? "#FFF176" : "#949494",
+    Fat: "#F59E0B",
+  };
+
+  const legend = [
+    { label: "Calorie", color: COLORS.Calorie },
+    { label: "Carbs", color: COLORS.Carbs },
+    { label: "Fat", color: COLORS.Fat },
+    { label: "Protein", color: COLORS.Protein },
+  ];
+
   const { data: logs } = useQuery({
     queryKey: ["meal-logs", "today"],
     queryFn: async () => {

@@ -9,17 +9,11 @@ import {
 } from "recharts";
 import type { MealLogEntry } from "@/types/apiTypes";
 import { useEffect, useState } from "react";
+import { useTheme } from "@/context/ThemeContext";
 
 interface CalorieChartProps {
   logs: MealLogEntry[];
 }
-
-const COLORS = {
-  Calorie: "#7FB096",
-  Protein: "#F43F5E",
-  Carbs: "#8B5CF6",
-  Fat: "#F59E0B",
-};
 
 const MEAL_ORDER: Record<string, number> = {
   breakfast: 0,
@@ -144,6 +138,13 @@ const CustomTooltip = ({
 };
 
 export const CalorieChart = ({ logs }: CalorieChartProps) => {
+  const { resolvedTheme } = useTheme();
+  const COLORS = {
+    Calorie: "#7FB096",
+    Protein: "#F43F5E",
+    Carbs: resolvedTheme === "dark" ? "#FFF176" : "#949494",
+    Fat: "#F59E0B",
+  };
   //------------------------------------------------------------------
   // detect mobile screens
   const useIsMobile = () => {

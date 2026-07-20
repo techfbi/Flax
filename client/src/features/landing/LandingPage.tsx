@@ -703,13 +703,13 @@ const LandingPage = () => {
 
             {/* Big centered headline + one-line subhead */}
             <div className="text-center max-w-xl mx-auto mb-16 md:mb-20">
-              <h3 className="font-heading text-1xl md:text-3xl font-bold text-surface leading-snug mb-4">
+              <h3 className="font-heading text-1xl md:text-3xl font-bold text-surface leading-snug mb-3">
                 One assistant,{" "}
                 <span className="text-pawpaw dark:text-black-pawpaw">
                   different capabilities
                 </span>
               </h3>
-              <p className="text-sm md:text-base text-surface/75 leading-relaxed">
+              <p className="text-xs md:text-sm lg:text-base text-surface/75 leading-relaxed">
                 Noura sees your profile and your logs, so every answer,
                 estimate, and suggestion is actually about you.
               </p>
