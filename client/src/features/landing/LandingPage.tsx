@@ -293,7 +293,7 @@ const LandingPage = () => {
               <span>doesn't have to be complicated</span>
             </h1>
 
-            <p className="mt-5 text-sm md:text-base text-cocoa dark:text-dark-white leading-relaxed max-w-md">
+            <p className="mt-5 text-xs md:text-sm lg:text-base text-cocoa dark:text-dark-white leading-relaxed max-w-md">
               <strong>Flax</strong> learns your goal and helps you stay on track
               with it, meal by meal, glass by glass. Log what you eat, keep tabs
               on your water, and build the kind of consistency that actually
