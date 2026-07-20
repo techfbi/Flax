@@ -259,7 +259,7 @@ const AnimatedRoutes = () => {
   return (
     <Routes location={location} key={location.pathname}>
       <Route path="/" element={<RootRoute />} />
-      <Route path="/api/auth/callback" element={<AuthCallbackPage />} />
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
       <Route
         path="/register"

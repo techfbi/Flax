@@ -165,7 +165,7 @@ api.interceptors.response.use(
         '/verify-otp',
         '/forgot-password',
         '/reset-password',
-        '/api/auth/callback',
+        '/auth/callback',
       ].includes(window.location.pathname);
 
       // TOKEN_REUSED or TOKEN_EXPIRED → session expired → go to login
