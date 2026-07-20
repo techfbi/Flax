@@ -324,7 +324,7 @@ const LandingPage = () => {
             <img
               src="/images/heroImage1.png"
               alt="Diet plate and water bottle"
-              className="w-[380px] md:w-[380px] lg:w-[500px] object-contain object-bottom "
+              className="w-[330px] md:w-[380px] lg:w-[500px] object-contain object-bottom "
               draggable={false}
             />
           </div>
@@ -338,7 +338,7 @@ const LandingPage = () => {
       <section className="bg-surface dark:bg-black-surface py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <ScrollReveal>
-            <h2 className="font-heading text-1xl md:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-2 lg:mb-4 max-w-80 md:max-w-2xl mx-auto">
+            <h2 className="font-heading text-1xl md:text-[20px] lg:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-2 lg:mb-4 max-w-80 md:max-w-2xl mx-auto">
               Most nutrition advice{" "}
               <span className="text-pawpaw dark:text-black-pawpaw">fails</span>{" "}
               because it ignores the{" "}
@@ -409,7 +409,7 @@ const LandingPage = () => {
       <section className="py-20 px-6">
         <ScrollReveal>
           <div className="max-w-6xl mx-auto text-center">
-            <h2 className="font-heading text-1xl md:text-3xl max-w-80 md:max-w-xl font-bold mb-2 lg:mb-4 mx-auto">
+            <h2 className="font-heading text-1xl md:text-[20px] lg:text-3xl  max-w-80 md:max-w-xl font-bold mb-2 lg:mb-4 mx-auto">
               <span className="text-pawpaw dark:text-black-pawpaw">
                 It connects what you eat
               </span>{" "}
@@ -443,7 +443,7 @@ const LandingPage = () => {
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <ScrollReveal>
-            <h2 className="font-heading text-1xl md:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-2 lg:mb-4">
+            <h2 className="font-heading text-1xl md:text-[20px] lg:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-2 lg:mb-4">
               Two streaks, two reasons to come back
             </h2>
             <p className="text-center text-xs md:text-sm font-bold text-cocoa-faded mb-12">
@@ -695,15 +695,15 @@ const LandingPage = () => {
                   <path d="M12 2L13.5 10.5L22 12L13.5 13.5L12 22L10.5 13.5L2 12L10.5 10.5L12 2Z" />
                 </svg>
               </div>
-              <h2 className="font-heading text-1xl md:text-2xl font-bold text-surface mb-1">
+              <h2 className="font-heading text-1xl md:text-[20px] lg:text-3xl font-bold text-surface mb-1">
                 Meet Noura
               </h2>
-              <div className="w-16 h-1 rounded-full bg-pawpaw dark:bg-black-pawpaw" />
+              <div className="w-16 h-0.5 rounded-full bg-pawpaw dark:bg-black-pawpaw" />
             </div>
 
             {/* Big centered headline + one-line subhead */}
             <div className="text-center max-w-xl mx-auto mb-16 md:mb-20">
-              <h3 className="font-heading text-1xl md:text-3xl font-bold text-surface leading-snug mb-3">
+              <h3 className="font-heading text-1xl md:text-1.5xl lg:text-3xl font-bold text-surface leading-snug mb-3">
                 One assistant,{" "}
                 <span className="text-pawpaw dark:text-black-pawpaw">
                   different capabilities
@@ -870,16 +870,19 @@ const LandingPage = () => {
       ══════════════════════════════════════════════════════════ */}
       <section id="how-it-works" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="font-heading text-1xl md:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-2 lg:mb-4">
-            How it works
-          </h2>
-          <p className="text-center text-xs md:text-sm font-bold text-cocoa-faded mb-12">
-            From sign up to your first streak
-          </p>
+          <ScrollReveal>
+            <h2 className="font-heading text-1xl md:text-[20px] lg:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-2 lg:mb-4">
+              How it works
+            </h2>
+            <p className="text-center text-xs md:text-sm font-bold text-cocoa-faded mb-12">
+              From sign up to your first streak
+            </p>
+          </ScrollReveal>
 
-          <div className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
+          <ScrollRevealGroup className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
+            {" "}
             {/* Card 1 — Set your goal, moringa circle */}
-            <div className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
+            <ScrollRevealItem className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
               <div className="w-12 h-12 rounded-full bg-moringa-faded flex items-center justify-center shrink-0">
                 <img
                   src="/images/targetHit.png"
@@ -898,10 +901,9 @@ const LandingPage = () => {
                   minutes, skip anything you're not ready to share.
                 </p>
               </div>
-            </div>
-
+            </ScrollRevealItem>
             {/* Card 2 — Get a suggestion, pawpaw circle */}
-            <div className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
+            <ScrollRevealItem className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
               <div className="w-12 h-12 rounded-full bg-pawpaw dak:bg-black-pawpaw flex items-center justify-center shrink-0">
                 <img
                   src="/images/arrowSpin.png"
@@ -921,10 +923,9 @@ const LandingPage = () => {
                   meal was picked.
                 </p>
               </div>
-            </div>
-
+            </ScrollRevealItem>
             {/* Card 3 — Log it in seconds, black circle */}
-            <div className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
+            <ScrollRevealItem className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
               <div className="w-12 h-12 rounded-full bg-cocoa dark:bg-dark-bg flex items-center justify-center shrink-0">
                 <img
                   src="/images/log.png"
@@ -943,10 +944,9 @@ const LandingPage = () => {
                   Noura reads for you. No nutrition database memorized required.
                 </p>
               </div>
-            </div>
-
+            </ScrollRevealItem>
             {/* Card 4 — Watch your streak grow, yellow circle */}
-            <div className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
+            <ScrollRevealItem className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
               <div className="w-12 h-12 rounded-full bg-[#FEF3C7] flex items-center justify-center shrink-0">
                 <span className="text-2xl">
                   <img
@@ -967,8 +967,8 @@ const LandingPage = () => {
                   perfection.
                 </p>
               </div>
-            </div>
-          </div>
+            </ScrollRevealItem>
+          </ScrollRevealGroup>
         </div>
       </section>
 
@@ -980,7 +980,7 @@ const LandingPage = () => {
       ══════════════════════════════════════════════════════════ */}
       <section className="bg-surface dark:bg-black-surface py-20 px-6 text-center">
         <ScrollReveal>
-          <h2 className="font-heading text-1xl md:text-3xl font-bold text-cocoa dark:text-dark-white mb-2 lg:mb-4">
+          <h2 className="font-heading text-1xl md:text-[20px] lg:text-3xl font-bold text-cocoa dark:text-dark-white mb-2 lg:mb-4">
             Your first{" "}
             <span className="text-pawpaw dark:text-black-pawpaw">
               suggestion
