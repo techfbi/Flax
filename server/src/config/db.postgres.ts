@@ -9,7 +9,7 @@ const { Pool } = pg;
 // The pg library reads SSL mode directly from the connection string parameter.
 export const pgPool = new Pool({
   connectionString: env.DATABASE_URL,
-  max: 20,
+  max: 100,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 20000, // 
 });
