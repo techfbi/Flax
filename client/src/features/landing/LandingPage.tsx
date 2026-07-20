@@ -338,7 +338,7 @@ const LandingPage = () => {
       <section className="bg-surface dark:bg-black-surface py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <ScrollReveal>
-            <h2 className="font-heading text-1xl md:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-4 max-w-80 md:max-w-2xl mx-auto">
+            <h2 className="font-heading text-1xl md:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-2 lg:mb-4 max-w-80 md:max-w-2xl mx-auto">
               Most nutrition advice{" "}
               <span className="text-pawpaw dark:text-black-pawpaw">fails</span>{" "}
               because it ignores the{" "}
@@ -409,7 +409,7 @@ const LandingPage = () => {
       <section className="py-20 px-6">
         <ScrollReveal>
           <div className="max-w-6xl mx-auto text-center">
-            <h2 className="font-heading text-1xl md:text-3xl max-w-80 md:max-w-xl font-bold mb-4 mx-auto">
+            <h2 className="font-heading text-1xl md:text-3xl max-w-80 md:max-w-xl font-bold mb-2 lg:mb-4 mx-auto">
               <span className="text-pawpaw dark:text-black-pawpaw">
                 It connects what you eat
               </span>{" "}
@@ -443,7 +443,7 @@ const LandingPage = () => {
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <ScrollReveal>
-            <h2 className="font-heading text-1xl md:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-3">
+            <h2 className="font-heading text-1xl md:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-2 lg:mb-4">
               Two streaks, two reasons to come back
             </h2>
             <p className="text-center text-xs md:text-sm font-bold text-cocoa-faded mb-12">
@@ -870,7 +870,7 @@ const LandingPage = () => {
       ══════════════════════════════════════════════════════════ */}
       <section id="how-it-works" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <h2 className="font-heading text-1xl md:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-3">
+          <h2 className="font-heading text-1xl md:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-2 lg:mb-4">
             How it works
           </h2>
           <p className="text-center text-xs md:text-sm font-bold text-cocoa-faded mb-12">
@@ -980,7 +980,7 @@ const LandingPage = () => {
       ══════════════════════════════════════════════════════════ */}
       <section className="bg-surface dark:bg-black-surface py-20 px-6 text-center">
         <ScrollReveal>
-          <h2 className="font-heading text-1xl md:text-3xl font-bold text-cocoa dark:text-dark-white mb-3">
+          <h2 className="font-heading text-1xl md:text-3xl font-bold text-cocoa dark:text-dark-white mb-2 lg:mb-4">
             Your first{" "}
             <span className="text-pawpaw dark:text-black-pawpaw">
               suggestion
