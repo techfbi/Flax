@@ -1,3 +1,4 @@
+import { useRef, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageTopBar } from "@/components/layout/PageTopBar";
@@ -25,6 +26,13 @@ import type {
   the chat's own message list scrolls. This overrides AppLayout's
   normal "mobile and tablet scroll the whole page" behavior on purpose,
   this one page needs the app like fixed shell on every screen size.
+
+  On iOS Safari and Chrome, the browser shifts the visual viewport
+  upward when the keyboard opens rather than resizing it. We use the
+  visualViewport API to track that offset and compensate in real time
+  so the shell always covers exactly the real visible area. This is
+  what keeps the Noura heading and the input pinned in place when the
+  keyboard is open, same as WhatsApp behavior.
 */
 
 const NouraIdentity = () => (
@@ -47,6 +55,44 @@ const NouraIdentity = () => (
 
 export const AskNouraPage = () => {
   const { resolvedTheme } = useTheme();
+  const shellRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Prevent the document body from scrolling while this page is
+    // mounted. Without this, touch scroll gestures on parts of the
+    // page that have no content can still move the document, making
+    // the layout look broken independent of the keyboard issue.
+    document.body.style.overflow = "hidden";
+
+    const vv = window.visualViewport;
+
+    const update = () => {
+      const el = shellRef.current;
+      if (!el || !vv) return;
+      // vv.height is the actual visible height above the keyboard,
+      // it shrinks when the keyboard opens on iOS.
+      // vv.offsetTop is how far iOS has scrolled the visual viewport
+      // upward during keyboard open. Setting top to this value keeps
+      // the shell anchored to the top of what is actually visible
+      // regardless of what iOS did to the visual viewport offset.
+      el.style.height = `${vv.height}px`;
+      el.style.top = `${vv.offsetTop}px`;
+    };
+
+    if (vv) {
+      update();
+      vv.addEventListener("resize", update);
+      vv.addEventListener("scroll", update);
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+      if (vv) {
+        vv.removeEventListener("resize", update);
+        vv.removeEventListener("scroll", update);
+      }
+    };
+  }, []);
 
   const { data: dashData } = useQuery({
     queryKey: ["dashboard"],
@@ -84,8 +130,12 @@ export const AskNouraPage = () => {
   return (
     <AppLayout>
       <div
-        className="flex flex-col h-[100dvh] overflow-hidden"
+        ref={shellRef}
+        className="fixed left-0 right-0 top-0 flex flex-col overflow-hidden"
         style={{
+          // 100dvh is the initial height before the visualViewport
+          // effect fires on first render. JS takes over after that.
+          height: "100dvh",
           background:
             resolvedTheme === "dark"
               ? "linear-gradient(180deg, #3E4E42 -10%, #2D342C 4%, #2D342C 10%, #171410 45%)"
