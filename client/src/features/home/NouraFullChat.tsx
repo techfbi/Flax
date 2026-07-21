@@ -49,6 +49,22 @@ export const NouraFullChat = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // A full markdown parser re-reading and rebuilding a syntax tree on
+  // every character of a live stream is expensive enough to drop
+  // frames, that was the actual cause of the stutter. This only
+  // handles bold text, the one thing worth keeping live since our own
+  // prompt is what asks the model to use it, cheap enough to run on
+  // every tick. Escaping happens first, the bold tag is only ever
+  // inserted after that, so nothing here can inject real markup.
+  const renderLiveText = (text: string): { __html: string } => {
+    const escaped = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    const withBold = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    return { __html: withBold };
+  };
+
   useEffect(() => {
     if (streamingText === null) return;
     indexRef.current = 0;
@@ -69,6 +85,17 @@ export const NouraFullChat = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [streamingText]);
 
+  useEffect(() => {
+    // Lock the document scroll while the full chat is open so mobile
+    // browsers cannot scroll the page itself. Only the message list
+    // scrolls internally via its own overflow-y-auto container.
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
   const handleConfirmClear = () => {
     clearChat();
     setConfirmingClear(false);
@@ -82,9 +109,9 @@ export const NouraFullChat = () => {
   }, [isSending]);
 
   return (
-    <div className="flex flex-col h-full min-h-0 w-full max-w-[720px] mx-auto relative">
+    <div className="overflow-hidden flex flex-col h-full min-h-0 w-full max-w-[720px] mx-auto relative">
       {localMessages.length > 0 && (
-        <div className="flex justify-end px-4 pt-2 shrink-0">
+        <div className="flex justify-end px-4 pt-1 shrink-0">
           <button
             onClick={() => setConfirmingClear(true)}
             aria-label="Clear chat"
@@ -122,7 +149,7 @@ export const NouraFullChat = () => {
             className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
           >
             <div
-              className={`rounded-2xl px-4 py-3 max-w-[75%] text-sm leading-relaxed
+              className={`rounded-2xl px-3 py-3 max-w-[75%] text-xs md:text-sm leading-relaxed
       ${
         msg.role === "user"
           ? "rounded-tr-sm bg-surface-two dark:bg-dark-bg text-cocoa dark:text-dark-white"
@@ -169,8 +196,8 @@ export const NouraFullChat = () => {
 
         {streamingText !== null && (
           <div className="flex justify-start">
-            <div className="rounded-2xl rounded-tl-sm px-4 py-3 max-w-[75%] text-sm bg-[rgba(47,93,75,0.14)] dark:bg-[#4d4d4d] text-cocoa dark:text-dark-white leading-relaxed">
-              <NouraMarkdown text={displayed} />
+            <div className="rounded-2xl rounded-tl-sm px-4 py-3 max-w-[75%] text-xs md:text-sm bg-[rgba(47,93,75,0.14)] dark:bg-[#4d4d4d] text-cocoa dark:text-dark-white leading-relaxed whitespace-pre-wrap">
+              <span dangerouslySetInnerHTML={renderLiveText(displayed)} />
               <span className="inline-block w-px h-3.5 bg-moringa dark:bg-moringa-faded ml-0.5 align-middle animate-pulse" />
             </div>
           </div>

@@ -84,7 +84,7 @@ export const AskNouraPage = () => {
   return (
     <AppLayout>
       <div
-        className="flex flex-col h-screen overflow-hidden"
+        className="flex flex-col h-[100dvh] overflow-hidden"
         style={{
           background:
             resolvedTheme === "dark"

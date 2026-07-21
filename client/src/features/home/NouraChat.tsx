@@ -48,6 +48,22 @@ const StreamingMessage = ({
   );
 };
 
+// A full markdown parser re-reading and rebuilding a syntax tree on
+// every character of a live stream is expensive enough to drop
+// frames, that was the actual cause of the stutter. This only
+// handles bold text, the one thing worth keeping live since our own
+// prompt is what asks the model to use it, cheap enough to run on
+// every tick. Escaping happens first, the bold tag is only ever
+// inserted after that, so nothing here can inject real markup.
+const renderLiveText = (text: string): { __html: string } => {
+  const escaped = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  const withBold = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  return { __html: withBold };
+};
+
 const TypingText = ({
   text,
   onDone,
@@ -83,11 +99,11 @@ const TypingText = ({
 
   return (
     <div
-      className="rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] text-sm
+      className="rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] text-xs lg:text-sm
       bg-[rgba(47,93,75,0.14)] dark:bg-[#4d4d4d]
-      text-cocoa dark:text-dark-white leading-relaxed"
+      text-cocoa dark:text-dark-white leading-relaxed whitespace-pre-wrap"
     >
-      <NouraMarkdown text={displayed} />
+      <span dangerouslySetInnerHTML={renderLiveText(displayed)} />
       <span className="inline-block w-px h-3.5 bg-moringa dark:bg-moringa-faded ml-0.5 align-middle animate-pulse" />
     </div>
   );
