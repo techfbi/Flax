@@ -131,7 +131,7 @@ export const AskNouraPage = () => {
     <AppLayout>
       <div
         ref={shellRef}
-        className="fixed left-0 right-0 top-0 flex flex-col overflow-hidden"
+        className="fixed md:static right-0 top-0 flex flex-col overflow-hidden"
         style={{
           // 100dvh is the initial height before the visualViewport
           // effect fires on first render. JS takes over after that.
