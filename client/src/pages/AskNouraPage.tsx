@@ -58,7 +58,11 @@ export const AskNouraPage = () => {
   const shellRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Prevent the document body from scrolling while this page is mounted.
+    // Prevent the document body from scrolling while this page is
+    // mounted. Without this, touch scroll gestures on parts of the
+    // page that have no content can still move the document, making
+    // the layout look broken independent of the keyboard issue.
+    document.body.style.overflow = "hidden";
 
     const vv = window.visualViewport;
 
@@ -72,6 +76,7 @@ export const AskNouraPage = () => {
       // the shell anchored to the top of what is actually visible
       // regardless of what iOS did to the visual viewport offset.
       el.style.height = `${vv.height}px`;
+      el.style.top = `${vv.offsetTop}px`;
     };
 
     if (vv) {
@@ -81,6 +86,7 @@ export const AskNouraPage = () => {
     }
 
     return () => {
+      document.body.style.overflow = "";
       if (vv) {
         vv.removeEventListener("resize", update);
         vv.removeEventListener("scroll", update);
