@@ -368,7 +368,7 @@ const LandingPage = () => {
                 <h3 className="font-heading font-bold text-base text-surface mb-3">
                   What you eat adds up faster than you think
                 </h3>
-                <p className="text-sm text-surface/80 leading-relaxed">
+                <p className="text-xs md:text-sm text-surface/80 leading-relaxed">
                   A meal here, a snack there, it's easy to lose track. Log from
                   a regional catalogue, describe something custom, or let Noura
                   estimate it for you, whichever way you actually eat.
@@ -391,7 +391,7 @@ const LandingPage = () => {
                 <h3 className="font-heading font-bold text-base text-surface mb-3">
                   Hydration is the part everyone forgets
                 </h3>
-                <p className="text-sm text-surface/80 leading-relaxed">
+                <p className="text-xs md:text-sm text-surface/80 leading-relaxed">
                   Water affects energy, appetite, and how your body actually
                   uses what you eat. Flax calculates a target built for your
                   body, so you're working toward a real number, not a guess.
@@ -423,7 +423,7 @@ const LandingPage = () => {
 
             {/* Content box */}
             <div className="bg-surface dark:bg-black-surface rounded-2xl p-8 max-w-2xl mx-auto text-left">
-              <p className="text-sm md:text-base text-cocoa dark:text-dark-white leading-relaxed text-center">
+              <p className="text-xs md:text-sm text-cocoa dark:text-dark-white leading-relaxed text-center">
                 Tell flax your goal once,{" "}
                 <strong>lose weight, gain muscle, eat better</strong>, whatever
                 it is, and every target, every log, every streak is calculated
@@ -896,7 +896,7 @@ const LandingPage = () => {
                 <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
                   Set your goal
                 </p>
-                <p className="text-sm text-cocoa-faded leading-relaxed">
+                <p className="text-xs md:text-base text-cocoa-faded leading-relaxed">
                   Region, diet, allergies, and what you're working toward. Two
                   minutes, skip anything you're not ready to share.
                 </p>
@@ -917,7 +917,7 @@ const LandingPage = () => {
                 <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
                   Get a suggestion
                 </p>
-                <p className="text-sm text-cocoa-faded leading-relaxed">
+                <p className="text-xs md:text-base text-cocoa-faded leading-relaxed">
                   You ran out of ideas? Spin for a meal that fits your goal and
                   what's already in your kitchen. Noura also tells you why the
                   meal was picked.
@@ -939,7 +939,7 @@ const LandingPage = () => {
                 <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
                   Log it in seconds
                 </p>
-                <p className="text-sm text-cocoa-faded leading-relaxed">
+                <p className="text-xs md:text-sm text-cocoa-faded leading-relaxed">
                   From the catalogue, your own custom entry, or a quick photo
                   Noura reads for you. No nutrition database memorized required.
                 </p>
@@ -962,7 +962,7 @@ const LandingPage = () => {
                 <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
                   Watch your streak grow
                 </p>
-                <p className="text-sm text-cocoa-faded leading-relaxed">
+                <p className="text-xs md:text-sm text-cocoa-faded leading-relaxed">
                   Every day you hit your goal counts. Consistency, not
                   perfection.
                 </p>
@@ -987,7 +987,7 @@ const LandingPage = () => {
             </span>{" "}
             is one spin away
           </h2>
-          <p className="text-sm text-cocoa-faded mb-8">
+          <p className="text-xs md:text-sm text-cocoa-faded mb-8">
             Set up your profile in under two minutes.
             <br />
             Flax handles the rest.
@@ -1014,11 +1014,11 @@ const LandingPage = () => {
       <footer className="py-10 px-6 text-center">
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="text-sm text-cocoa dark:text-dark-white underline underline-offset-2 hover:opacity-70 transition-opacity mb-6 inline-flex items-center gap-1"
+          className="md:text-sm text-xs text-cocoa dark:text-dark-white underline underline-offset-2 hover:opacity-70 transition-opacity mb-6 inline-flex items-center gap-1"
         >
           Back to top ↗
         </button>
-        <p className="text-sm text-cocoa-faded">
+        <p className="text-xs md:text-sm text-cocoa-faded">
           Copyright © {new Date().getFullYear()} Tech FBI
         </p>
       </footer>
