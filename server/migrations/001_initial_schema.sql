@@ -288,3 +288,17 @@ CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_hash
 -- Covers pending registration lookup by email during OTP verification
 CREATE INDEX IF NOT EXISTS idx_pending_registrations_email
   ON pending_registrations(email);
+
+-- Cron job to delete pending registration from db after 3 days. i did this on NEON db
+SELECT cron.schedule(
+  'cleanup-pending-registrations',
+  '0 4 * * *',
+  $$ DELETE FROM pending_registrations WHERE created_at < NOW() - INTERVAL '3 days' $$
+);
+
+-- To delete every revoked refresh token in the db after 24hrs
+SELECT cron.schedule(
+  'cleanup-revoked-refresh-tokens',
+  '0 5 * * *',
+  $$ DELETE FROM refresh_tokens WHERE is_revoked = TRUE AND revoked_at < NOW() - INTERVAL '24 hours' $$
+);

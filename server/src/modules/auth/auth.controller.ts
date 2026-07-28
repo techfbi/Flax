@@ -42,7 +42,7 @@ const clearRefreshCookie = (res: Response): void => {
     path: "/api/auth",
     // Must match the original cookie options exactly for the browser to clear it
     secure: isProduction,
-    sameSite: (isProduction ? "none" : "lax") as "none" | "lax",
+    sameSite: "lax" as  "lax",
   });
 };
 
