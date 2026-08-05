@@ -21,7 +21,7 @@ self.addEventListener("push", (event) => {
   const title = payload.title || "Flax";
   const options = {
     body: payload.body || "",
-    icon: "/images/logoIcon.png",
+    icon: "/images/logoIconDark.png",
     badge: "/images/arrowSpin.png",
     data: { url: payload.url || "/" },
   };
