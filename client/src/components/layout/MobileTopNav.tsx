@@ -71,7 +71,6 @@ export const MobileTopNav = () => {
           className="bg-white/70 dark:bg-cocoa/70
           backdrop-blur-md
            shadow-lg
-          border border-white/20 dark:border-white/10
           px-5 py-5 h-14 flex items-center justify-between
           max-w-7xl mx-auto"
         >

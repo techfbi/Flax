@@ -23,7 +23,7 @@ export const Navbar = () => {
   };
 
   return (
-    <div className="fixed top-5 md:top-3 left-4 right-4 z-50">
+    <div className="fixed top-2 md:top-2 left-4 right-4 z-50">
       <nav
         className="
           bg-white/70 dark:bg-cocoa/70
@@ -31,7 +31,7 @@ export const Navbar = () => {
           rounded-2xl shadow-lg
           border border-white/20 dark:border-white/10
           px-5 py-5 md:px-10 md:py-10 h-14 flex items-center justify-between
-          max-w-7xl mx-auto
+          max-w-7xl lg:max-w-[95%] mx-auto
         "
       >
         <Link to="/" aria-label="Flax home" className="shrink-0">
