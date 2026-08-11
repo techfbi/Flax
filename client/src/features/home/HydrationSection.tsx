@@ -168,7 +168,7 @@ export const HydrationSection = ({
               <p className="font-heading text-[14px] md:text-xs font-semibold text-cocoa dark:text-dark-white mb-1">
                 Tips
               </p>
-              <ul className="text-[14px] md:text-xs text-cocoa-faded space-y-0.5">
+              <ul className="text-xs text-cocoa-faded space-y-0.5">
                 <li className="flex gap-1.5">
                   <span>•</span>
                   <span>1 sachet / small bottle of water is 500 ml</span>
