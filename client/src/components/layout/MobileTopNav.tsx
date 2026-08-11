@@ -66,11 +66,11 @@ export const MobileTopNav = () => {
 
   return (
     <>
-      <div className="px-0 fixed top-1 left-4 right-4 z-50">
+      <div className="px-0 fixed top-0 left-0 right-0 z-50">
         <div
           className="bg-white/70 dark:bg-cocoa/70
           backdrop-blur-md
-          rounded-2xl shadow-lg
+           shadow-lg
           border border-white/20 dark:border-white/10
           px-5 py-5 h-14 flex items-center justify-between
           max-w-7xl mx-auto"
@@ -128,7 +128,7 @@ export const MobileTopNav = () => {
         {/* Mobile drawer */}
         {menuOpen && (
           <div
-            className="mt-2 bg-surface dark:bg-black-surface rounded-2xl
+            className="mt-1 bg-surface dark:bg-black-surface rounded-2xl
             shadow-md px-4 py-3 flex flex-col gap-1"
           >
             {[
