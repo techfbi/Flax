@@ -282,6 +282,14 @@ export const getFoodsForSpin = async (
     .lean(); // We do not want our returned object to be full Mongoose document instance (i.e the methods, getters, internal tracking etc). To get faster and use less memory js objects for safe caching.
 
   if (foods.length === 0) {
+    if (region !== "Nigeria" && region !== "India" && region !== "China" && region !== "Ghana" && region !== "America") {
+      throw new AppError(
+        "Meals not yet available for your region. Please contact support.",
+        404,
+        "NO_FOODS_FOUND"
+      );
+    }
+
     throw new AppError(
       "No meals found matching your filters. Try adjusting your preferences.",
       404,

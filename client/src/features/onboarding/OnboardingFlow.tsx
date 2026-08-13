@@ -115,13 +115,11 @@ const AGE_OPTIONS = [
 const REGION_OPTIONS = [
   { value: "Nigeria", label: "Nigeria" },
   { value: "Ghana", label: "Ghana" },
-  { value: "Kenya", label: "Kenya" },
   { value: "South Africa", label: "South Africa" },
   { value: "United Kingdom", label: "United Kingdom" },
-  { value: "United States", label: "United States" },
-  { value: "Canada", label: "Canada" },
+  { value: "America", label: "United States" },
   { value: "India", label: "India" },
-  { value: "Other", label: "Other" },
+  { value: "China", label: "China" },
 ];
 
 /* ── Types ───────────────────────────────────────────────────── */
