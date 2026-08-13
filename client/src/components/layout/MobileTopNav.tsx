@@ -104,9 +104,9 @@ export const MobileTopNav = () => {
 
               {unreadCount > 0 && (
                 <span
-                  className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full
+                  className="absolute -top-1.5 -right-1.5 w-3 h-3 rounded-md
                   bg-pawpaw text-surface text-[9px] font-bold
-                  flex items-center justify-center"
+                  flex items-center justify-center px-2"
                 >
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
