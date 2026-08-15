@@ -356,7 +356,7 @@ const LandingPage = () => {
               {/* Card 1 */}
               <div>
                 {/* Icon circle — amber/yellow bg */}
-                <div className="w-14 h-14 rounded-full bg-[#D89A2D] flex items-center justify-center mb-6 shadow-sm">
+                <div className="w-14 h-14 rounded-full bg-surface-two flex items-center justify-center mb-6 shadow-sm">
                   <img
                     src="/images/forkKnife.png"
                     alt="cutlery"
@@ -379,7 +379,7 @@ const LandingPage = () => {
             <ScrollRevealItem className="bg-moringa dark:bg-moringa-faded/50 rounded-2xl p-8 shadow-sm">
               {/* Card 2 */}
               <div>
-                <div className="w-14 h-14 rounded-full bg-[#D89A2D] flex items-center justify-center mb-6 shadow-sm">
+                <div className="w-14 h-14 rounded-full bg-surface-two flex items-center justify-center mb-6 shadow-sm">
                   <img
                     src="/images/cupWhite.svg"
                     alt="water drop"
