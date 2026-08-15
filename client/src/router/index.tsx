@@ -39,8 +39,10 @@ const PageLoader = () => (
     bg-off-white dark:bg-dark-bg"
   >
     <div
-      className="w-8 h-8 border-2 border-moringa dark:border-moringa-faded
-      border-t-transparent rounded-full animate-spin"
+      className="w-8 h-8 rounded-full animate-spin
+      border-2 border-moringa dark:border-moringa-faded
+      border-t-transparent dark:border-t-transparent"
+      style={{ borderTopColor: "transparent" }}
     />
   </div>
 );
@@ -121,8 +123,10 @@ const RetrySpinner = ({
       gap-4 bg-off-white dark:bg-dark-bg"
     >
       <div
-        className="w-8 h-8 border-2 border-moringa dark:border-moringa-faded
-        border-t-transparent rounded-full animate-spin"
+        className="w-8 h-8 rounded-full animate-spin
+      border-2 border-moringa dark:border-moringa-faded
+      border-t-transparent dark:border-t-transparent"
+        style={{ borderTopColor: "transparent" }}
       />
       <p className="text-sm text-cocoa-faded">Waiting for connection...</p>
     </div>

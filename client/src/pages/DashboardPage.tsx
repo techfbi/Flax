@@ -264,7 +264,12 @@ export const DashboardPage = () => {
             </p>
             {insightsLoading && !insights ? (
               <div className="flex items-center justify-center h-64">
-                <div className="w-8 h-8 border-2 border-moringa dark:border-moringa-faded border-t-transparent rounded-full animate-spin" />
+                <div
+                  className="w-6 h-6 rounded-full animate-spin
+                    border-2 border-moringa dark:border-moringa-faded
+                    border-t-transparent dark:border-t-transparent"
+                  style={{ borderTopColor: "transparent" }}
+                />
               </div>
             ) : !insights ? (
               <div className="flex items-center justify-center h-64">
@@ -771,7 +776,12 @@ export const DashboardPage = () => {
                     </div>
                   ) : (
                     <div className="h-32 flex items-center justify-center">
-                      <div className="w-6 h-6 border-2 border-moringa dark:border-moringa-faded border-t-transparent rounded-full animate-spin" />
+                      <div
+                        className="w-6 h-6 rounded-full animate-spin
+                          border-2 border-moringa dark:border-moringa-faded
+                          border-t-transparent dark:border-t-transparent"
+                        style={{ borderTopColor: "transparent" }}
+                      />
                     </div>
                   )}
                   <p className="text-[11px] text-cocoa-faded mt-3">

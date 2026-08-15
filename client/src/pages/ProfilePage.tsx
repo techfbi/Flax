@@ -302,7 +302,12 @@ export const ProfilePage = () => {
           }}
         >
           <div className="flex items-center justify-center h-full">
-            <div className="w-8 h-8 border-2 border-moringa dark:border-moringa-faded border-t-transparent rounded-full animate-spin" />
+            <div
+              className="w-8 h-8 rounded-full animate-spin
+                border-2 border-moringa dark:border-moringa-faded
+                border-t-transparent dark:border-t-transparent"
+              style={{ borderTopColor: "transparent" }}
+            />{" "}
           </div>
         </div>
       </AppLayout>

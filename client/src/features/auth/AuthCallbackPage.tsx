@@ -63,8 +63,10 @@ const AuthCallbackPage = () => {
     <div className="min-h-screen bg-off-white dark:bg-dark-bg flex items-center justify-center">
       <div className="flex flex-col items-center gap-3">
         <div
-          className="w-8 h-8 border-2 border-moringa dark:border-moringa-faded
-          border-t-transparent rounded-full animate-spin"
+          className="w-8 h-8 rounded-full animate-spin
+          border-2 border-moringa dark:border-moringa-faded
+          border-t-transparent dark:border-t-transparent"
+          style={{ borderTopColor: "transparent" }}
         />
         <p className="text-sm text-cocoa-faded">Signing you in...</p>
       </div>
