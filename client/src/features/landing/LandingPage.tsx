@@ -266,7 +266,7 @@ const LandingPage = () => {
           The navbar floats above so we add pt to clear it (fixed nav = 56px + 12px gap).
       ══════════════════════════════════════════════════════════ */}
       <section
-        className="relative overflow-hidden min-h-[100vh] md:min-h-[70vh] lg:min-h-[90vh] flex items-center"
+        className="relative overflow-hidden min-h-[100vh] md:min-h-[70vh] lg:min-h-[100vh] flex items-center"
         style={{
           background:
             resolvedTheme === "dark"
