@@ -155,10 +155,6 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 /* "/" serves landing for unauthenticated, homepage for authenticated */
 const RootRoute = () => {
   const { isAuthenticated, isLoading } = useAuthStore();
-
-  // Override: Show status bar on landing, hide on home
-  useStatusBar({ show: !isAuthenticated });
-
   if (isLoading) return <PageLoader />;
   return isAuthenticated ? <HomePage /> : <LandingPage />;
 };
@@ -239,7 +235,9 @@ const SessionGate = ({ children }: { children: React.ReactNode }) => {
 
 const AppRouter = () => {
   const location = useLocation();
+  const { isAuthenticated } = useAuthStore();
 
+  // Determine if status bar should show
   const hideStatusBarRoutes = [
     "/spin",
     "/dashboard",
@@ -248,9 +246,18 @@ const AppRouter = () => {
     "/settings",
     "/notifications",
   ];
-  const shouldHide = hideStatusBarRoutes.includes(location.pathname);
 
-  useStatusBar({ show: !shouldHide });
+  const isAuthRoute = hideStatusBarRoutes.some((route) =>
+    location.pathname.startsWith(route),
+  );
+
+  // Hide on auth routes, show on landing, hide on home
+  const isHomePage = location.pathname === "/" && isAuthenticated;
+  const isLandingPage = location.pathname === "/" && !isAuthenticated;
+
+  const showStatusBar = !isAuthRoute && !isHomePage && isLandingPage;
+
+  useStatusBar({ show: showStatusBar });
 
   // Useeffect to set timezone for user
   useEffect(() => {
