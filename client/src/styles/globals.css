@@ -30,6 +30,11 @@ html.dark input:-webkit-autofill:active {
   transition: background-color 5000s ease-in-out 0s !important;
 }
 
+/* This WILL make the browser chrome fade on iOS Safari for status bar smooth transitions */
+body {
+  transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Focus state override */
 input:-webkit-autofill:focus {
   border-color: #7FB096 !important;
