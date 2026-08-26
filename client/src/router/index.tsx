@@ -1,5 +1,11 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import type { ApiResponse, AuthUser, FullProfile } from "@/types/apiTypes";
@@ -149,6 +155,10 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
 /* "/" serves landing for unauthenticated, homepage for authenticated */
 const RootRoute = () => {
   const { isAuthenticated, isLoading } = useAuthStore();
+
+  // Override: Show status bar on landing, hide on home
+  useStatusBar({ show: !isAuthenticated });
+
   if (isLoading) return <PageLoader />;
   return isAuthenticated ? <HomePage /> : <LandingPage />;
 };
@@ -228,7 +238,20 @@ const SessionGate = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppRouter = () => {
-  useStatusBar();
+  const location = useLocation();
+
+  const hideStatusBarRoutes = [
+    "/spin",
+    "/dashboard",
+    "/ask-noura",
+    "/profile",
+    "/settings",
+    "/notifications",
+  ];
+  const shouldHide = hideStatusBarRoutes.includes(location.pathname);
+
+  useStatusBar({ show: !shouldHide });
+
   // Useeffect to set timezone for user
   useEffect(() => {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;

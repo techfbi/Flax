@@ -1,24 +1,48 @@
 // hooks/useStatusBar.ts
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
-export const useStatusBar = (): void => {
+interface UseStatusBarProps {
+  show?: boolean;
+}
+
+export const useStatusBar = ({ show = true }: UseStatusBarProps = {}): void => {
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
-    // Create overlay for smooth transition (works on Android & some iOS browsers)
-    const overlay = document.createElement('div');
-    overlay.id = 'status-bar-fade';
-    overlay.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 0px;
-      z-index: 99999;
-      pointer-events: none;
-      transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    `;
-    document.body.appendChild(overlay);
+    // Create overlay if it doesn't exist
+    if (!overlayRef.current) {
+      const overlay = document.createElement('div');
+      overlay.id = 'status-bar-fade';
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 0px;
+        z-index: 99999;
+        pointer-events: none;
+        transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      `;
+      document.body.appendChild(overlay);
+      overlayRef.current = overlay;
+    }
 
     const updateStatusBar = (): void => {
+      // If show is false, hide everything
+      if (!show) {
+        if (overlayRef.current) {
+          overlayRef.current.style.backgroundColor = 'transparent';
+          overlayRef.current.style.height = '0px';
+        }
+        const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+        if (themeColor) {
+          themeColor.content = 'transparent';
+        }
+        document.body.style.backgroundColor = 'transparent';
+        return;
+      }
+
+      // Normal behavior when show is true
       const isDarkMode = document.documentElement.classList.contains('dark');
       const isScrolled = window.scrollY > 100;
 
@@ -30,9 +54,11 @@ export const useStatusBar = (): void => {
       const mode = isDarkMode ? 'dark' : 'light';
       const bgColor = isScrolled ? colors[mode].scrolled : colors[mode].top;
 
-      // Update overlay (smooth fade for Android)
-      overlay.style.backgroundColor = bgColor;
-      overlay.style.height = 'env(safe-area-inset-top, 0px)';
+      // Update overlay
+      if (overlayRef.current) {
+        overlayRef.current.style.backgroundColor = bgColor;
+        overlayRef.current.style.height = 'env(safe-area-inset-top, 0px)';
+      }
 
       // Update Android meta tag
       const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
@@ -40,7 +66,7 @@ export const useStatusBar = (): void => {
         themeColor.content = bgColor;
       }
 
-      // Update iOS body background (instant, but works)
+      // Update iOS body background
       document.body.style.backgroundColor = bgColor;
       document.body.style.transition = 'background-color 0.5s ease';
 
@@ -68,5 +94,5 @@ export const useStatusBar = (): void => {
       const overlayToRemove = document.getElementById('status-bar-fade');
       if (overlayToRemove) overlayToRemove.remove();
     };
-  }, []);
+  }, [show]); // Re-run when show changes
 };
