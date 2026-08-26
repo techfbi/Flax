@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import type { ApiResponse, AuthUser, FullProfile } from "@/types/apiTypes";
 import { motion, useReducedMotion } from "framer-motion";
 import { NouraChatProvider } from "@/context/NouraChatContext";
+import { useStatusBar } from "@/hooks/useStatusBar";
 
 /* Lazy pages */
 const LandingPage = lazy(() => import("@/features/landing/LandingPage"));
@@ -227,6 +228,7 @@ const SessionGate = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppRouter = () => {
+  useStatusBar();
   // Useeffect to set timezone for user
   useEffect(() => {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
