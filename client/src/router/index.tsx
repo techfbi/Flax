@@ -1,5 +1,11 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import type { ApiResponse, AuthUser, FullProfile } from "@/types/apiTypes";
@@ -228,7 +234,6 @@ const SessionGate = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppRouter = () => {
-  useStatusBar();
   // Useeffect to set timezone for user
   useEffect(() => {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -262,6 +267,23 @@ const AppRouter = () => {
   off of to know when a real route change happened.
 */
 const AnimatedRoutes = () => {
+  const location = useLocation();
+  const { isAuthenticated } = useAuthStore();
+
+  const isLanding = location.pathname === "/" && !isAuthenticated;
+  const isChoseRoute = [
+    "/spin",
+    "/dashboard",
+    "/ask-noura",
+    "/profile",
+    "/settings",
+    "/notifications",
+  ].includes(location.pathname);
+  const isHome = location.pathname === "/" && isAuthenticated;
+
+  const showStatusBar = isLanding || (!isChoseRoute && !isHome);
+
+  useStatusBar({ show: showStatusBar });
   return (
     <Routes location={location} key={location.pathname}>
       <Route path="/" element={<RootRoute />} />

@@ -155,7 +155,7 @@ api.interceptors.response.use(
       // 6b. Server responded to the refresh request.
       //     Now we check the error code and navigate ONLY if it's an auth failure.
       const refreshCode = getErrorCode(refreshError);
-      console.log("The refresh code is ", refreshCode);
+      //console.log("The refresh code is ", refreshCode);
 
       // SMART REDIRECT: Only redirect if NOT already on a login page
       const isOnLoginPage = [
