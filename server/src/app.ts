@@ -16,6 +16,7 @@ import { waterRouter } from "./modules/water/water.routes.js";
 import { streakRouter } from "./modules/streaks/streak.routes.js";
 import { notificationRouter } from "./modules/notifications/notification.routes.js";
 import { runScheduledChecksHandler } from "./modules/notifications/scheduler.controller.js";
+import httpLogger from "./middleware/httpLogger.js";
 
 export const app = express();
 
@@ -52,6 +53,8 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token"],
   })
 );
+// logger
+app.use(httpLogger);
 
 // The scan endpoint accepts a real photo, base64 encoded, which needs
 // real room well past the 20kb default. Excluded here so it gets its

@@ -21,6 +21,7 @@ import { scanMealSchema } from "./meallog.schema.js";
 import { scanMealImage } from "./visionProviders/index.js";
 import { claimScanUsage, refundScanUsage, getScanUsage, DAILY_SCAN_LIMIT } from "./scanUsage.service.js";
 import { getUserTimezone, getLocalDateInTimezone } from "../../shared/date.helpers.js";
+import logger from "../../config/logger.js";
 
 // ---------------------------------------------------------------------------
 // POST /api/meal-logs
@@ -323,7 +324,7 @@ try {
   await refundScanUsage(req.user!.id, localDate);
   throw err;
 }
-console.log(`[REMOVE LOG LATER] [vision] scan completed via ${providerUsed}`);
+logger.info(` [vision] scan completed via ${providerUsed}`);
 
     // Convert the AI's totals for the estimated portion into the per
     // 100g convention the rest of the app already stores everything

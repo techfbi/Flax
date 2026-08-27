@@ -1,6 +1,7 @@
 // src/config/email.ts
 import { Resend } from "resend";
 import { env } from "./env.js";
+import logger from "./logger.js";
 
 export const resend = new Resend(env.RESEND_API_KEY);
 
@@ -35,7 +36,7 @@ export const sendPasswordResetEmail = async (toEmail: string, displayName: strin
 
   if (error) {
     // The forgot email endpoint willalways return 200 to avoid account enumeration, so I log the error here for debugging but do not throw.
-    console.error("Failed to send password reset email.", error);
+    logger.error("Failed to send password reset email.", error);
   }
 };
 
@@ -64,7 +65,7 @@ export const sendOtpEmail = async ( toEmail: string, displayName: string, otp: s
   });
 
   if (error) {
-    console.error("Failed to send OTP email.", error);
+    logger.error("Failed to send OTP email.", error);
   }
 };
 
@@ -211,6 +212,6 @@ export const sendWelcomeEmail = async (toEmail: string, displayName: string): Pr
   });
 
   if (error) {
-    console.error("[REMOVE LOG LATER] Failed to send welcome email.", error);
+    logger.error("Failed to send welcome email.", error);
   }
 };

@@ -1,4 +1,5 @@
 import { pgPool } from "../../config/db.postgres.js";
+//import logger from "../../config/logger.js";
 import { AppError } from "../../shared/errors.js";
 import type { AddPantryItemInput, UpdatePantryItemInput } from "./pantry.schema.js";
 
@@ -66,9 +67,7 @@ export const addPantryItem = async (
     return existing.rows[0];
   }
 
-  console.log(
-    `[REMOVE LOG LATER] Pantry item added. user. ${userId}. item. ${input.name}`
-  );
+  //logger.info(` Pantry item added. user. ${userId}. item. ${input.name}`);
 
   return result.rows[0];
 };
@@ -129,9 +128,7 @@ export const deletePantryItem = async (
     throw new AppError("Pantry item not found", 404, "PANTRY_ITEM_NOT_FOUND");
   }
 
-  console.log(
-    `[REMOVE LOG LATER] Pantry item deleted. user. ${userId}. itemId. ${itemId}`
-  );
+  //logger.info(` Pantry item deleted. user. ${userId}. itemId. ${itemId}`);
 };
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { redis } from "../config/db.redis.js";
 import { sendError } from "../shared/response.js";
+import logger from "../config/logger.js";
 
 interface RateLimitOptions {
   windowSeconds: number;
@@ -58,8 +59,8 @@ let redisAvailable = true;
 redis.on("error", () => {
   if (redisAvailable) {
     redisAvailable = false;
-    console.error(
-      "[REMOVE LOG LATER] Redis unreachable. Rate limiter falling back to " +
+    logger.error(
+      "Redis unreachable. Rate limiter falling back to " +
       "in-memory store. Brute force protection is degraded on multi-instance deployments."
     );
   }
@@ -68,7 +69,7 @@ redis.on("error", () => {
 redis.on("ready", () => {
   if (!redisAvailable) {
     redisAvailable = true;
-    console.log("[REMOVE LOG LATER] Redis reconnected. Rate limiter restored.");
+    logger.info("Redis reconnected. Rate limiter restored.");
   }
 });
 
@@ -89,8 +90,8 @@ const getClientKey = (req: Request, prefix: string): string => {
     "NO_IP_FOUND";
 
   if (ip === "NO_IP_FOUND") {
-    console.error(
-      "[REMOVE LOG LATER] Rate limiter could not determine client IP. " +
+    logger.error(
+      "Rate limiter could not determine client IP. " +
       "Check that app.set trust proxy is configured in app.ts."
     );
   }
@@ -129,8 +130,8 @@ export function rateLimiter({
         // If count is 0 here it means the cast failed unexpectedly.
         // Log it to catch any future Redis version behaviour change.
         if (count === 0 && results?.[0] !== undefined) {
-        console.error(
-            "[REMOVE LOG LATER] Rate limiter: unexpected pipeline exec result type:",
+        logger.error(
+            "Rate limiter: unexpected pipeline exec result type:",
             typeof results?.[0], results?.[0]
         );
         }
@@ -151,16 +152,16 @@ export function rateLimiter({
         return;
       } catch (err) {
         redisAvailable = false;
-        console.error(
-          "[REMOVE LOG LATER] Redis pipeline failed. Switching to memory fallback.",
+        logger.error(
+          "Redis pipeline failed. Switching to memory fallback.",
           err
         );
       }
     }
 
     // Path B — in-memory fallback
-    console.warn(
-      "[REMOVE LOG LATER] Rate limiter using in-memory fallback for key:", key
+    logger.warn(
+      "Rate limiter using in-memory fallback for key:", key
     );
 
     const allowed = memoryRateCheck(key, windowMs, maxRequests);

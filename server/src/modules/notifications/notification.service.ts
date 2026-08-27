@@ -1,4 +1,5 @@
 import { pgPool } from "../../config/db.postgres.js";
+import logger from "../../config/logger.js";
 import { webpush } from "../../config/webpush.js";
 import { insertNotification } from "./notification.model.js";
 
@@ -42,7 +43,7 @@ export const saveSubscription = async ( userId: string, sub: PushSubscriptionInp
     [userId, sub.endpoint, sub.p256dh, sub.auth]
   );
 
-  console.log(`[REMOVE LOG LATER] Push subscription saved. user. ${userId}`);
+  logger.info(` Push subscription saved. user. ${userId}`);
 };
 
 // ---------------------------------------------------------------------------
@@ -88,12 +89,12 @@ export const sendPushToUser = async ( userId: string, payload: { title: string; 
             "DELETE FROM push_subscriptions WHERE id = $1",
             [sub.id]
           );
-          console.log(
-            `[REMOVE LOG LATER] Removed expired push subscription. ${sub.endpoint}`
+          logger.info(
+            ` Removed expired push subscription. ${sub.endpoint}`
           );
         } else {
-          console.error(
-            "[REMOVE LOG LATER] Push notification send failed.",
+          logger.error(
+            " Push notification send failed.",
             err?.message ?? err
           );
         }

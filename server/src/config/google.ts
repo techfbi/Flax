@@ -1,6 +1,7 @@
 import axios from "axios";
 import { env } from "./env.js";
 import { AppError } from "../shared/errors.js";
+import logger from "./logger.js";
 
 // ---------------------------------------------------------------------------
 // Shape of the user info Google returns after we exchange the code.
@@ -31,15 +32,15 @@ export const exchangeCodeForProfile = async (code: string): Promise<GoogleProfil
       { headers: { "Content-Type": "application/json" } }
     );
 
-    console.log("[REMOVE LOG LATER] Google token response:", tokenResponse.data);
-    accessToken = tokenResponse.data.access_token;
+    // logger.info("Google token response:", tokenResponse.data);
+     accessToken = tokenResponse.data.access_token;
 
     if (!accessToken) {
       throw new Error("No access token in Google response");
     }
   } catch (err: any) {
-    console.error(
-      "[REMOVE LOG LATER] Google code exchange failed.",
+    logger.error(
+      "Google code exchange failed.",
       err?.response?.data ?? err?.message ?? err
     );
     throw new AppError(
@@ -56,7 +57,7 @@ export const exchangeCodeForProfile = async (code: string): Promise<GoogleProfil
         }
     );
 
-    console.log("[REMOVE LOG LATER] Google profile response:", profileResponse.data);
+    //logger.info("Google profile response:", profileResponse.data);
     const { sub, email, email_verified, name } = profileResponse.data;
 
     if (!sub || !email) {
@@ -65,8 +66,8 @@ export const exchangeCodeForProfile = async (code: string): Promise<GoogleProfil
 
     return { sub, email, email_verified, name };
   } catch (err: any) {
-    console.error(
-      "[REMOVE LOG LATER] Google profile fetch failed.",
+    logger.error(
+      "Google profile fetch failed.",
       err?.response?.data ?? err?.message ?? err
     );
     throw new AppError(

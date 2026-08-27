@@ -7,6 +7,7 @@ import { AppError } from "../../shared/errors.js";
 import type { FlagMealInput } from "./spin.schema.js";
 import { getUserPantryNames } from "../pantry/pantry.service.js";
 import { generateText } from "../../config/ai.js";
+import logger from "../../config/logger.js";
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -126,9 +127,7 @@ const applyPantryLogic = async (
     }
 
     // Pantry produced no matches.
-    console.log(
-      `[REMOVE LOG LATER] Pantry fallback used for user ${userId}`
-    );
+    //logger.info(`Pantry fallback used for user ${userId}`);
 
     return {
       foods: baseFiltered,
@@ -143,8 +142,8 @@ const applyPantryLogic = async (
   // We continue respecting:
   //   allergens
   //   flagged meals
-  console.log(
-    `[REMOVE LOG LATER] No foods after exclusions. Relaxing recency for ${userId}`
+  logger.info(
+    `No foods after exclusions. Relaxing recency for ${userId}`
   );
 
   const flaggedResult = await pgPool.query(
@@ -203,9 +202,9 @@ const applyPantryLogic = async (
     const pantryRelaxed = filterByPantry(relaxedFoods, userPantry);
 
     if (pantryRelaxed.length > 0) {
-      console.log(
-        `[REMOVE LOG LATER] Returning previously seen pantry meals for ${userId}`
-      );
+      // logger.info(
+      //   `Returning previously seen pantry meals for ${userId}`
+      // );
 
       return {
         foods: pantryRelaxed,
@@ -215,9 +214,9 @@ const applyPantryLogic = async (
     }
   }
 
-  console.log(
-    `[REMOVE LOG LATER] Returning previously seen meals for ${userId}`
-  );
+  // logger.info(
+  //   `Returning previously seen meals for ${userId}`
+  // );
 
   return {
     foods: relaxedFoods,
@@ -244,7 +243,7 @@ export const getFoodsForSpin = async (
     const cached = await redis.get(cacheKey);
 
     if (cached) {
-      console.log(`[REMOVE LOG LATER] Food cache hit. key. ${cacheKey}`);
+      logger.info(` Food cache hit. key. ${cacheKey}`);
       // Parse the cached JSON string back into an array of FoodResult objects.
       // Then pass through the same pantry logic as the MongoDB path.
       // The return type must match the function signature in both the cache
@@ -254,8 +253,8 @@ export const getFoodsForSpin = async (
     }
   } catch (err) {
     // If Redis fails, continue to MongoDB. we didnt block spin due to cache failure.
-    console.error(
-      "[REMOVE LOG LATER] Redis cache read failed. falling back to MongoDB.",
+    logger.error(
+      "Redis cache read failed. falling back to MongoDB.",
       err
     );
   }
@@ -311,10 +310,10 @@ export const getFoodsForSpin = async (
   // so the same cache entry serves all users in the same region.
   try {
     await redis.setEx(cacheKey, 3600, JSON.stringify(foodsWithUrls));
-    console.log(`[REMOVE LOG LATER] Food list cached. key. ${cacheKey}`);
+    logger.info(` Food list cached. key. ${cacheKey}`);
   } catch (err) {
     // Cache write failure is not a blocker. the user still gets their food list.
-    console.error("[REMOVE LOG LATER] Redis cache write failed.", err);
+    logger.error("Redis cache write failed.", err);
   }
 
   // Pass through pantry logic and return.
@@ -406,8 +405,8 @@ export const getAvailableFilters = async (
     const cached = await redis.get(cacheKey);
     if (cached) return JSON.parse(cached);
   } catch (err) {
-    console.error(
-      "[REMOVE LOG LATER] Redis filter cache read failed.",
+    logger.error(
+      "Redis filter cache read failed.",
       err
     );
   }
@@ -450,8 +449,8 @@ export const getAvailableFilters = async (
   try {
     await redis.setEx(cacheKey, 24 * 3600, JSON.stringify(filters));
   } catch (err) {
-    console.error(
-      "[REMOVE LOG LATER] Redis filter cache write failed.",
+    logger.error(
+      "Redis filter cache write failed.",
       err
     );
   }
@@ -472,9 +471,9 @@ export const flagMeal = async (userId: string, input: FlagMealInput): Promise<vo
     [userId, input.food_ref, input.food_name]
   );
 
-  console.log(
-    `[REMOVE LOG LATER] Meal flagged. user. ${userId}. food. ${input.food_name}`
-  );
+  // logger.info(
+  //   `Meal flagged. user. ${userId}. food. ${input.food_name}`
+  // );
 };
 
 // ---------------------------------------------------------------------------
@@ -582,8 +581,8 @@ export const generateSpinReasoning = async (
 
   if (!text) {
     // Both models failed. use hard fallback.
-    console.warn(
-      "[REMOVE LOG LATER] All AI models failed for spin reasoning. Using hard fallback."
+    logger.warn(
+      "All AI models failed for spin reasoning. Using hard fallback."
     );
     return getFallbackReasoning(food.name);
   }
@@ -721,9 +720,9 @@ export const validateMeal = async (
     [userId, foodRef, foodName]
   );
 
-  console.log(
-    `[REMOVE LOG LATER] Meal validated. user. ${userId}. food. ${foodName}`
-  );
+  // logger.info(
+  //   `Meal validated. user. ${userId}. food. ${foodName}`
+  // );
 };
 
 // ---------------------------------------------------------------------------
@@ -739,9 +738,9 @@ export const unvalidateMeal = async (
     [userId, foodRef]
   );
 
-  console.log(
-    `[REMOVE LOG LATER] Meal validation removed. user. ${userId}. food. ${foodRef}`
-  );
+  // logger.info(
+  //   `Meal validation removed. user. ${userId}. food. ${foodRef}`
+  // );
 };
 
 // ---------------------------------------------------------------------------

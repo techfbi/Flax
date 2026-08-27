@@ -14,6 +14,7 @@ import {
   type ActivityLevel,
   type AgeRange,
 } from "../../shared/calculations.js";
+import logger from "../../config/logger.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -393,7 +394,7 @@ export const changePassword = async ( userId: string, input: ChangePasswordInput
   );
 
   const user = result.rows[0];
-  console.log("[REMOVE LOG LATER] User details for password change attempt:", user);
+  //logger.info(`User details for password change attempt: ${JSON.stringify(user)}`);
 
   if (!user) {
     throw new AppError("User not found", 404, "USER_NOT_FOUND");
@@ -435,8 +436,8 @@ export const changePassword = async ( userId: string, input: ChangePasswordInput
     [userId]
   );
 
-  console.log(
-    `[REMOVE LOG LATER] Password changed. all sessions revoked for user. ${userId}`
+  logger.info(
+    `Password changed. all sessions revoked for user. ${userId}`
   );
 };
 
@@ -486,8 +487,8 @@ export const deleteAccount = async ( userId: string, input: DeleteAccountInput )
     [userId]
   );
 
-  console.log(
-    `[REMOVE LOG LATER] Account soft deleted. ${userId}`
+  logger.info(
+    `Account soft deleted. ${userId}`
   );
 };
 

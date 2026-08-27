@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { AppError } from "../shared/errors.js";
 import { sendError } from "../shared/response.js";
 import { env } from "../config/env.js";
+import logger from "../config/logger.js";
 
 export function errorHandler(
   err: Error,
@@ -11,7 +12,7 @@ export function errorHandler(
 ): void {
   if (err instanceof AppError) {
     // This is an expected error so no need to log the trace.
-    // console.warn("[REMOVE LOG LATER] Operational error:", {
+    // logger.warn(" Operational error:", {
     //   message: err.message,
     //   statusCode: err.statusCode,
     //   code: err.code,
@@ -25,7 +26,7 @@ export function errorHandler(
     return;
   }
 
-  console.error("Unhandled server error:", {
+  logger.error("Unhandled server error:", {
     name: err.name,
     message: err.message,
     stack: env.NODE_ENV !== "production" ? err.stack : "[stack hidden in production]",

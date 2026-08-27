@@ -3,6 +3,7 @@ import { AppError } from "../../shared/errors.js";
 import { updateWaterStreak } from "../streaks/streak.service.js";
 import type { LogWaterInput } from "./water.schema.js";
 import { getUserTimezone, isTodayOrYesterdayInTimezone } from "../../shared/date.helpers.js";
+//import logger from "../../config/logger.js";
 
 // ---------------------------------------------------------------------------
 // logWater
@@ -55,10 +56,10 @@ import { getUserTimezone, isTodayOrYesterdayInTimezone } from "../../shared/date
     streakUpdated = true;
   }
 
-  console.log(
-    `[REMOVE LOG LATER] Water logged. user. ${userId}. ` +
-    `amount. ${input.amount_ml}ml. daily total. ${dailyTotal}ml. target. ${targetMl}ml`
-  );
+  // logger.info(
+  //   `Water logged. user. ${userId}. ` +
+  //   `amount. ${input.amount_ml}ml. daily total. ${dailyTotal}ml. target. ${targetMl}ml`
+  // );
 
   return {
     entry: insertResult.rows[0],

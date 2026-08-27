@@ -1,6 +1,7 @@
 import { ChatSession } from "../../models/chat.model.js";
 import { generateChatCompletion } from "../../config/ai.js";
 import { pgPool } from "../../config/db.postgres.js";
+import logger from "../../config/logger.js";
 
 // Model sees 7 previous messages. Keeping this low saves TPM on the Groq free tier.
 const CONTEXT_WINDOW = 7;
@@ -166,10 +167,9 @@ export const sendMessage = async ( userId: string, userMessage: string ): Promis
   // Save the updated session with both the user message and assistant reply.
   await session.save();
 
-  console.log(
-    `[REMOVE LOG LATER] Chat message processed. user. ${userId}. model. ${modelUsed}. ` +
-    `history length. ${session.messages.length}`
-  );
+  // logger.info (`Chat message processed. user. ${userId}. model. ${modelUsed}. ` +
+  //   `history length. ${session.messages.length}`
+  // );
 
   return { reply, modelUsed, isFallback };
 };
@@ -196,5 +196,5 @@ export const clearChatHistory = async (userId: string): Promise<void> => {
     { $set: { messages: [] } }
   );
 
-  console.log(`[REMOVE LOG LATER] Chat history cleared. user. ${userId}`);
+  logger.info(`Chat history cleared. user. ${userId}`);
 };

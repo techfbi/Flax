@@ -10,6 +10,7 @@ import type { ForgotPasswordInput, ResetPasswordInput } from "./auth.schema.js";
 import type { VerifyOtpInput, ResendOtpInput } from "./auth.schema.js";
 import { exchangeCodeForProfile } from "../../config/google.js";
 import { notifyUser } from "../notifications/notification.service.js";
+import logger from "../../config/logger.js";
 
 // ---------------------------------------------------------------------------
 // Set Types
@@ -107,8 +108,8 @@ export const registerUser = async (
     const refreshToken = await generateAndStoreRefreshToken(user.id, familyId);
     const accessToken = generateAccessToken(user.id, user.role);
 
-    console.log(
-      `DEVELOPMENT MODE: User registered without verification. ${user.id}`
+    logger.info(
+      `DEVELOPMENT MODE: User registered without verification.`
     );
 
     return { verified: true, user, tokens: { accessToken, refreshToken } };
@@ -145,9 +146,9 @@ export const registerUser = async (
 
   await sendOtpEmail(input.email, input.display_name, otp);
 
-  console.log(
-    `[REMOVE LOG LATER] Pending registration created. OTP sent. pendingId. ${pendingId}`
-  );
+  // logger.info(
+  //   `Pending registration created. OTP sent. Email: ${input.email}`
+  // );
 
   return {
     verified: false,
@@ -215,7 +216,7 @@ export const loginUser = async (input: LoginInput): Promise<{
     created_at: user.created_at,
   };
 
-  console.log(`[REMOVE LOG LATER] User logged in: ${user.id}`);
+  logger.info(`User logged in: ${user.email}`);
 
   return { user: safeUser, tokens: { accessToken, refreshToken } };
 }
@@ -243,8 +244,8 @@ export const refreshTokens = async (rawToken: string): Promise<TokenPair> => {
   // Token reuse detected, a revoked token was used again. Meaning someone may have stolen and already used this token.
   // Then we revoke the entire family to log out all devices for this user.
   if (storedToken.is_revoked) {
-    console.error(
-      `[REMOVE LOG LATER] Refresh token reuse detected, revoking family: ${storedToken.family_id}. ` +
+    logger.error(
+      `Refresh token reuse detected, revoking family: ${storedToken.family_id}. ` +
       `Possible token theft for user: ${storedToken.user_id}`
     );
 
@@ -358,7 +359,7 @@ export const googleAuth = async (code: string): Promise<{ user: SafeUser; tokens
       "/"
     );
 
-    console.log(`[REMOVE LOG LATER] New user created via Google. ${user.id}`);
+    logger.info(`New user created via Google. Email: ${user.email}`);
   }
 
   // Update last login timestamp for both new and returning users.
@@ -382,7 +383,7 @@ export const googleAuth = async (code: string): Promise<{ user: SafeUser; tokens
     created_at: user.created_at,
   };
 
-  console.log(`[REMOVE LOG LATER] User authenticated via Google. ${user.id}. new account. ${isNewUser}`);
+  logger.info(`User authenticated via Google. Email: ${user.email}, New account: ${isNewUser}`);
 
   return { user: safeUser, tokens: { accessToken, refreshToken }, isNewUser };
 };
@@ -439,7 +440,7 @@ export const requestPasswordReset = async (input: ForgotPasswordInput): Promise<
 
   await sendPasswordResetEmail(input.email, user.display_name, rawToken);
 
-  console.log(`[REMOVE LOG LATER] Password reset email sent to user. ${user.id}`);
+  logger.info(`Password reset email sent to user. Email: ${user.email}`);
 
 };
 
@@ -508,7 +509,7 @@ export const resetPassword = async (input: ResetPasswordInput): Promise<void> =>
     [resetToken.user_id]
   );
 
-  console.log(
+  logger.info(
     `Password reset successful. All sessions revoked for user. ${resetToken.user_id}`
   );
 };
@@ -606,8 +607,8 @@ export const verifyRegistrationOtp = async (
   const refreshToken = await generateAndStoreRefreshToken(user.id, familyId);
   const accessToken = generateAccessToken(user.id, user.role);
 
-  console.log(
-    `OTP verified. user created successfully. ${user.id}`
+  logger.info(
+    `OTP verified. user created successfully. Email: ${user.email}`
   );
 
   // Fire and forget. does not block the response or affect registration outcome.
@@ -657,8 +658,8 @@ export const resendOtp = async (input: ResendOtpInput): Promise<void> => {
 
   await sendOtpEmail(row.email, row.display_name, otp);
 
-  console.log(
-    `[REMOVE LOG LATER] OTP resent for pendingId. ${input.pendingId}`
+  logger.info(
+    `OTP resent for pendingId. ${input.pendingId}`
   );
 };
 

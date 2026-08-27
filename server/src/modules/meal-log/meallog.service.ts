@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { checkAndUpdateGoalStreak } from "../streaks/streak.service.js";
 import { withImageUrl } from "../../shared/food.helpers.js";
 import { getUserTimezone, isTodayOrYesterdayInTimezone } from "../../shared/date.helpers.js";
+//import logger from "../../config/logger.js";
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -113,10 +114,10 @@ export const createCatalogueMealLog = async (
   // fire and forget update meal/goal streak, failure should never block a meal log response
   void checkAndUpdateGoalStreak(userId, result.rows[0].logged_date);
 
-  console.log(
-    `[REMOVE LOG LATER] Catalogue meal logged. user. ${userId}. food. ${input.food_name}. ` +
-    `quantity. ${input.quantity_grams}g. calories. ${calories}`
-  );
+    // logger.info(
+    //   ` Catalogue meal logged. user. ${userId}. food. ${input.food_name}. ` +
+    //   `quantity. ${input.quantity_grams}g. calories. ${calories}`
+    // );
 
   return result.rows[0];
 };
@@ -175,10 +176,10 @@ export const createCustomMealLog = async (
   // fire and forget update meal/goal streak, failure should never block a meal log response
   void checkAndUpdateGoalStreak(userId, result.rows[0].logged_date);
 
-  console.log(
-    `[REMOVE LOG LATER] Custom meal logged. user. ${userId}. name. ${input.custom_name}. ` +
-    `quantity. ${input.quantity_grams}g. calories. ${calories}`
-  );
+  // logger.info(
+  //   ` Custom meal logged. user. ${userId}. name. ${input.custom_name}. ` +
+  //   `quantity. ${input.quantity_grams}g. calories. ${calories}`
+  // );
 
   return result.rows[0];
 };
@@ -261,9 +262,9 @@ export const deleteMealLog = async ( userId: string, logId: string ): Promise<vo
   // but it ensures the streak is not awarded for a day where goal was not hit.
   void checkAndUpdateGoalStreak(userId, loggedDate);
 
-  console.log(
-    `[REMOVE LOG LATER] Meal log deleted. user. ${userId}. logId. ${logId}`
-  );
+  // logger.info(
+  //   ` Meal log deleted. user. ${userId}. logId. ${logId}`
+  // );
 };
 
 // ---------------------------------------------------------------------------
@@ -486,10 +487,10 @@ export const updateMealLog = async (
     values
   );
 
-  console.log(
-    `[REMOVE LOG LATER] Meal log updated. user. ${userId}. logId. ${logId}. ` +
-    `quantity. ${newQuantity}g`
-  );
+  // logger.info(
+  //   ` Meal log updated. user. ${userId}. logId. ${logId}. ` +
+  //   `quantity. ${newQuantity}g`
+  // );
 
   return result.rows[0];
 };

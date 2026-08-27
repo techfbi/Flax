@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { env } from "./env.js";
+import logger from "./logger.js";
 
 export const connectMongo = async (): Promise<void> => {
   // mongoose.set("strictQuery", true);
@@ -8,17 +9,17 @@ export const connectMongo = async (): Promise<void> => {
 
   // mongoose.connection.on("disconnected", () => {
   //   if (!hasConnected) return; // Ignore initial disconnect before first successful connection
-  //   console.error( 
-  //     "[REMOVE LOG LATER] MongoDB disconnected. Mongoose will attempt automatic reconnection."
+  //   logger.error(
+  //     "MongoDB disconnected. Mongoose will attempt automatic reconnection."
   //   );
   // });
 
   // mongoose.connection.on("reconnected", () => {
-  //   console.log("[REMOVE LOG LATER] MongoDB reconnected successfully.");
+  //   logger.info("MongoDB reconnected successfully.");
   // });
 
   // mongoose.connection.on("error", (err) => {
-  //   console.error("[REMOVE LOG LATER] MongoDB connection error:", err.message);
+  //   logger.error("MongoDB connection error:", err.message);
   // });
 
   await mongoose.connect(env.MONGO_URI, {
@@ -27,5 +28,5 @@ export const connectMongo = async (): Promise<void> => {
   });
 
   // hasConnected = true;
-  console.log("MongoDB connected!");
+  logger.info("MongoDB connected!");
 }
