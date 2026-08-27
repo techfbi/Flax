@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://flax-m3iy.onrender.com/api/:path*"
+      "destination": "https://flax-148t.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",

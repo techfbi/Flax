@@ -4,14 +4,14 @@ import {
   Routes,
   Route,
   Navigate,
-  //useLocation,
+  useLocation,
 } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import type { ApiResponse, AuthUser, FullProfile } from "@/types/apiTypes";
 import { motion, useReducedMotion } from "framer-motion";
 import { NouraChatProvider } from "@/context/NouraChatContext";
-//import { useStatusBar } from "@/hooks/useStatusBar";
+import { useStatusBar } from "@/hooks/useStatusBar";
 
 /* Lazy pages */
 const LandingPage = lazy(() => import("@/features/landing/LandingPage"));
@@ -267,23 +267,23 @@ const AppRouter = () => {
   off of to know when a real route change happened.
 */
 const AnimatedRoutes = () => {
-  // const location = useLocation();
-  // const { isAuthenticated } = useAuthStore();
+  const location = useLocation();
+  const { isAuthenticated } = useAuthStore();
 
-  // const isLanding = location.pathname === "/" && !isAuthenticated;
-  // const isChoseRoute = [
-  //   "/spin",
-  //   "/dashboard",
-  //   "/ask-noura",
-  //   "/profile",
-  //   "/settings",
-  //   "/notifications",
-  // ].includes(location.pathname);
-  // const isHome = location.pathname === "/" && isAuthenticated;
+  const isLanding = location.pathname === "/" && !isAuthenticated;
+  const isChoseRoute = [
+    "/spin",
+    "/dashboard",
+    "/ask-noura",
+    "/profile",
+    "/settings",
+    "/notifications",
+  ].includes(location.pathname);
+  const isHome = location.pathname === "/" && isAuthenticated;
 
-  // const showStatusBar = isLanding || (!isChoseRoute && !isHome);
+  const showStatusBar = isLanding || (!isChoseRoute && !isHome);
 
-  // useStatusBar({ show: showStatusBar });
+  useStatusBar({ show: showStatusBar });
   return (
     <Routes location={location} key={location.pathname}>
       <Route path="/" element={<RootRoute />} />
