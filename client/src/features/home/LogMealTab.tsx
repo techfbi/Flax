@@ -236,6 +236,7 @@ export const LogMealTab = () => {
     setCustomIsGrams(true);
     setCustomDescription("");
     setMealType(defaultMealTypeForNow());
+    setCustomDescriptionExtra("");
   };
 
   const logMeal = useMutation({
@@ -759,7 +760,7 @@ export const LogMealTab = () => {
         </div>
       )}
       {!isLoading && (!logs || logs.length === 0) && !selectedFood && (
-        <p className="text-sm text-cocoa-faded text-center py-8">
+        <p className="text-xs md:text-sm text-cocoa-faded text-center py-8">
           No meals logged today. Search above or add a custom meal.
         </p>
       )}
