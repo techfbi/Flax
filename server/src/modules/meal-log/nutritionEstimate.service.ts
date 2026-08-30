@@ -1,5 +1,6 @@
 import { generateText } from "../../config/ai.js";
 import { AppError } from "../../shared/errors.js";
+import { generateStructuredJSON } from "../../config/ai.js";
 
 export interface NutritionEstimate {
   calories: number;
@@ -43,9 +44,9 @@ How to approach this:
 4. Favor accuracy over convenience, do not round to a tidy looking
    number if the real estimate is not tidy.
 
-Return ONLY a JSON object, no markdown, no explanation, shaped exactly
-like this example:
-{"calories": 320, "protein_g": 12.5, "carbs_g": 45.2, "fat_g": 8.1}
+Return ONLY a valid JSON object, no markdown, no explanation, shaped exactly
+like this example and no other text:
+{"calories": number, "protein_g": number, "carbs_g": number, "fat_g": number}
 All four values are totals for the exact ${grams}g portion, not per 100g.
 `;
 
@@ -71,54 +72,23 @@ How to approach this:
 3. Favor accuracy over convenience, do not round to a tidy looking
    number if the real estimate is not tidy.
 
-Return ONLY a JSON object, no markdown, no explanation, shaped exactly
-like this example:
-{"estimated_grams": 180, "calories": 320, "protein_g": 12.5, "carbs_g": 45.2, "fat_g": 8.1}
+Return ONLY a valid JSON object, no markdown, no explanation, shaped exactly
+like this example and no other text:
+{"estimated_grams": number, "calories": number, "protein_g": number, "carbs_g": number, "fat_g": number}
 estimated_grams is your best real world estimate of the total weight
 "${quantityDescription}" of this specific food represents. The remaining four
 values are totals for that estimated portion, not per 100g.
 `;
-
-const parseEstimate = (raw: string, requireEstimatedGrams: boolean): NutritionEstimate => {
-  const cleaned = raw.replace(/```json|```/g, "").trim();
-  const parsed = JSON.parse(cleaned);
-
-  const values = ["calories", "protein_g", "carbs_g", "fat_g"] as const;
-  for (const key of values) {
-    if (typeof parsed[key] !== "number") {
-      throw new Error(`Missing or invalid ${key} in AI response`);
-    }
-  }
-  if (requireEstimatedGrams && typeof parsed.estimated_grams !== "number") {
-    throw new Error("Missing or invalid estimated_grams in AI response");
-  }
-  return {
-    calories: parsed.calories,
-    protein_g: parsed.protein_g,
-    carbs_g: parsed.carbs_g,
-    fat_g: parsed.fat_g,
-    ...(requireEstimatedGrams ? { estimated_grams: parsed.estimated_grams } : {}),
-  };
-};
 
 export const estimateNutrition = async (
   name: string,
   quantity: { grams?: number; quantity_description?: string },
   description?: string,
 ): Promise<NutritionEstimate> => {
-  try {
-    const usingDescription = quantity.grams === undefined;
-    const prompt = usingDescription
-      ? buildPromptForDescription(name, quantity.quantity_description!, description)
-      : buildPromptForGrams(name, quantity.grams!, description);
+  const usingDescription = quantity.grams === undefined;
+  const prompt = usingDescription
+    ? buildPromptForDescription(name, quantity.quantity_description!, description)
+    : buildPromptForGrams(name, quantity.grams!, description);
 
-    const { text } = await generateText(prompt, 250, 0.3);
-    return parseEstimate(text, usingDescription);
-  } catch {
-    throw new AppError(
-      "Could not estimate nutrition for that meal. Try rewording it or enter the values manually.",
-      502,
-      "ESTIMATE_FAILED"
-    );
-  }
+  const { data } = await generateStructuredJSON<NutritionEstimate>(prompt, 400);  return data;
 };
