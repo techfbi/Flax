@@ -1,13 +1,30 @@
 import { pgPool } from "../../config/db.postgres.js";
+import { sendReEngagementEmail } from "../../config/email.js";
 import { claimDailyEvent } from "./notification.model.js";
 import { notifyUser } from "./notification.service.js";
 import { getDashboardData } from "../meal-log/meallog.service.js";
 import { getWaterLogs } from "../water/water.service.js";
 import { getStreaks } from "../streaks/streak.service.js";
 
+// Returns the number of days since the user last logged a meal or water entry.
+// Returns Infinity if they have never logged anything, so the cutoff
+// checks still work correctly for brand new accounts with no data.
+const getDaysSinceLastActivity = async (userId: string): Promise<number> => {
+  const result = await pgPool.query<{ last_active: string | null }>(
+    `SELECT GREATEST(
+       (SELECT MAX(logged_date::text) FROM meal_logs  WHERE user_id = $1),
+       (SELECT MAX(logged_date::text) FROM water_logs WHERE user_id = $1)
+     ) AS last_active`,
+    [userId],
+  );
+  const raw = result.rows[0]?.last_active;
+  if (!raw) return Infinity;
+  const diffMs = Date.now() - new Date(raw).getTime();
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+};
+
 /*
-  Event checkers. Each one runs per active user, per user's own local
-  time, decided by the runScheduledChecks loop below. Every event is
+  Event checkers. Each one runs per active user, per user's own local  time, decided by the runScheduledChecks loop below. Every event is
   gated by claimDailyEvent so it can only fire once per user per day
   even if the scheduler tick overlaps or the server restarts mid day.
 */
@@ -117,9 +134,9 @@ const checkStreakAtRisk = async (userId: string, localDate: string, localHour: n
 // at with server UTC, a wrong guess is worse than no notification.
 // ---------------------------------------------------------------------------
 export const runScheduledChecks = async (): Promise<void> => {
-  const result = await pgPool.query(
-  "SELECT id, timezone, created_at FROM users WHERE timezone IS NOT NULL"
-);
+      const result = await pgPool.query(
+    "SELECT id, email, display_name, timezone, created_at FROM users WHERE timezone IS NOT NULL AND deleted_at IS NULL"
+  );
 
 for (const user of result.rows) {
   try {
@@ -138,6 +155,26 @@ for (const user of result.rows) {
 
       const localDate = `${localParts.find((p) => p.type === "year")!.value}-${localParts.find((p) => p.type === "month")!.value}-${localParts.find((p) => p.type === "day")!.value}`;
       const localHour = parseInt(localParts.find((p) => p.type === "hour")!.value, 10);
+
+      const daysSince = await getDaysSinceLastActivity(user.id);
+
+      // Users inactive for 3 or more days stop receiving push nudges.
+      // They already know the app exists, repeated nudges with no
+      // response become noise. After 14 days send a weekly re-engagement
+      // email instead. The week bucket ensures one email per week of
+      // continued inactivity rather than one every scheduler tick.
+      if (daysSince >= 3) {
+        if (daysSince >= 14) {
+          // Single lifetime re-engagement email. The fixed key means
+          // claimDailyEvent will only ever succeed once for this user
+          // regardless of how many days pass after the two week mark.
+          const claimed = await claimDailyEvent(user.id, "reengagement_email_sent", localDate);
+          if (claimed) {
+            await sendReEngagementEmail(user.email, user.display_name, daysSince);
+          }
+        }
+        continue;
+      }
 
       await checkNoMealLogged(user.id, localDate, localHour);
       await checkEveningTarget(user.id, localDate, localHour);

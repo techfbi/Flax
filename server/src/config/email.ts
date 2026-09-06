@@ -215,3 +215,64 @@ export const sendWelcomeEmail = async (toEmail: string, displayName: string): Pr
     logger.error("Failed to send welcome email.", error);
   }
 };
+
+// ---------------------------------------------------------------------------
+// Sends a re-engagement email when a user has been inactive for 2+ weeks.
+// Called by the notification scheduler, not by any API endpoint.
+// ---------------------------------------------------------------------------
+export const sendReEngagementEmail = async (
+  toEmail: string,
+  displayName: string,
+  daysSince: number,
+): Promise<void> => {
+  const appLink = env.CLIENT_URL;
+
+  const { error } = await resend.emails.send({
+    from: "Flax <onboarding@resend.dev>",
+    to: toEmail,
+    subject: "Your streaks are waiting",
+    html: `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6F1E7;padding:32px 16px;">
+        <tr><td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFFFFF;border-radius:16px;overflow:hidden;">
+            <tr>
+              <td style="background:#2F5D4B;padding:28px 32px;text-align:center;">
+                <span style="font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:700;letter-spacing:2px;color:#FFFFFF;">FLAX</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px 32px 24px;font-family:Arial,Helvetica,sans-serif;">
+                <h2 style="margin:0 0 12px;font-size:20px;color:#1C1A17;">Hi ${displayName}, it has been a while</h2>
+                <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#4B4640;">
+                  Small daily habits compound faster than most people expect. Logging what you eat takes under a minute,
+                  and knowing you hit your calorie goal or drank enough water that day is the kind of feedback
+                  that actually changes behaviour over time.
+                </p>
+                <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#4B4640;">
+                  Your calorie target, your water target, and your health profile are all still set up exactly
+                  as you left them. Noura still knows your goal and your dietary style. Nothing to reconfigure,
+                  just open the app and log something today.
+                </p>
+                <a href="${appLink}"
+                   style="display:inline-block;padding:13px 32px;background:#E8623C;color:#FFFFFF;text-decoration:none;border-radius:8px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;">
+                  Open Flax
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 32px 32px;font-family:Arial,Helvetica,sans-serif;">
+                <p style="margin:0;font-size:13px;line-height:1.6;color:#9C9488;text-align:center;">
+                  You are receiving this because you have a Flax account.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>
+    `,
+  });
+
+  if (error) {
+    console.error("[REMOVE LOG LATER] Failed to send re-engagement email.", error);
+  }
+};
