@@ -4,11 +4,17 @@ import { passwordSchema } from "../auth/auth.schema.js";
 // Update basic profile fields.
 // All fields optional. user can update one or all at once.
 export const updateProfileSchema = z.object({
-  display_name: z
+    display_name: z
     .string()
     .min(2, "Name must be at least 2 characters")
     .max(50, "Name must be under 50 characters")
     .trim()
+    .refine((val) => !/\p{Extended_Pictographic}/u.test(val), {
+      message: "Name cannot contain emoji",
+    })
+    .refine((val) => /[a-zA-Z]/.test(val), {
+      message: "Name must contain at least one letter",
+    })
     .optional(),
   avatar_url: z
     .string()
@@ -53,8 +59,18 @@ export const updateHealthSchema = z.object({
     .array(z.string().min(1).max(50))
     .max(20, "Maximum 20 allergies allowed")
     .optional(),
-  health_conditions: z
-    .array(z.string().min(1).max(100))
+    health_conditions: z
+    .array(
+      z.string()
+        .min(2, "Each condition must be at least 2 characters")
+        .max(100)
+        .refine((val) => !/\p{Extended_Pictographic}/u.test(val), {
+          message: "Conditions cannot contain emoji",
+        })
+        .refine((val) => /[a-zA-Z]/.test(val), {
+          message: "Each condition must contain at least one letter",
+        })
+    )
     .max(20, "Maximum 20 conditions allowed")
     .optional(),
   calorie_target: z

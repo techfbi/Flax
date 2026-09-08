@@ -19,11 +19,17 @@ export const passwordSchema = z
 // ---------------------------------------------------------------------------
 export const registerSchema = z
   .object({
-    display_name: z
+        display_name: z
       .string()
       .min(2, "Name must be at least 2 characters")
       .max(50, "Name must be under 50 characters")
-      .trim(),
+      .trim()
+      .refine((val) => !/\p{Extended_Pictographic}/u.test(val), {
+        message: "Name cannot contain emoji",
+      })
+      .refine((val) => /[a-zA-Z]/.test(val), {
+        message: "Name must contain at least one letter",
+      }),
     email: z
       .string()
       .email("Please enter a valid email address")

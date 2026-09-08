@@ -38,11 +38,17 @@ export const catalogueMealLogSchema = z.object({
 // exactly the same calculation as catalogue logs. This keeps the dashboard aggregation consistent regardless of source.
 // ---------------------------------------------------------------------------
 export const customMealLogSchema = z.object({
-  custom_name: z
+    custom_name: z
     .string()
-    .min(1, "Meal name is required")
+    .min(2, "Meal name must be at least 2 characters")
     .max(100, "Meal name cannot exceed 100 characters")
-    .transform((val) => val.trim()),
+    .transform((val) => val.trim())
+    .refine((val) => !/\p{Extended_Pictographic}/u.test(val), {
+      message: "Meal name cannot contain emoji",
+    })
+    .refine((val) => /[a-zA-Z]/.test(val), {
+      message: "Meal name must contain at least one letter",
+    }),
 
   quantity_grams: z
     .number()
@@ -96,11 +102,17 @@ export const patchMealLogSchema = z
 // ---------------------------------------------------------------------------
 export const estimateNutritionSchema = z
   .object({
-    name: z
+        name: z
       .string()
-      .min(1, "Meal name is required")
+      .min(2, "Meal name must be at least 2 characters")
       .max(100, "Meal name cannot exceed 100 characters")
-      .transform((val) => val.trim()),
+      .transform((val) => val.trim())
+      .refine((val) => !/\p{Extended_Pictographic}/u.test(val), {
+        message: "Meal name cannot contain emoji",
+      })
+      .refine((val) => /[a-zA-Z]/.test(val), {
+        message: "Meal name must contain at least one letter",
+      }),
 
     grams: z
       .number()
@@ -119,6 +131,9 @@ export const estimateNutritionSchema = z
       .min(1, "Quantity description cannot be empty")
       .max(100, "Quantity description cannot exceed 100 characters")
       .transform((val) => val.trim())
+      .refine((val) => !/\p{Extended_Pictographic}/u.test(val), {
+        message: "Quantity description cannot contain emoji",
+      })
       .optional(),
   })
   .refine((data) => data.grams !== undefined || data.quantity_description !== undefined, {

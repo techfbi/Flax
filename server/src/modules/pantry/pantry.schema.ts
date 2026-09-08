@@ -7,10 +7,16 @@ import { z } from "zod";
 // ---------------------------------------------------------------------------
 export const addPantryItemSchema = z.object({
   name: z
-    .string()
+        .string()
     .min(2, "Ingredient name must be at least 2 characters")
     .max(50, "Ingredient name must be under 50 characters")
     .trim()
+    .refine((val) => !/\p{Extended_Pictographic}/u.test(val), {
+      message: "Ingredient name cannot contain emoji",
+    })
+    .refine((val) => /[a-zA-Z]/.test(val), {
+      message: "Ingredient name must contain at least one letter",
+    })
     .toLowerCase(),
 });
 
