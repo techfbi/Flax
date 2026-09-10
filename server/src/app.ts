@@ -17,6 +17,7 @@ import { streakRouter } from "./modules/streaks/streak.routes.js";
 import { notificationRouter } from "./modules/notifications/notification.routes.js";
 import { runScheduledChecksHandler } from "./modules/notifications/scheduler.controller.js";
 import httpLogger from "./middleware/httpLogger.js";
+import reviewRouter from "./modules/reviews/review.routes.js";
 
 export const app = express();
 
@@ -90,6 +91,7 @@ app.use("/api/streaks", streakRouter);
 app.use("/api/water", waterRouter);
 app.use("/api/notifications", notificationRouter);
 app.post("/internal/run-scheduled-checks", runScheduledChecksHandler);
+app.use("/api/reviews", reviewRouter);
 
 app.use((_req, res) => {
   res.status(404).json({

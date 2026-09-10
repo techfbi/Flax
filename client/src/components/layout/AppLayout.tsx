@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
 import { useSessionState } from "@/hooks/useSessionState";
+import { ReviewSheet } from "@/features/reviews/ReviewSheet";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -68,7 +69,6 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
       <div className="hidden lg:flex shrink- sticky top-0 h-screen">
         <Sidebar collapsed={collapsed} onToggle={handleDesktopToggle} />
       </div>
-
       {/* Tablet: collapsed icon strip always visible */}
       <div className="hidden md:flex lg:hidden shrink-0">
         {/* Fixed icon strip */}
@@ -92,7 +92,6 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
           </>
         )}
       </div>
-
       {/* Main area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/*
@@ -104,6 +103,8 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
         */}
         <main className="flex-1 lg:overflow-hidden lg:min-h-0">{children}</main>
       </div>
+      {/* Review sheet — rendered at layout level so it's accessible from any nav trigger */}
+      <ReviewSheet />
     </div>
   );
 };

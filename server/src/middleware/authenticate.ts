@@ -40,7 +40,7 @@ export function authenticate(
     // with a different secret. We catch those cases below.
     const decoded = jwt.verify(token, env.ACCESS_TOKEN_SECRET) as {
       sub: string;
-      role: string;
+      role: "admin" | "user";
       iat: number;
       exp: number;
     };
@@ -50,7 +50,8 @@ export function authenticate(
     const user: AuthenticatedUser = {
       id: decoded.sub,
       email: "",  // not in JWT payload, to fetch from DB if needed via /me
-      role: decoded.role,
+      role: decoded.role ?? "user", 
+      sub: decoded.sub,
     };
 
     req.user = user;

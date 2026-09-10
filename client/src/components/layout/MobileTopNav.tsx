@@ -20,6 +20,9 @@ import { useAuthStore } from "@/store/authStore";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import api from "@/lib/api";
 import type { InternalAxiosRequestConfig } from "axios";
+import { MessageSquare } from "lucide-react";
+import { useReviewStore } from "@/store/reviewStore";
+import { useReviewUnread } from "@/hooks/useReviewUnread";
 
 /*
   Mobile top nav. Floating rounded card, same pattern as landing page navbar.
@@ -32,6 +35,8 @@ export const MobileTopNav = () => {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
+  const { open: openReviews } = useReviewStore();
+  const { data: hasUnreadReview } = useReviewUnread();
 
   //The counter capped at 9+ clearing on notification open
   const { data: notifData } = useQuery({
@@ -148,6 +153,22 @@ export const MobileTopNav = () => {
                 {item.label}
               </Link>
             ))}
+            <button
+              onClick={() => {
+                setMenuOpen(false);
+                openReviews();
+              }}
+              className="flex items-center gap-3 px-2 py-2.5 text-sm font-medium
+                  text-cocoa dark:text-dark-white hover:opacity-70 transition-opacity w-full text-left"
+            >
+              <div className="relative">
+                <MessageSquare size={18} />
+                {hasUnreadReview && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-pawpaw dark:bg-black-pawpaw" />
+                )}
+              </div>
+              Reviews
+            </button>
             <button
               onClick={() => {
                 setMenuOpen(false);

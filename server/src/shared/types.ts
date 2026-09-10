@@ -3,7 +3,8 @@
 export interface AuthenticatedUser {
   id: string;
   email: string;
-  role: string;
+  sub: string;
+  role: "admin" | "user";
 }
 
 // Extends Express Request so TypeScript knows about req.user

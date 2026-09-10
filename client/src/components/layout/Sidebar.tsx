@@ -13,6 +13,9 @@ import { useAuthStore } from "@/store/authStore";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import api from "@/lib/api";
 import type { InternalAxiosRequestConfig } from "axios";
+import { MessageSquare } from "lucide-react";
+import { useReviewStore } from "@/store/reviewStore";
+import { useReviewUnread } from "@/hooks/useReviewUnread";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -32,6 +35,8 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   const { user, avatarUrl, clearAuth } = useAuthStore();
   const navigate = useNavigate();
   const [showLogout, setShowLogout] = useState(false);
+  const { open: openReviews } = useReviewStore();
+  const { data: hasUnreadReview } = useReviewUnread();
 
   const firstName = user?.display_name?.split(" ")[0] ?? "User";
 
@@ -191,6 +196,26 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
               )}
             </NavLink>
           ))}
+
+          {/* Reviews button, opens the review sheet */}
+          <button
+            onClick={openReviews}
+            className={`flex items-center gap-3 px-3 py-2.5 w-full
+              transition-colors duration-150 relative
+              text-cocoa/60 dark:text-dark-white/50
+              hover:bg-cocoa/5 dark:hover:bg-dark-white/5
+              border-l-2 border-transparent`}
+          >
+            <div className="relative shrink-0">
+              <MessageSquare size={18} />
+              {hasUnreadReview && (
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-pawpaw dark:bg-black-pawpaw" />
+              )}
+            </div>
+            {!collapsed && (
+              <span className="text-sm font-heading font-medium">Reviews</span>
+            )}
+          </button>
         </nav>
 
         {/* Bottom section */}
