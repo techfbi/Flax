@@ -239,3 +239,15 @@ export const chatLimiter = rateLimiter({
   maxRequests: 20,
   keyPrefix: "chat",
 });
+
+export const reviewPostLimiter = rateLimiter({
+  windowSeconds: 60,
+  maxRequests: 5,
+  keyPrefix: "review:post",
+});
+
+export const reviewMutateLimiter = rateLimiter({
+  windowSeconds: 60,
+  maxRequests: 10,
+  keyPrefix: "review:mutate",
+});

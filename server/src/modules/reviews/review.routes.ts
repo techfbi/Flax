@@ -1,6 +1,10 @@
 import { Router } from "express";
 import { authenticate } from "../../middleware/authenticate.js";
 import {
+  reviewPostLimiter,
+  reviewMutateLimiter,
+} from "../../middleware/rateLimiter.js";
+import {
   getReviews, postReview, editReview, removeReview,
   postReply, editReply, removeReply, markRead, checkUnread,
 } from "./review.controller.js";
@@ -13,15 +17,13 @@ router.use(authenticate);
 router.get("/unread", checkUnread);
 router.post("/read", markRead);
 
-// Review CRUD
 router.get("/", getReviews);
-router.post("/", postReview);
-router.patch("/:id", editReview);
-router.delete("/:id", removeReview);
+router.post("/", reviewPostLimiter, postReview);
+router.patch("/:id", reviewMutateLimiter, editReview);
+router.delete("/:id", reviewMutateLimiter, removeReview);
 
-// Reply routes
-router.post("/:id/reply", postReply);
-router.patch("/reply/:id", editReply);
-router.delete("/reply/:id", removeReply);
+router.post("/:id/reply", reviewMutateLimiter, postReply);
+router.patch("/reply/:id", reviewMutateLimiter, editReply);
+router.delete("/reply/:id", reviewMutateLimiter, removeReply);
 
 export default router;

@@ -34,7 +34,8 @@ const reviewWithRelations = `
     r.updated_at,
     json_build_object(
       'display_name', u.display_name,
-      'avatar_url',   u.avatar_url
+      'avatar_url',   u.avatar_url,
+      'email',        u.email
     ) AS "user",
     CASE WHEN rr.id IS NOT NULL THEN
       json_build_object(
@@ -84,13 +85,27 @@ export const createReview = async (userId: string, message: string): Promise<Rev
 };
 
 export const updateReview = async (reviewId: string, userId: string, message: string): Promise<void> => {
-  const { rowCount } = await pgPool.query(
+  const { rows } = await pgPool.query<{ created_at: string }>(
+    `SELECT created_at FROM reviews WHERE id = $1 AND user_id = $2`,
+    [reviewId, userId],
+  );
+  if (!rows.length) throw new AppError("Review not found", 404, "REVIEW_NOT_FOUND");
+
+  const ageMs = Date.now() - new Date(rows[0].created_at).getTime();
+  if (ageMs > 60 * 60 * 1000) {
+    throw new AppError(
+      "Reviews can only be edited within 1 hour of posting",
+      403,
+      "EDIT_WINDOW_EXPIRED",
+    );
+  }
+
+  await pgPool.query(
     `UPDATE reviews
      SET message = $1, is_edited = TRUE, updated_at = NOW()
      WHERE id = $2 AND user_id = $3`,
     [message.trim(), reviewId, userId],
   );
-  if (!rowCount) throw new AppError("Review not found", 404, "REVIEW_NOT_FOUND");
 };
 
 export const deleteReview = async (reviewId: string, userId: string): Promise<void> => {
