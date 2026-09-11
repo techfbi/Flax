@@ -77,14 +77,13 @@ const Avatar = ({
         className="shrink-0 rounded-full bg-moringa flex items-center justify-center"
         style={s}
       >
-        <svg
-          width={size * 0.44}
-          height={size * 0.44}
-          viewBox="0 0 24 24"
-          fill="white"
-        >
-          <path d="M12 2L13.5 10.5L22 12L13.5 13.5L12 22L10.5 13.5L2 12L10.5 10.5L12 2Z" />
-        </svg>
+        <img
+          src="/images/logoIconDark.png"
+          alt="Flax"
+          width={18}
+          height={18}
+          className="object-contain"
+        />
       </div>
     );
   }
@@ -319,7 +318,7 @@ const ReviewItem = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-0.5">
                     <span className="font-heading font-semibold text-xs text-cocoa dark:text-dark-white">
-                      Admin
+                      Ojayy from Flax
                     </span>
                     <span className="text-[11px] text-cocoa-faded shrink-0">
                       {relativeTime(review.reply.created_at)}
@@ -399,7 +398,7 @@ const ReviewItem = ({
                 </div>
               </div>
             ) : canReply ? (
-              // Reply button — expands to input on click
+              // Reply button expands to input on click
               <div className="mt-1">
                 {!showReplyBox ? (
                   <button
@@ -703,7 +702,7 @@ export const ReviewSheet = () => {
         )}
       </div>
 
-      {/* Input — hidden for admin, they reply inline per review */}
+      {/* Input hidden for admin, they reply inline per review */}
       {!isAdmin && (
         <div className="shrink-0 px-4 py-3 border-t border-cocoa/8 dark:border-dark-white/8">
           <div className="flex gap-2 items-center">
@@ -742,7 +741,7 @@ export const ReviewSheet = () => {
 
   return (
     <>
-      {/* Backdrop — fades in with the sheet */}
+      {/* Backdrop fades in with the sheet */}
       <div
         className="fixed inset-0 z-[60] bg-black/35 backdrop-blur-[2px]"
         style={{
