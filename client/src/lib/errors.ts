@@ -14,6 +14,11 @@ export const getErrorMessage = (
   error: unknown,
   fallback = "Something went wrong. Please try again.",
 ): string => {
+  //when offline.
+  if ((error as any)?.isOfflineError === true) {
+    return "Check your connection and try again.";
+  }
+
   if (!axios.isAxiosError(error)) {
     return error instanceof Error ? error.message : fallback;
   }

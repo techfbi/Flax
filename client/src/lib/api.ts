@@ -55,6 +55,18 @@ const api: AxiosInstance = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+// Reject immediately if the browser knows it is offline, rather than
+// waiting for axios to attempt the request and timeout. navigator.onLine
+// is not a guarantee of connectivity, but it is a reliable indicator of complete offline state.
+api.interceptors.request.use((config) => {
+  if (!navigator.onLine) {
+    const err = new Error("Check your connection and try again.") as any;
+    err.isOfflineError = true;
+    return Promise.reject(err);
+  }
+  return config;
+});
+
 /* Attach access token to every request */
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = tokenStore.get()
