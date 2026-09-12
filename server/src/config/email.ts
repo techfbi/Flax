@@ -12,7 +12,7 @@ export const sendPasswordResetEmail = async (toEmail: string, displayName: strin
   const resetLink = `${env.CLIENT_URL}/reset-password?token=${rawToken}`;
 
   const { error } = await resend.emails.send({
-    from: "Flax <onboarding@resend.dev>", // Mail for testing with Resend, change to real email later
+    from: "Flax <no-reply@useflax.cc>", // Mail for testing with Resend, change to real email later
     to: toEmail,
     subject: "Reset your Flax password",
     html: `
@@ -45,7 +45,7 @@ export const sendPasswordResetEmail = async (toEmail: string, displayName: strin
 export const sendOtpEmail = async ( toEmail: string, displayName: string, otp: string): Promise<void> => {
 
   const { error } = await resend.emails.send({
-    from: "Flax <onboarding@resend.dev>", // Mail for testing with Resend, change to real email later
+    from: "Flax <no-reply@useflax.cc>", // Mail for testing with Resend, change to real email later
     to: toEmail,
     subject: "Your Flax verification code",
     html: `
@@ -81,7 +81,7 @@ export const sendWelcomeEmail = async (toEmail: string, displayName: string): Pr
   const appLink = env.CLIENT_URL;
 
   const { error } = await resend.emails.send({
-    from: "Flax <onboarding@resend.dev>", // change to real domain email later
+    from: "Flax <no-reply@useflax.cc>", // change to real domain email later
     to: toEmail,
     subject: "Welcome to Flax, let's get you set up",
     html: `
@@ -228,7 +228,7 @@ export const sendReEngagementEmail = async (
   const appLink = env.CLIENT_URL;
 
   const { error } = await resend.emails.send({
-    from: "Flax <onboarding@resend.dev>",
+    from: "Flax <no-reply@useflax.cc>",
     to: toEmail,
     subject: "Your streaks are waiting",
     html: `
