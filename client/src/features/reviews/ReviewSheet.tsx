@@ -563,7 +563,7 @@ export const ReviewSheet = () => {
       setInput("");
       await invalidate();
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to post review"));
+      toast.error(getErrorMessage(err, "Failed to post feedback"));
     } finally {
       setSending(false);
     }
@@ -574,7 +574,7 @@ export const ReviewSheet = () => {
       await api.patch(`/api/reviews/${id}`, { message: msg });
       await invalidate();
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to edit review"));
+      toast.error(getErrorMessage(err, "Failed to edit feedback"));
     }
   };
   const handleDelete = async (id: string) => {
@@ -582,7 +582,7 @@ export const ReviewSheet = () => {
       await api.delete(`/api/reviews/${id}`);
       await invalidate();
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to delete review"));
+      toast.error(getErrorMessage(err, "Failed to delete feedback"));
     }
   };
   const handleReply = async (reviewId: string, msg: string) => {
@@ -636,7 +636,7 @@ export const ReviewSheet = () => {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-cocoa/8 dark:border-dark-white/8 shrink-0">
         <h3 className="font-heading font-bold text-sm text-cocoa dark:text-dark-white">
-          {isAdmin ? "All Reviews" : "Reviews"}
+          {isAdmin ? "All Feedbacks" : "Feedbacks"}
         </h3>
         <button
           onClick={close}
@@ -676,11 +676,11 @@ export const ReviewSheet = () => {
             </div>
             <div>
               <p className="text-xs font-heading font-semibold text-cocoa dark:text-dark-white mb-0.5">
-                {isAdmin ? "No reviews yet" : "Drop a review"}
+                {isAdmin ? "No feedback yet" : "Drop your feedback"}
               </p>
               <p className="text-[11px] text-cocoa-faded leading-relaxed max-w-[180px]">
                 {isAdmin
-                  ? "Reviews from users will appear here"
+                  ? "Feedbacks from users will appear here"
                   : "Only you and the admin can see it"}
               </p>
             </div>
@@ -716,7 +716,7 @@ export const ReviewSheet = () => {
                   handlePost();
                 }
               }}
-              placeholder="Write a review..."
+              placeholder="Drop your feedback..."
               className="flex-1 min-w-0 text-sm bg-surface-two dark:bg-black-surface border border-cocoa/15
                 dark:border-dark-white/15 rounded-xl px-3 py-2 text-cocoa dark:text-dark-white
                 outline-none focus:border-moringa-faded placeholder:text-cocoa-faded transition-colors"

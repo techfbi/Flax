@@ -167,7 +167,7 @@ export const MobileTopNav = () => {
                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-pawpaw dark:bg-black-pawpaw" />
                 )}
               </div>
-              Reviews
+              Feedback
             </button>
             <button
               onClick={() => {

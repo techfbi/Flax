@@ -213,7 +213,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
               )}
             </div>
             {!collapsed && (
-              <span className="text-sm font-heading font-medium">Reviews</span>
+              <span className="text-sm font-heading font-medium">Feedback</span>
             )}
           </button>
         </nav>

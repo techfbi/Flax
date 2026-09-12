@@ -29,7 +29,7 @@ export const postReview = async (req: Request, res: Response, next: NextFunction
     const parsed = messageSchema.safeParse(req.body.message);
     if (!parsed.success) throw new AppError(parsed.error.issues[0].message, 400, "VALIDATION_ERROR");
     const review = await createReview(req.user!.sub, parsed.data);
-    sendSuccess({ res, statusCode: 201, data: { review }, message: "Review posted" });
+    sendSuccess({ res, statusCode: 201, data: { review }, message: "Feedback posted" });
   } catch (err) { next(err); }
 };
 
@@ -38,14 +38,14 @@ export const editReview = async (req: Request, res: Response, next: NextFunction
     const parsed = messageSchema.safeParse(req.body.message);
     if (!parsed.success) throw new AppError(parsed.error.issues[0].message, 400, "VALIDATION_ERROR");
     await updateReview(req.params.id as string, req.user!.sub, parsed.data);
-    sendSuccess({ res, message: "Review updated" });
+    sendSuccess({ res, message: "Feedback updated" });
   } catch (err) { next(err); }
 };
 
 export const removeReview = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     await deleteReview(req.params.id as string, req.user!.sub);
-    sendSuccess({ res, message: "Review deleted" });
+    sendSuccess({ res, message: "Feedback deleted" });
   } catch (err) { next(err); }
 };
 

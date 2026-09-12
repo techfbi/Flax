@@ -34,20 +34,20 @@ const reviewWithRelations = `
     r.updated_at,
     json_build_object(
       'display_name', u.display_name,
-      'avatar_url',   u.avatar_url,
-      'email',        u.email
+      'avatar_url', u.avatar_url,
+      'email', u.email
     ) AS "user",
     CASE WHEN rr.id IS NOT NULL THEN
       json_build_object(
-        'id',           rr.id,
-        'message',      rr.message,
-        'is_edited',    rr.is_edited,
+        'id', rr.id,
+        'message',rr.message,
+        'is_edited', rr.is_edited,
         'seen_by_user', rr.seen_by_user,
-        'created_at',   rr.created_at
+        'created_at', rr.created_at
       )
     ELSE NULL END AS reply
   FROM reviews r
-  JOIN  users u         ON u.id  = r.user_id
+  JOIN  users u ON u.id  = r.user_id
   LEFT JOIN review_replies rr ON rr.review_id = r.id
 `;
 
@@ -89,12 +89,12 @@ export const updateReview = async (reviewId: string, userId: string, message: st
     `SELECT created_at FROM reviews WHERE id = $1 AND user_id = $2`,
     [reviewId, userId],
   );
-  if (!rows.length) throw new AppError("Review not found", 404, "REVIEW_NOT_FOUND");
+  if (!rows.length) throw new AppError("Feedback not found", 404, "FEEDBACK_NOT_FOUND");
 
   const ageMs = Date.now() - new Date(rows[0].created_at).getTime();
   if (ageMs > 60 * 60 * 1000) {
     throw new AppError(
-      "Reviews can only be edited within 1 hour of posting",
+      "Feedbacks can only be edited within 1 hour of posting",
       403,
       "EDIT_WINDOW_EXPIRED",
     );
@@ -113,7 +113,7 @@ export const deleteReview = async (reviewId: string, userId: string): Promise<vo
     `DELETE FROM reviews WHERE id = $1 AND user_id = $2`,
     [reviewId, userId],
   );
-  if (!rowCount) throw new AppError("Review not found", 404, "REVIEW_NOT_FOUND");
+  if (!rowCount) throw new AppError("Feedback not found", 404, "FEEDBACK_NOT_FOUND");
 };
 
 // ON CONFLICT handles the case where a reply already exists (edit in place).
@@ -123,7 +123,7 @@ export const createOrUpdateReply = async (reviewId: string, message: string): Pr
     `SELECT user_id FROM reviews WHERE id = $1`,
     [reviewId],
   );
-  if (!rows.length) throw new AppError("Review not found", 404, "REVIEW_NOT_FOUND");
+  if (!rows.length) throw new AppError("Feedback not found", 404, "FEEDBACK_NOT_FOUND");
 
   await pgPool.query(
     `INSERT INTO review_replies (review_id, message)
@@ -136,8 +136,8 @@ export const createOrUpdateReply = async (reviewId: string, message: string): Pr
   await notifyUser(
     rows[0].user_id,
     "review_reply",
-    "Admin replied to your review",
-    "You have a new reply. Open the reviews panel to see it.",
+    "Admin replied to your feedback",
+    "You have a new reply. Open the feedback panel to see it.",
     "/",
   );
 };
