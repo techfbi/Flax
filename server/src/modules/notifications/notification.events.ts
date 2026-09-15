@@ -168,7 +168,7 @@ for (const user of result.rows) {
           // Single lifetime re-engagement email. The fixed key means
           // claimDailyEvent will only ever succeed once for this user
           // regardless of how many days pass after the two week mark.
-          const claimed = await claimDailyEvent(user.id, "reengagement_email_sent", localDate);
+          const claimed = await claimDailyEvent(user.id, "reengagement_email_sent", "lifetime");
           if (claimed) {
             await sendReEngagementEmail(user.email, user.display_name, daysSince);
           }
