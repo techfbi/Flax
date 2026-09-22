@@ -339,9 +339,7 @@ const LandingPage = () => {
         <div className="max-w-6xl mx-auto">
           <ScrollReveal>
             <h2 className="font-heading text-1xl md:text-[20px] lg:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-2 lg:mb-4 max-w-80 md:max-w-2xl mx-auto">
-              Most nutrition advice{" "}
-              <span className="text-pawpaw dark:text-black-pawpaw">fails</span>{" "}
-              because it ignores the{" "}
+              Most nutrition advice fails because it ignores the{" "}
               <span className="text-pawpaw dark:text-black-pawpaw">habits</span>{" "}
               people struggle with every day.
             </h2>
@@ -370,8 +368,10 @@ const LandingPage = () => {
                 </h3>
                 <p className="text-xs md:text-sm text-surface/80 leading-relaxed">
                   A meal here, a snack there, it's easy to lose track. Log from
-                  a regional catalogue, describe something custom, or let Noura
-                  estimate it for you, whichever way you actually eat.
+                  a regional catalogue, describe something custom - a Nigerian,
+                  Ghanaian or any African dish, or snap your plate and Noura
+                  will identify it and estimate it for you, whichever way you
+                  actually eat.
                 </p>
               </div>
             </ScrollRevealItem>
@@ -422,15 +422,17 @@ const LandingPage = () => {
             </p>
 
             {/* Content box */}
-            <div className="bg-surface dark:bg-black-surface rounded-2xl p-8 max-w-2xl mx-auto text-left">
+            <div className="bg-surface dark:bg-black-surface rounded-2xl p-8 max-w-3xl mx-auto text-left">
               <p className="text-xs md:text-sm text-cocoa dark:text-dark-white leading-relaxed text-center">
-                Tell flax your goal once,{" "}
-                <strong>lose weight, gain muscle, eat better</strong>, whatever
-                it is, and every target, every log, every streak is calculated
-                around getting you there. Big ups for African dishes, no
-                hold-back, Snap jollof, amala, nkwobi or suya and get instant
-                nutrition data. Noura identifies African dishes better than any
-                nutrition app.
+                Set your goal once,{" "}
+                <strong>lose weight, build muscle, eat better</strong>. Every
+                target, every log, every streak is built around getting you
+                there.{" "}
+                <p>
+                  Then just point your camera at your plate. Jollof, amala,
+                  nkwobi, suya. Noura recognises African dishes and gives you
+                  instant nutrition data. No guessing. No generic food database.
+                </p>
               </p>
             </div>
           </div>
@@ -882,7 +884,7 @@ const LandingPage = () => {
             </p>
           </ScrollReveal>
 
-          <ScrollRevealGroup className="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
+          <ScrollRevealGroup className="grid sm:grid-cols-2 gap-5 max-w-[55rem] mx-auto">
             {" "}
             {/* Card 1 — Set your goal, moringa circle */}
             <ScrollRevealItem className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
@@ -899,9 +901,10 @@ const LandingPage = () => {
                 <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
                   Set your goal
                 </p>
-                <p className="text-xs md:text-base text-cocoa-faded leading-relaxed">
-                  Region, diet, allergies, and what you're working toward. Two
-                  minutes, skip anything you're not ready to share.
+                <p className="text-xs md:text-sm text-cocoa-faded leading-relaxed">
+                  Calorie targets are auto-calculated from your age, height,
+                  weight, activity level and goal. Hydration target is
+                  auto-calculated based on your gender and activity level.
                 </p>
               </div>
             </ScrollRevealItem>
@@ -920,7 +923,7 @@ const LandingPage = () => {
                 <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
                   Get a suggestion
                 </p>
-                <p className="text-xs md:text-base text-cocoa-faded leading-relaxed">
+                <p className="text-xs md:text-sm text-cocoa-faded leading-relaxed">
                   You ran out of ideas? Spin for a meal that fits your goal and
                   what's already in your kitchen. Noura also tells you why the
                   meal was picked.
@@ -944,7 +947,8 @@ const LandingPage = () => {
                 </p>
                 <p className="text-xs md:text-sm text-cocoa-faded leading-relaxed">
                   From the catalogue, your own custom entry, or a quick photo
-                  Noura reads for you. No nutrition database memorized required.
+                  scan Noura reads for you (including Wanke, Egusi and other
+                  local ingredients). No nutrition database memorized required.
                 </p>
               </div>
             </ScrollRevealItem>
@@ -984,7 +988,7 @@ const LandingPage = () => {
       <section className="bg-surface dark:bg-black-surface py-20 px-6 text-center">
         <ScrollReveal>
           <h2 className="font-heading text-1xl md:text-[20px] lg:text-3xl font-bold text-cocoa dark:text-dark-white mb-2 lg:mb-4">
-            Ready to transform your
+            Ready to transform your{" "}
             <span className="text-pawpaw dark:text-black-pawpaw">
               nutrition journey
             </span>{" "}
@@ -993,7 +997,7 @@ const LandingPage = () => {
           <p className="text-xs md:text-sm text-cocoa-faded mb-8">
             Set up your profile in under two minutes.
             <br />
-            Eat well with Flax without losing your culture.
+            And eat well with Flax without losing your culture.
           </p>
           <button
             onClick={() => navigate("/register")}
