@@ -13,10 +13,45 @@
     <meta name="theme-color" content="#ffffff">
     <meta name="msapplication-TileColor" content="#ffffff">
     <title>Flax</title>
+    <meta name="description" content="Flax is an intelligent nutrition and hydration tracking app built for Nigerian and West African users. Log meals, track water, and get personalised guidance from Noura, your AI nutrition assistant." />
+
+    <meta property="og:title" content="Flax — Intelligent Hydration & Nutrition Tracker for Nigerian & West African dishes" />
+    <meta property="og:description" content="Log water & local meals, scan your plate, and let Noura guide your nutrition and hydration goals. Built specifically to identify and estimate Nigerian and West African food culture." />
+    <meta property="og:url" content="https://useflax.cc" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://useflax.cc/og-image.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Flax — Intelligent Hydration & Nutrition Tracker" />
+    <meta name="twitter:description" content="Personalised hydration and nutrition tracking for Nigerian and West African users. Powered by Noura AI." />
   </head>
   <body>
     <div id="root"></div>
     <div id="modal-root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Flax",
+        "applicationCategory": "HealthApplication",
+        "operatingSystem": "Web",
+        "url": "https://useflax.cc",
+        "description": "An intelligent nutrition and hydration tracking app for Nigerian and West African users, featuring an AI assistant named Noura that scans meals, estimates macros, and answers food questions personalised to the user's health profile. The meal scanner is specifically trained to identify and estimate local, Nigerian and West African dishes. Users can buid streaks, track water intake, and get personalised guidance on their nutrition and hydration goals.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@type": "Person",
+          "name": "Oluwafemi Johnson"
+          "sameAs": [
+            "https://x.com/ojayy__x",
+            "https://www.linkedin.com/in/johnsonprofile",
+          ]
+        }
+      }
+    </script>
   </body>
 </html>
