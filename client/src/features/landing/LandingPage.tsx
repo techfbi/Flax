@@ -228,7 +228,7 @@ const NOURA_CAPABILITIES = [
     icon: Camera,
     title: "Scan a plate",
     description:
-      "Point your camera at what's in front of you. Noura identifies every item and works out the calories and macros before you've picked up a fork.",
+      "Snap what's in front of you, including fufu, amala, jollof - Noura identifies every item and works out the calories and macros before you've picked up a fork.",
   },
   {
     icon: MessageSquare,
@@ -427,8 +427,10 @@ const LandingPage = () => {
                 Tell flax your goal once,{" "}
                 <strong>lose weight, gain muscle, eat better</strong>, whatever
                 it is, and every target, every log, every streak is calculated
-                around getting you there. No spreadsheets, no guesswork, just
-                numbers that actually apply to you.
+                around getting you there. Big ups for African dishes, no
+                hold-back, Snap jollof, amala, nkwobi or suya and get instant
+                nutrition data. Noura identifies African dishes better than any
+                nutrition app.
               </p>
             </div>
           </div>
@@ -710,8 +712,9 @@ const LandingPage = () => {
                 </span>
               </h3>
               <p className="text-xs md:text-sm lg:text-base text-surface/75 leading-relaxed">
-                Noura sees your profile and your logs, so every answer,
-                estimate, and suggestion is actually about you.
+                Noura sees your profile and your logs, so every answer and
+                suggestion is actually about you. Noura has capacity to also
+                identify any African dish confidently.
               </p>
             </div>
 
@@ -981,16 +984,16 @@ const LandingPage = () => {
       <section className="bg-surface dark:bg-black-surface py-20 px-6 text-center">
         <ScrollReveal>
           <h2 className="font-heading text-1xl md:text-[20px] lg:text-3xl font-bold text-cocoa dark:text-dark-white mb-2 lg:mb-4">
-            Your first{" "}
+            Ready to transform your
             <span className="text-pawpaw dark:text-black-pawpaw">
-              suggestion
+              nutrition journey
             </span>{" "}
-            is one spin away
+            ?
           </h2>
           <p className="text-xs md:text-sm text-cocoa-faded mb-8">
             Set up your profile in under two minutes.
             <br />
-            Flax handles the rest.
+            Eat well with Flax without losing your culture.
           </p>
           <button
             onClick={() => navigate("/register")}
