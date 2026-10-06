@@ -32,7 +32,7 @@ const makeGroqVisionProvider = (name: string, model: string): VisionProvider => 
 
 export const groqQwenVisionProvider = makeGroqVisionProvider(
   "groq-qwen-vision",
-  "qwen/qwen3.6-27b",
+  "qwen/qwen3.8-27b",
 );
 export const groqLlamaScoutVisionProvider = makeGroqVisionProvider(
   "groq-llama-scout-vision",
