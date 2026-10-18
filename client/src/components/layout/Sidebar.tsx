@@ -41,7 +41,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   const firstName = user?.display_name?.split(" ")[0] ?? "User";
 
   const navItems = [
-    { to: "/", icon: Home, label: "Homepage" },
+    { to: "/home", icon: Home, label: "Homepage" },
     { to: "/spin", icon: RefreshCw, label: "Spin" },
     { to: "/dashboard", icon: BarChart2, label: "Dashboard" },
     { to: "/ask-noura", icon: MessageCircle, label: "Ask Noura", dot: true },
@@ -85,7 +85,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
           className={`flex items-center md:pt-5 lg:pt-9 pb-6 px-3 ${collapsed ? "flex-col gap-4" : "justify-between"}`}
         >
           {!collapsed && (
-            <Link to="/" aria-label="Home">
+            <Link to="/home" aria-label="Home">
               <img
                 src={
                   resolvedTheme === "dark"
@@ -102,7 +102,7 @@ export const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
               Collapsed logo: icon only.
               Place at public/images/logoIcon.png (40x36px).
             */
-            <Link to="/" aria-label="Home">
+            <Link to="/home" aria-label="Home">
               <img
                 src={
                   resolvedTheme === "dark"

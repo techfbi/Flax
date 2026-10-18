@@ -143,20 +143,32 @@ const RetrySpinner = ({
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuthStore();
   if (isLoading) return <PageLoader />;
-  return isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
+  return isAuthenticated ? (
+    <>{children}</>
+  ) : (
+    <Navigate to="/landingpage" replace />
+  );
 };
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading, pendingNavigation } = useAuthStore();
   if (isLoading || pendingNavigation) return <PageLoader />;
-  return !isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
+  return !isAuthenticated ? <>{children}</> : <Navigate to="/home" replace />;
 };
 
 /* "/" serves landing for unauthenticated, homepage for authenticated */
+// Root only redirects. It never renders page content directly.
+// This keeps / clean for both authenticated and unauthenticated users
+// without any page component conditionally swapping, which was causing
+// Googlebot to see a loading spinner instead of real content.
 const RootRoute = () => {
   const { isAuthenticated, isLoading } = useAuthStore();
   if (isLoading) return <PageLoader />;
-  return isAuthenticated ? <HomePage /> : <LandingPage />;
+  return isAuthenticated ? (
+    <Navigate to="/home" replace />
+  ) : (
+    <Navigate to="/landingpage" replace />
+  );
 };
 
 /*
@@ -286,7 +298,31 @@ const AnimatedRoutes = () => {
   useStatusBar({ show: showStatusBar });
   return (
     <Routes location={location} key={location.pathname}>
+      {/* Root redirects only — no page content renders here */}
       <Route path="/" element={<RootRoute />} />
+
+      {/* Public landing page — no auth wrapper so Googlebot crawls it instantly */}
+      <Route
+        path="/landingpage"
+        element={
+          <PageTransition>
+            <LandingPage />
+          </PageTransition>
+        }
+      />
+
+      {/* Authenticated home — was previously at / */}
+      <Route
+        path="/home"
+        element={
+          <ProtectedRoute>
+            <PageTransition>
+              <HomePage />
+            </PageTransition>
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
       <Route
@@ -411,7 +447,7 @@ const AnimatedRoutes = () => {
         }
       />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/landingpage" replace />} />
     </Routes>
   );
 };
