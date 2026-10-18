@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/landingpage",
+      "destination": "/landingpage.html"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://flax-148t.onrender.com/api/:path*"
     },
