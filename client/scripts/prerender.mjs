@@ -51,7 +51,10 @@ try {
     throw new Error('Vite preview server did not become ready.');
   }
 
-  browser = await puppeteer.launch({ headless: true });
+  browser = await puppeteer.launch({
+  headless: true,
+  args: ['--no-sandbox', '--disable-setuid-sandbox'],
+});
   const page = await browser.newPage();
 
   page.setDefaultNavigationTimeout(60000);
