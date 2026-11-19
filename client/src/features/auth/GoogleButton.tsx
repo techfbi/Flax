@@ -4,9 +4,9 @@
  * Google redirects back to /auth/callback?code=xxx after user consent.
  * Frontend then POSTs the code to POST /api/auth/google (Pattern B).
  *
- * TRACK: VITE_GOOGLE_CLIENT_ID must be set in .env before this works.
+ * TRACK: NEXT_PUBLIC_GOOGLE_CLIENT_ID (or legacy VITE_GOOGLE_CLIENT_ID) must be set in .env before this works.
  * TRACK: Authorised redirect URI in Google Cloud Console must match
- *        the VITE_GOOGLE_REDIRECT_URI value exactly.
+ *        the NEXT_PUBLIC_GOOGLE_REDIRECT_URI value exactly.
  */
 
 interface GoogleButtonProps {
@@ -17,8 +17,8 @@ interface GoogleButtonProps {
 const SCOPES = ["openid", "email", "profile"].join(" ");
 
 const buildGoogleUrl = (): string => {
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
-  const redirectUri = import.meta.env.VITE_GOOGLE_REDIRECT_URI as string;
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string;
+  const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI as string;
 
   const params = new URLSearchParams({
     client_id: clientId,

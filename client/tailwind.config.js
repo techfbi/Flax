@@ -2,13 +2,13 @@
 export default {
   // Toggle dark mode by adding/removing the 'dark' class on <html>
   darkMode: 'class',
-  content: ['./index.html', './src/**/*.{ts,tsx}'],
+  content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       fontFamily: {
         // Montserrat for all headings, Inter for body (loaded in index.html)
         heading: ['Montserrat', 'sans-serif'],
-        body: ['Inter', 'system-ui'],
+        body: ['var(--font-inter)', 'Inter', 'system-ui'],
       },
       colors: {
         // ── Brand palette ──────────────────────────────────────

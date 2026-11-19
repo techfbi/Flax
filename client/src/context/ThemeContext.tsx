@@ -1,3 +1,5 @@
+"use client";
+
 import {
   createContext,
   useContext,
@@ -5,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { THEME_STORAGE_KEY } from "@/lib/themeKey";
 
 export type Theme = "light" | "dark" | "system";
 
@@ -17,18 +20,36 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-const STORAGE_KEY = "flax-theme";
+// Shared with the inline script in app/layout.tsx, which applies the
+// dark class before first paint so server rendered pages never flash
+// the wrong theme.
+const STORAGE_KEY = THEME_STORAGE_KEY;
 
+const isBrowser = typeof window !== "undefined";
+
+/*
+  Server rendered markup must never depend on theme or resolvedTheme,
+  the server cannot know the visitor's preference. Public pages style
+  themed elements with Tailwind dark: classes instead, which the inline
+  head script makes correct before paint. The logged in app renders
+  client only, so it reads the real values from its very first render.
+*/
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
-    // Read persisted preference on first render
-    const saved = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    return saved ?? "system";
+    if (!isBrowser) return "system";
+    try {
+      // Read persisted preference on first render
+      const saved = localStorage.getItem(STORAGE_KEY) as Theme | null;
+      return saved ?? "system";
+    } catch {
+      return "system";
+    }
   });
 
   // Resolve 'system' to the actual OS preference
   const getResolved = (t: Theme): "light" | "dark" => {
     if (t === "system") {
+      if (!isBrowser) return "light";
       return window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
         : "light";
@@ -59,7 +80,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   }, [theme]);
 
   const setTheme = (t: Theme) => {
-    localStorage.setItem(STORAGE_KEY, t);
+    try {
+      localStorage.setItem(STORAGE_KEY, t);
+    } catch {
+      // storage unavailable, preference just lasts for this visit
+    }
     setThemeState(t);
   };
 
@@ -70,7 +95,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useTheme = () => {
   const ctx = useContext(ThemeContext);
   if (!ctx) throw new Error("useTheme must be used inside ThemeProvider");

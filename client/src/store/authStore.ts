@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { tokenStore } from '@/lib/tokenStore'
+import { sessionHint } from '@/lib/sessionHint'
 import type { AuthUser } from '@/types/apiTypes'
 
 interface AuthState {
@@ -31,10 +32,12 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setAuth: (user, accessToken) => {
     tokenStore.set(accessToken)
+    sessionHint.set()
     set({ user, isAuthenticated: true, isLoading: false })
   },
 
   setUser: (user) => {
+    sessionHint.set()
     set({ user, isAuthenticated: true, isLoading: false })
   },
 
@@ -42,6 +45,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   clearAuth: () => {
     tokenStore.clear()
+    sessionHint.clear()
     set({ user: null, isAuthenticated: false, isLoading: false, pendingNavigation: false })
   },
 

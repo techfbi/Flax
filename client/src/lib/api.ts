@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
 import { tokenStore } from './tokenStore'
+import { sessionHint } from './sessionHint'
 
 declare module 'axios' {
   export interface InternalAxiosRequestConfig {
@@ -49,7 +50,9 @@ const getErrorCode = (err: unknown): string | null => {
 }
 
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
+  // Empty by default: every call already uses an absolute /api/... path,
+  // which the host proxies to the backend on the same origin.
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? '',
   timeout: 100000,
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
@@ -183,6 +186,9 @@ api.interceptors.response.use(
 
       // TOKEN_REUSED or TOKEN_EXPIRED → session expired → go to login
       if (refreshCode && NAVIGATE_TO_EXPIRED.has(refreshCode)) {
+        // Cleared before navigating so the public homepage never sends
+        // this browser back into the app on a session that is gone.
+        sessionHint.clear();
         if (!isOnLoginPage) {
           window.location.replace('/login?session=expired');
         }
@@ -196,6 +202,7 @@ api.interceptors.response.use(
       // instead, matching the contract documented at the top of this file.
       const NOT_LOGGED_IN_CODES = new Set(['NO_TOKEN', 'INVALID_TOKEN']);
       if (refreshCode && NOT_LOGGED_IN_CODES.has(refreshCode)) {
+        sessionHint.clear();
         if (!isOnLoginPage) {
           window.location.replace('/');
         }

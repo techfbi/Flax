@@ -13,8 +13,16 @@ import { motion, useReducedMotion } from "framer-motion";
 import { NouraChatProvider } from "@/context/NouraChatContext";
 import { useStatusBar } from "@/hooks/useStatusBar";
 
+/*
+  This router now only runs the signed in app and the auth screens. It
+  is mounted client side by app/[...app]/page.tsx for a fixed list of
+  paths (see lib/spaRoutes.ts). Public pages, the landing page at "/",
+  /foods, /tools, /about and so on, are server rendered by Next.js and
+  are not part of this router, links from here to them must be full
+  page loads (HardRedirect below), never react-router navigations.
+*/
+
 /* Lazy pages */
-const LandingPage = lazy(() => import("@/features/landing/LandingPage"));
 const HomePage = lazy(() => import("@/features/home/HomePage"));
 const RegisterForm = lazy(() => import("@/features/auth/RegisterForm"));
 const LoginForm = lazy(() => import("@/features/auth/LoginForm"));
@@ -29,15 +37,15 @@ const ResetPasswordForm = lazy(
 const OnboardingFlow = lazy(
   () => import("@/features/onboarding/OnboardingFlow"),
 );
-//const PlaceholderPage = lazy(() => import("@/pages/PlaceholderPage"));
+//const PlaceholderPage = lazy(() => import("@/screens/PlaceholderPage"));
 const SpinTab = lazy(() =>
   import("@/features/home/SpinTab").then((m) => ({ default: m.SpinTab })),
 );
-const AskNouraPage = lazy(() => import("@/pages/AskNouraPage"));
-const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
-const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
-const NotificationsPage = lazy(() => import("@/pages/NotificationsPage"));
-const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
+const AskNouraPage = lazy(() => import("@/screens/AskNouraPage"));
+const ProfilePage = lazy(() => import("@/screens/ProfilePage"));
+const SettingsPage = lazy(() => import("@/screens/SettingsPage"));
+const NotificationsPage = lazy(() => import("@/screens/NotificationsPage"));
+const DashboardPage = lazy(() => import("@/screens/DashboardPage"));
 
 /* Full screen spinner, shown while verifying session */
 const PageLoader = () => (
@@ -140,14 +148,22 @@ const RetrySpinner = ({
   );
 };
 
+/*
+  Full page navigation to a URL this router does not own, the public
+  landing page or any other server rendered page. A react-router
+  <Navigate> would try to render that path inside the SPA instead.
+*/
+const HardRedirect = ({ to }: { to: string }) => {
+  useEffect(() => {
+    window.location.replace(to);
+  }, [to]);
+  return <PageLoader />;
+};
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuthStore();
   if (isLoading) return <PageLoader />;
-  return isAuthenticated ? (
-    <>{children}</>
-  ) : (
-    <Navigate to="/landingpage" replace />
-  );
+  return isAuthenticated ? <>{children}</> : <HardRedirect to="/" />;
 };
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
@@ -156,18 +172,20 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return !isAuthenticated ? <>{children}</> : <Navigate to="/home" replace />;
 };
 
-/* "/" serves landing for unauthenticated, homepage for authenticated */
-// Root only redirects. It never renders page content directly.
-// This keeps / clean for both authenticated and unauthenticated users
-// without any page component conditionally swapping, which was causing
-// Googlebot to see a loading spinner instead of real content.
+/*
+  Only reached through an in app navigate("/"), e.g. goToLogMeal, a
+  full page load of "/" is served by the server rendered landing page
+  and never mounts this router. Signed in users go to /home inside the
+  SPA, which keeps in memory state like a prefilled meal intact. Anyone
+  else gets the real landing page through a full page load.
+*/
 const RootRoute = () => {
   const { isAuthenticated, isLoading } = useAuthStore();
   if (isLoading) return <PageLoader />;
   return isAuthenticated ? (
     <Navigate to="/home" replace />
   ) : (
-    <Navigate to="/landingpage" replace />
+    <HardRedirect to="/" />
   );
 };
 
@@ -301,15 +319,8 @@ const AnimatedRoutes = () => {
       {/* Root redirects only — no page content renders here */}
       <Route path="/" element={<RootRoute />} />
 
-      {/* Public landing page — no auth wrapper so Googlebot crawls it instantly */}
-      <Route
-        path="/landingpage"
-        element={
-          <PageTransition>
-            <LandingPage />
-          </PageTransition>
-        }
-      />
+      {/* Old landing URL, the server 301s it to "/" on a full load */}
+      <Route path="/landingpage" element={<HardRedirect to="/" />} />
 
       {/* Authenticated home — was previously at / */}
       <Route
@@ -447,7 +458,7 @@ const AnimatedRoutes = () => {
         }
       />
 
-      <Route path="*" element={<Navigate to="/landingpage" replace />} />
+      <Route path="*" element={<RootRoute />} />
     </Routes>
   );
 };

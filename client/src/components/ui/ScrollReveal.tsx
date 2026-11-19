@@ -1,5 +1,7 @@
+"use client";
+
 import { motion, useReducedMotion } from "framer-motion";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 /*
   Fades and rises a block into view the first time it crosses into
@@ -9,8 +11,26 @@ import type { ReactNode } from "react";
   rather than deliberate.
 
   Skips the animation entirely under prefers-reduced-motion, content
-  is just there from the start with no transition.
+  is just there with no transition.
+
+  Server rendering: the server cannot know the reduced motion setting,
+  so the first client render must match the server (animated markup)
+  or React hydration leaves the server's opacity: 0 in place and the
+  content never shows. The plain, non animated version is swapped in
+  only after mount, which is a normal update, not a hydration mismatch.
+  The text itself is always present in the HTML, so crawlers read it
+  whether or not any animation ever runs.
 */
+const useSkipAnimation = (): boolean => {
+  const reduceMotion = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
+  return mounted && !!reduceMotion;
+};
+
 interface ScrollRevealProps {
   children: ReactNode;
   delay?: number;
@@ -22,9 +42,9 @@ export const ScrollReveal = ({
   delay = 0,
   className,
 }: ScrollRevealProps) => {
-  const reduceMotion = useReducedMotion();
+  const skip = useSkipAnimation();
 
-  if (reduceMotion) return <div className={className}>{children}</div>;
+  if (skip) return <div className={className}>{children}</div>;
 
   return (
     <motion.div
@@ -53,9 +73,9 @@ export const ScrollRevealGroup = ({
   children: ReactNode;
   className?: string;
 }) => {
-  const reduceMotion = useReducedMotion();
+  const skip = useSkipAnimation();
 
-  if (reduceMotion) return <div className={className}>{children}</div>;
+  if (skip) return <div className={className}>{children}</div>;
 
   return (
     <motion.div
@@ -80,9 +100,9 @@ export const ScrollRevealItem = ({
   children: ReactNode;
   className?: string;
 }) => {
-  const reduceMotion = useReducedMotion();
+  const skip = useSkipAnimation();
 
-  if (reduceMotion) return <div className={className}>{children}</div>;
+  if (skip) return <div className={className}>{children}</div>;
 
   return (
     <motion.div
