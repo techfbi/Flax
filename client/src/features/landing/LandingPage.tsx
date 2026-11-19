@@ -301,7 +301,12 @@ const LandingPage = () => {
           tokens in tailwind.config.js so the server HTML is right for
           both themes. Light: moringa-faded bleeds from top-left. Dark:
           dark-bg dominates, moringa bleeds from the top-left edge. */}
-      <section className="relative overflow-hidden min-h-[100vh] md:min-h-[70vh] lg:min-h-[100vh] flex items-center bg-brand-gradient dark:bg-brand-gradient-dark">
+      {/* Heights are capped: Google renders pages in a viewport stretched
+          to the whole page height (thousands of px), an uncapped 100vh
+          hero then pushed the headline ~3000px down and Search Console's
+          screenshot showed only the navbar. Real screens are below the
+          caps, so visitors see exactly the same full height hero. */}
+      <section className="relative overflow-hidden min-h-[min(100vh,1000px)] md:min-h-[min(70vh,1000px)] lg:min-h-[min(100vh,1300px)] flex items-center bg-brand-gradient dark:bg-brand-gradient-dark">
         <div className="w-full max-w-7xl mx-auto px-6 pt-20 md:pt-24 pb-0 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
           {/* Left: text + CTA */}
           <div className=" w-full md:max-w-[520px] flex flex-col items-center text-center md:items-start md:text-left">
