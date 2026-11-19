@@ -30,28 +30,14 @@ html.dark input:-webkit-autofill:active {
   transition: background-color 5000s ease-in-out 0s !important;
 }
 
-/* This WILL make the browser chrome fade on iOS Safari for status bar smooth transitions */
-body {
-  transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
+/* Same color as the page body, so overscroll and the safe area behind
+   the mobile status bar never show a separate colored band. */
 html {
-  background-color: #9DAFA1;
-  transition: background-color 0.3s ease;
+  background-color: #F6F1E7;
 }
 
 html.dark {
   background-color: #171410;
-}
-
-/* When status bar is hidden on dark mode */
-html.dark.hide-status-bar {
-  background-color: #171410;
-}
-
-/* When status bar is hidden on light mode */
-html.light.hide-status-bar {
-  background-color: #9DAFA1;
 }
 
 /* Focus state override */

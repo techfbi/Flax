@@ -18,6 +18,7 @@ import { notificationRouter } from "./modules/notifications/notification.routes.
 import { runScheduledChecksHandler } from "./modules/notifications/scheduler.controller.js";
 import httpLogger from "./middleware/httpLogger.js";
 import reviewRouter from "./modules/reviews/review.routes.js";
+import { publicRouter } from "./modules/public/public.routes.js";
 
 export const app = express();
 
@@ -92,6 +93,7 @@ app.use("/api/water", waterRouter);
 app.use("/api/notifications", notificationRouter);
 app.post("/internal/run-scheduled-checks", runScheduledChecksHandler);
 app.use("/api/reviews", reviewRouter);
+app.use("/api/public", publicRouter); // unauthenticated, read only, verified catalogue fields only
 
 app.use((_req, res) => {
   res.status(404).json({

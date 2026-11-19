@@ -62,7 +62,7 @@ export const SettingsPage = () => {
   const navigate = useNavigate();
   const { enabled: spinSoundEnabled, setEnabled: setSpinSoundEnabled } =
     useSpinSound();
-  const showDeleteAccount = import.meta.env.VITE_SHOW_DELETE_ACCOUNT;
+  const showDeleteAccount = process.env.NEXT_PUBLIC_SHOW_DELETE_ACCOUNT;
 
   // ---- Notifications ----
   const [pushEnabled, setPushEnabled] = useState(false);

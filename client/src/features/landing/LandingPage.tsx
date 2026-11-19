@@ -1,27 +1,63 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import Link from "next/link";
 import {
   ArrowRight,
   Camera,
+  ChevronDown,
   MessageSquare,
   Sparkles,
   Brain,
 } from "lucide-react";
-import { useTheme } from "@/context/ThemeContext";
-import { Navbar } from "@/components/layout/Navbar";
+import { PublicNavbar } from "@/components/public/PublicNavbar";
+import { PublicFooterLinks } from "@/components/public/PublicFooterLinks";
 import { line, curveMonotoneX } from "d3-shape";
 import {
   ScrollReveal,
   ScrollRevealGroup,
   ScrollRevealItem,
 } from "@/components/ui/ScrollReveal";
+import { sessionHint } from "@/lib/sessionHint";
+import { LANDING_FAQS } from "./landingFaqs";
 
 /**
  * Landing page — the only scrollable page.
  * Every section, color, fill, card, chart, and badge matches the design exactly
  * Streak cards contain inline SVG charts — donut + macro bars (left),
  * area line chart (right). No library needed for these static display elements.
+ *
+ * Server rendered by Next.js at "/" (app/(public)/page.tsx), so the full
+ * text is in the HTML search engines receive. Rules that keep it that way:
+ * - Markup never depends on the theme. Themed colors use Tailwind dark:
+ *   classes, the server cannot know the visitor's theme.
+ * - Navigation uses real links (next/link), never onClick navigate().
+ * - Nothing here calls the API, a crawler must never be redirected away.
  */
+
+/*
+  Signed in visitors go straight to the app, like the old SPA root
+  route did. Only browsers that hold the session hint are redirected,
+  crawlers never have it, so they always see this page. The guard stops
+  a second redirect within a few seconds, if /home bounced back here
+  the session was stale and the app has already cleared the hint.
+*/
+const REDIRECT_GUARD_KEY = "flax-home-redirect-at";
+
+const useSignedInRedirect = () => {
+  useEffect(() => {
+    if (!sessionHint.has()) return;
+    try {
+      const last = Number(sessionStorage.getItem(REDIRECT_GUARD_KEY) ?? 0);
+      if (Date.now() - last < 10_000) return;
+      sessionStorage.setItem(REDIRECT_GUARD_KEY, String(Date.now()));
+    } catch {
+      // sessionStorage unavailable, redirect anyway, the app clears a
+      // stale hint before it could ever send the browser back here
+    }
+    window.location.replace("/home");
+  }, []);
+};
 
 /* ── Typing animation hook ───────────────────────────────────── */
 const PHRASES = [
@@ -63,8 +99,6 @@ const useTypingAnimation = () => {
 
 /* ── Donut chart — goal streak card ─────────────────────────── */
 const DonutChart = () => {
-  const { resolvedTheme } = useTheme();
-
   // 1564 / 2900 kcal = ~54% consumed. Stroke arcs: protein moringa, carbs pawpaw, fat yellow
   const r = 54;
   const cx = 70;
@@ -123,7 +157,7 @@ const DonutChart = () => {
         cy={cy}
         r={r}
         fill="none"
-        stroke={resolvedTheme === "dark" ? "#D4522E" : "#E8623C"}
+        className="stroke-[#E8623C] dark:stroke-[#D4522E]"
         strokeWidth="16"
         strokeDasharray={`${carbs} ${circ - carbs}`}
         strokeDashoffset={-protein}
@@ -135,7 +169,7 @@ const DonutChart = () => {
         cy={cy}
         r={r}
         fill="none"
-        stroke={resolvedTheme === "dark" ? "#7FB096" : "#2F5D4B"}
+        className="stroke-[#2F5D4B] dark:stroke-[#7FB096]"
         strokeWidth="16"
         strokeDasharray={`${protein} ${circ - protein}`}
         transform={`rotate(-90 ${cx} ${cy})`}
@@ -160,7 +194,6 @@ const DonutChart = () => {
 
 /* ── Area line chart — water streak card ─────────────────────── */
 const WaterChart = () => {
-  const { resolvedTheme } = useTheme();
   // Points matching the design curve shape
   const points: [number, number][] = [
     [0, 80],
@@ -194,7 +227,7 @@ const WaterChart = () => {
       <path
         d={pathD}
         fill="none"
-        stroke={resolvedTheme === "dark" ? "#D4522E" : "#E8623C"}
+        className="stroke-[#E8623C] dark:stroke-[#D4522E]"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -252,30 +285,23 @@ const NOURA_CAPABILITIES = [
 
 /* ── Main component ──────────────────────────────────────────── */
 const LandingPage = () => {
-  const navigate = useNavigate();
   const typedText = useTypingAnimation();
-  const { resolvedTheme } = useTheme();
+  useSignedInRedirect();
 
   return (
     <div className="min-h-screen bg-off-white dark:bg-dark-bg font-body">
-      <Navbar />
+      <PublicNavbar variant="landing" />
 
       {/* ══ HERO ════════════════════════════════════════════════
           Gradient: light = off-white body, green enters from top-left corner slanting.
           Dark = dark-bg body, green enters from top-left corner edge slanting.
           The navbar floats above so we add pt to clear it (fixed nav = 56px + 12px gap).
       ══════════════════════════════════════════════════════════ */}
-      <section
-        className="relative overflow-hidden min-h-[100vh] md:min-h-[70vh] lg:min-h-[100vh] flex items-center"
-        style={{
-          background:
-            resolvedTheme === "dark"
-              ? /* Dark: dark-bg dominates, moringa bleeds from top-left corner edge */
-                "linear-gradient(170deg, #405245 10%, #2A3129 45%, #2A3129 10%, #171410 100%)"
-              : /* Light: off-white dominates, moringa-faded bleeds from top-left */
-                "linear-gradient(170deg, #9DAFA1 15%, #EAE8DE 45%, #EAE8DE 30%, #F6F1E7 100%)",
-        }}
-      >
+      {/* Gradients are the same values as before, via the brand-gradient
+          tokens in tailwind.config.js so the server HTML is right for
+          both themes. Light: moringa-faded bleeds from top-left. Dark:
+          dark-bg dominates, moringa bleeds from the top-left edge. */}
+      <section className="relative overflow-hidden min-h-[100vh] md:min-h-[70vh] lg:min-h-[100vh] flex items-center bg-brand-gradient dark:bg-brand-gradient-dark">
         <div className="w-full max-w-7xl mx-auto px-6 pt-20 md:pt-24 pb-0 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
           {/* Left: text + CTA */}
           <div className=" w-full md:max-w-[520px] flex flex-col items-center text-center md:items-start md:text-left">
@@ -284,9 +310,18 @@ const LandingPage = () => {
               className="font-heading font-bold leading-tight text-cocoa dark:text-dark-white"
               style={{ fontSize: "clamp(1.7rem, 3vw, 3rem)" }}
             >
-              <span className="text-pawpaw dark:text-black-pawpaw whitespace-nowrap">
+              {/* The typed phrase starts empty, so screen readers and
+                  search engines get the three phrases as real text here,
+                  the animation itself is decorative. */}
+              <span className="sr-only">
+                Figuring what to eat, staying hydrated and tracking your diet{" "}
+              </span>
+              <span
+                className="text-pawpaw dark:text-black-pawpaw whitespace-nowrap"
+                aria-hidden="true"
+              >
                 {typedText}
-                <span className="typing-cursor" aria-hidden="true" />
+                <span className="typing-cursor" />
               </span>
               {/* Line 2: static, always visible */}
               <br />
@@ -304,8 +339,8 @@ const LandingPage = () => {
 
             {/* Get Started — moringa filled, no bottom margin so it touches the section edge */}
             <div className="mt-8">
-              <button
-                onClick={() => navigate("/register")}
+              <Link
+                href="/register"
                 className="
                   inline-flex items-center gap-3 px-7 py-3 rounded-lg
                   bg-moringa dark:bg-moringa-faded
@@ -314,16 +349,21 @@ const LandingPage = () => {
                 "
               >
                 Get Started
-                <ArrowRight size={18} />
-              </button>
+                <ArrowRight size={18} aria-hidden="true" />
+              </Link>
             </div>
           </div>
 
-          {/* Hero Image */}
+          {/* Hero Image. width/height reserve its space before it loads
+              (no layout shift), fetchPriority because it is the largest
+              element above the fold. */}
           <div className="flex-shrink-0 flex items-end justify-center md:justify-end md:self-end">
             <img
               src="/images/heroImage1.png"
-              alt="Diet plate and water bottle"
+              alt="A balanced plate of food next to a water bottle, tracked with Flax"
+              width={757}
+              height={700}
+              fetchPriority="high"
               className="w-[330px] md:w-[380px] lg:w-[500px] object-contain object-bottom "
               draggable={false}
             />
@@ -423,7 +463,10 @@ const LandingPage = () => {
 
             {/* Content box */}
             <div className="bg-surface dark:bg-black-surface rounded-2xl p-8 max-w-3xl mx-auto text-left">
-              <p className="text-xs md:text-sm text-cocoa dark:text-dark-white leading-relaxed text-center">
+              {/* div, not p: a <p> inside a <p> is invalid HTML, browsers
+                  split it apart when parsing server HTML, which breaks
+                  hydration. Looks identical. */}
+              <div className="text-xs md:text-sm text-cocoa dark:text-dark-white leading-relaxed text-center">
                 Set your goal once,{" "}
                 <strong>lose weight, build muscle, eat better</strong>. Every
                 target, every log, every streak is built around getting you
@@ -433,7 +476,7 @@ const LandingPage = () => {
                   nkwobi, suya. Noura recognises African dishes and gives you
                   instant nutrition data. No guessing. No generic food database.
                 </p>
-              </p>
+              </div>
             </div>
           </div>
         </ScrollReveal>
@@ -467,7 +510,7 @@ const LandingPage = () => {
                       <span className="text-2xl">
                         <img
                           src="/images/fire.png"
-                          alt="fie"
+                          alt=""
                           width={32}
                           height={32}
                           className="object-contain"
@@ -979,6 +1022,55 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* ══ FAQ ═════════════════════════════════════════════════
+          Same section rhythm as How it works: centered heading + faded
+          subhead, surface cards on the normal body background. Native
+          <details> accordions, so every answer is real text in the
+          server HTML and works without JavaScript. Content comes from
+          landingFaqs.ts, shared with the FAQPage JSON-LD.
+      ══════════════════════════════════════════════════════════ */}
+      <section id="faq" className="py-20 px-6" aria-labelledby="faq-heading">
+        <div className="max-w-3xl mx-auto">
+          <ScrollReveal>
+            <h2
+              id="faq-heading"
+              className="font-heading text-1xl md:text-[20px] lg:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-2 lg:mb-4"
+            >
+              Frequently asked{" "}
+              <span className="text-pawpaw dark:text-black-pawpaw">
+                questions
+              </span>
+            </h2>
+            <p className="text-center text-xs md:text-sm font-bold text-cocoa-faded mb-10">
+              Everything you need to know about Flax
+            </p>
+          </ScrollReveal>
+
+          <div className="flex flex-col gap-3">
+            {LANDING_FAQS.map((faq) => (
+              <details
+                key={faq.question}
+                className="group bg-surface dark:bg-black-surface rounded-2xl shadow-sm px-6 py-4"
+              >
+                <summary className="flex items-center justify-between gap-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                  <h3 className="font-heading font-bold text-sm md:text-[15px] text-cocoa dark:text-dark-white">
+                    {faq.question}
+                  </h3>
+                  <ChevronDown
+                    size={18}
+                    aria-hidden="true"
+                    className="shrink-0 text-cocoa-faded transition-transform duration-200 group-open:rotate-180"
+                  />
+                </summary>
+                <p className="mt-3 text-xs md:text-sm text-cocoa-faded leading-relaxed">
+                  {faq.answer}
+                </p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ══ CTA ═════════════════════════════════════════════════
           Section bg: surface (light) / black-surface (dark)
           "suggestion" in heading: pawpaw (light) / black-pawpaw (dark)
@@ -999,8 +1091,8 @@ const LandingPage = () => {
             <br />
             And eat well with Flax without losing your culture.
           </p>
-          <button
-            onClick={() => navigate("/register")}
+          <Link
+            href="/register"
             className="
             inline-flex items-center gap-3 px-8 py-4 rounded-xl
             bg-pawpaw dark:bg-black-pawpaw
@@ -1009,8 +1101,8 @@ const LandingPage = () => {
           "
           >
             Get Started
-            <ArrowRight size={18} />
-          </button>
+            <ArrowRight size={18} aria-hidden="true" />
+          </Link>
         </ScrollReveal>
       </section>
 
@@ -1025,6 +1117,7 @@ const LandingPage = () => {
         >
           Back to top ↗
         </button>
+        <PublicFooterLinks />
         <p className="text-xs md:text-sm text-cocoa-faded">
           Copyright © {new Date().getFullYear()} Tech FBI
         </p>
