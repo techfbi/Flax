@@ -28,16 +28,18 @@ export const generateStaticParams = async (): Promise<Params[]> =>
 
 const kcal = (food: PublicFood) => Math.round(food.calories_per_100g);
 
+// First letter only. CSS `capitalize` would turn "1 cup (cooked beans)"
+// into "1 Cup (Cooked Beans)".
+const sentenceCase = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);
+
 const buildFaqs = (food: PublicFood) => {
   const split = macroSplit(food);
   const servings = food.serving_sizes.slice(0, 2);
   const servingSentence = servings.length
     ? ` ${servings
-        .map((s) => {
-          const label = s.label.toLowerCase();
-          const article = /^[aeiou]/.test(label) ? "An" : "A";
-          return `${article} ${label} (${s.grams} g) has about ${perPortion(food, s.grams).calories} kcal.`;
-        })
+        // Real labels look like "1 bowl", "1 cup (cooked beans)" or
+        // "Medium plate", so they lead the sentence as written.
+        .map((s) => `${sentenceCase(s.label)} (${s.grams} g) has about ${perPortion(food, s.grams).calories} kcal.`)
         .join(" ")}`
     : "";
 
@@ -229,7 +231,7 @@ const FoodPage = async ({ params }: { params: Promise<Params> }) => {
                     const n = perPortion(food, s.grams);
                     return (
                       <tr key={`${s.label}-${s.grams}`} className="border-b last:border-0 border-cocoa/5 dark:border-dark-white/5 text-cocoa dark:text-dark-white">
-                        <th scope="row" className="px-4 py-3 font-medium capitalize">{s.label}</th>
+                        <th scope="row" className="px-4 py-3 font-medium">{sentenceCase(s.label)}</th>
                         <td className="px-4 py-3">{s.grams} g</td>
                         <td className="px-4 py-3 font-semibold">{n.calories} kcal</td>
                         <td className="px-4 py-3">{n.protein_g} g</td>
