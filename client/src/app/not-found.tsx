@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteShell } from "@/components/public/SiteShell";
-import { PublicStatusBar } from "@/components/public/PublicStatusBar";
 
 // Served with a real 404 status for any unknown URL.
 export const metadata: Metadata = {
@@ -10,9 +9,7 @@ export const metadata: Metadata = {
 };
 
 const NotFound = () => (
-  <>
-    <PublicStatusBar />
-    <SiteShell>
+  <SiteShell>
       <div className="text-center py-16">
         <p className="font-heading font-bold text-5xl text-pawpaw dark:text-black-pawpaw mb-3">404</p>
         <h1 className="font-heading font-bold text-xl md:text-2xl text-cocoa dark:text-dark-white mb-3">
@@ -36,8 +33,7 @@ const NotFound = () => (
           </Link>
         </div>
       </div>
-    </SiteShell>
-  </>
+  </SiteShell>
 );
 
 export default NotFound;

@@ -86,11 +86,12 @@ export const metadata: Metadata = {
   },
 };
 
+// No themeColor on purpose: the browser picks its own native color for
+// the bar behind the clock, network and battery icons, instead of a
+// fixed tint that did not match every page.
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  // useStatusBar rewrites this tag at runtime, same as under Vite.
-  themeColor: "#ffffff",
 };
 
 /*
@@ -108,9 +109,11 @@ const RootLayout = ({ children }: { children: ReactNode }) => (
   <html lang="en" className={inter.variable} suppressHydrationWarning>
     <head>
       <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      {/* iOS status bar, read and updated at runtime by useStatusBar */}
+      {/* Food images come from Cloudinary, open the connection early. */}
+      <link rel="preconnect" href="https://res.cloudinary.com" />
+      <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+      {/* Installed web app (iOS home screen) */}
       <meta name="apple-mobile-web-app-capable" content="yes" />
-      <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       <meta name="apple-mobile-web-app-title" content="Flax" />
       <meta name="msapplication-TileColor" content="#ffffff" />
     </head>

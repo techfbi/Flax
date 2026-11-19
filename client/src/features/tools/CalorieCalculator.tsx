@@ -140,7 +140,14 @@ export const CalorieCalculator = () => {
         </Field>
 
         <div className="grid sm:grid-cols-3 gap-4">
-          <Field label="Age" htmlFor={`${id}-age`} hint="16 to 100 years">
+          <div>
+            {/* Same row height as the Height label row with its unit
+                toggle, so the two inputs line up. */}
+            <div className="flex items-center min-h-8 mb-2">
+              <label htmlFor={`${id}-age`} className="text-xs font-semibold text-cocoa dark:text-dark-white">
+                Age <span className="font-normal text-cocoa-faded">(16 to 100 years)</span>
+              </label>
+            </div>
             <input
               id={`${id}-age`}
               type="number"
@@ -152,10 +159,10 @@ export const CalorieCalculator = () => {
               onChange={(e) => setAge(e.target.value)}
               className={inputClass}
             />
-          </Field>
+          </div>
 
           <div className="sm:col-span-2">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between min-h-8 mb-2">
               <span className="text-xs font-semibold text-cocoa dark:text-dark-white">Height</span>
               <Segmented
                 label="Height unit"
@@ -203,7 +210,7 @@ export const CalorieCalculator = () => {
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between min-h-8 mb-2">
             <span className="text-xs font-semibold text-cocoa dark:text-dark-white">Weight</span>
             <Segmented
               label="Weight unit"

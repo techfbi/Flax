@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { foodPath, getAllFoods } from "@/lib/foods";
+import { foodImage, foodPath, getAllFoods } from "@/lib/foods";
 import { LEGAL_LAST_UPDATED, SITE, absoluteUrl } from "@/lib/site";
 
 export const revalidate = 3600;
@@ -48,7 +48,7 @@ const sitemap = async (): Promise<MetadataRoute.Sitemap> => {
     lastModified: food.updated_at,
     changeFrequency: "monthly",
     priority: 0.7,
-    images: [food.image_url],
+    images: [foodImage(food.image_url, 1200, 1200, "jpg")],
   }));
 
   return [...staticPages, ...regionPages, ...foodPages];

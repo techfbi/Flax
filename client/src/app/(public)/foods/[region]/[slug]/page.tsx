@@ -6,6 +6,7 @@ import { Breadcrumbs, SignupCta, SiteShell } from "@/components/public/SiteShell
 import { FoodCard, foodPath } from "@/components/public/FoodCard";
 import {
   type PublicFood,
+  foodImage,
   formatTag,
   getAllFoods,
   getFood,
@@ -92,7 +93,8 @@ export const generateMetadata = async ({
     title: `${food.name} Calories & Nutrition Facts`,
     description: `${food.name} has ${kcal(food)} calories per 100 g, with ${round1(food.protein_g)} g protein, ${round1(food.carbs_g)} g carbs and ${round1(food.fat_g)} g fat. See calories per serving, ingredients and allergens for this ${demonym} dish.`,
     path: foodPath(food),
-    image: { url: food.image_url, alt: food.name },
+    // 1200x630 JPEG, the size and format social and chat apps expect.
+    image: { url: foodImage(food.image_url, 1200, 630, "jpg"), width: 1200, height: 630, alt: food.name },
   });
 };
 
@@ -140,7 +142,7 @@ const FoodPage = async ({ params }: { params: Promise<Params> }) => {
             name: food.name,
             ...(food.regional_names.length ? { alternateName: food.regional_names } : {}),
             description: food.description,
-            image: food.image_url,
+            image: foodImage(food.image_url, 1200, 1200, "jpg"),
             url,
             nutrition: {
               "@type": "NutritionInformation",
@@ -177,7 +179,9 @@ const FoodPage = async ({ params }: { params: Promise<Params> }) => {
             )}
           </div>
           <img
-            src={food.image_url}
+            src={foodImage(food.image_url, 600)}
+            srcSet={`${foodImage(food.image_url, 300)} 300w, ${foodImage(food.image_url, 600)} 600w, ${foodImage(food.image_url, 900)} 900w`}
+            sizes="300px"
             alt={`A serving of ${food.name}`}
             width={600}
             height={600}

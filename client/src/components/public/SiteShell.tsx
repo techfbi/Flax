@@ -8,11 +8,15 @@ import { Copyright, PublicFooterLinks } from "./PublicFooterLinks";
   foods, tools, about and legal. Same brand gradient, navbar style and
   colors as the landing page, so the site reads as one product.
 */
+/*
+  The brand gradient is painted on the page itself, not on a separate
+  strip, so there is no edge anywhere: it ends on exactly the page color
+  (#F6F1E7 light, #171410 dark) and then simply continues as that color.
+*/
 export const SiteShell = ({ children }: { children: ReactNode }) => (
-  <div className="min-h-screen bg-off-white dark:bg-dark-bg font-body flex flex-col">
+  <div className="min-h-screen bg-off-white dark:bg-dark-bg bg-page-gradient dark:bg-page-gradient-dark bg-no-repeat bg-[length:100%_900px] font-body flex flex-col">
     <PublicNavbar variant="site" />
-    <div className="bg-brand-gradient dark:bg-brand-gradient-dark pt-28 md:pt-36 pb-4" aria-hidden="true" />
-    <main id="main" className="flex-1 w-full max-w-5xl mx-auto px-5 md:px-8 pb-16 -mt-4">
+    <main id="main" className="flex-1 w-full max-w-5xl mx-auto px-5 md:px-8 pt-28 md:pt-36 pb-16">
       {children}
     </main>
     <footer className="py-10 px-6 text-center border-t border-cocoa/5 dark:border-dark-white/5">

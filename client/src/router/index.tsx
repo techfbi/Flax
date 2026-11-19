@@ -11,7 +11,6 @@ import api from "@/lib/api";
 import type { ApiResponse, AuthUser, FullProfile } from "@/types/apiTypes";
 import { motion, useReducedMotion } from "framer-motion";
 import { NouraChatProvider } from "@/context/NouraChatContext";
-import { useStatusBar } from "@/hooks/useStatusBar";
 
 /*
   This router now only runs the signed in app and the auth screens. It
@@ -298,22 +297,9 @@ const AppRouter = () => {
 */
 const AnimatedRoutes = () => {
   const location = useLocation();
-  const { isAuthenticated } = useAuthStore();
 
-  const isLanding = location.pathname === "/" && !isAuthenticated;
-  const isChoseRoute = [
-    "/spin",
-    "/dashboard",
-    "/ask-noura",
-    "/profile",
-    "/settings",
-    "/notifications",
-  ].includes(location.pathname);
-  const isHome = location.pathname === "/" && isAuthenticated;
-
-  const showStatusBar = isLanding || (!isChoseRoute && !isHome);
-
-  useStatusBar({ show: showStatusBar });
+  // The mobile status bar tint (useStatusBar) was removed on request, the
+  // browser now uses its own default behind the clock and battery icons.
   return (
     <Routes location={location} key={location.pathname}>
       {/* Root redirects only — no page content renders here */}

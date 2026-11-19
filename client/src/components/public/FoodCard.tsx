@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { PublicFood } from "@/lib/foods";
-import { foodPath, round1 } from "@/lib/foods";
+import { foodImage, foodPath, round1 } from "@/lib/foods";
 
 export { foodPath };
 
@@ -11,7 +11,8 @@ export const FoodCard = ({ food }: { food: PublicFood }) => (
       className="group flex gap-4 items-center bg-surface dark:bg-black-surface rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow h-full"
     >
       <img
-        src={food.image_url}
+        src={foodImage(food.image_url, 144)}
+        srcSet={`${foodImage(food.image_url, 72)} 1x, ${foodImage(food.image_url, 144)} 2x, ${foodImage(food.image_url, 216)} 3x`}
         alt={food.name}
         width={72}
         height={72}

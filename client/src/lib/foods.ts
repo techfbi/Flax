@@ -108,6 +108,27 @@ export const getRegions = async (): Promise<RegionSummary[]> => {
   });
 };
 
+/*
+  Catalogue images are full size PNG originals on Cloudinary, ~1.4 MB
+  each. Shown at 72 px that made /foods download ~200 MB. Cloudinary
+  resizes and re-encodes on its CDN when the transformation is part of
+  the URL, a 144 px WebP thumbnail is ~4 KB. Derived images are cached
+  by Cloudinary after the first request. Any other URL passes through.
+
+  format "auto" serves WebP/AVIF to browsers that accept it, "jpg" is
+  for Open Graph and structured data where crawlers expect JPEG/PNG.
+*/
+export const foodImage = (
+  url: string,
+  width: number,
+  height: number = width,
+  format: "auto" | "jpg" = "auto",
+): string => {
+  const marker = "/image/upload/";
+  if (!url.startsWith("https://res.cloudinary.com/") || !url.includes(marker)) return url;
+  return url.replace(marker, `${marker}f_${format},q_auto,c_fill,w_${width},h_${height}/`);
+};
+
 /** Public URL of a dish page, /foods/<region>/<slug>. */
 export const foodPath = (food: Pick<PublicFood, "region_slug" | "slug">): string =>
   `/foods/${food.region_slug}/${food.slug}`;

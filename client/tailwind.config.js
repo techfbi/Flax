@@ -38,6 +38,11 @@ export default {
         'brand-gradient': 'linear-gradient(170deg, #9DAFA1 15%, #EAE8DE 45%, #EAE8DE 30%, #F6F1E7 100%)',
         // Dark variant: dark-bg to moringa-faded
         'brand-gradient-dark': 'linear-gradient(170deg, #405245 10%, #2A3129 45%, #2A3129 10%, #171410 100%)',
+        // Public content pages: the brand gradient with a vertical fade on top,
+        // so its bottom edge is exactly the page color across the full width
+        // (the 170deg gradient alone is still lighter on the left at its edge).
+        'page-gradient': 'linear-gradient(to bottom, rgba(246,241,231,0) 45%, #F6F1E7 100%), linear-gradient(170deg, #9DAFA1 15%, #EAE8DE 45%, #EAE8DE 30%, #F6F1E7 100%)',
+        'page-gradient-dark': 'linear-gradient(to bottom, rgba(23,20,16,0) 45%, #171410 100%), linear-gradient(170deg, #405245 10%, #2A3129 45%, #2A3129 10%, #171410 100%)',
       },
       keyframes: {
         // Typing cursor blink for hero headline animation
