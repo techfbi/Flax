@@ -1,5 +1,5 @@
 import { FoodItem } from "../../models/food.model.js";
-import { redis } from "../../config/db.redis.js";
+import { cacheGet, cacheSet } from "../../shared/redisSafe.js";
 import { buildImageUrl } from "../../shared/food.helpers.js";
 import logger from "../../config/logger.js";
 
@@ -49,7 +49,7 @@ export const slugify = (value: string): string =>
 
 export const getPublicFoods = async (): Promise<PublicFood[]> => {
   try {
-    const cached = await redis.get(CACHE_KEY);
+    const cached = await cacheGet(CACHE_KEY);
     if (cached) return JSON.parse(cached) as PublicFood[];
   } catch (err) {
     // Cache failure never blocks the response, fall through to Mongo.
@@ -99,7 +99,7 @@ export const getPublicFoods = async (): Promise<PublicFood[]> => {
   publicFoods.sort((a, b) => a.region.localeCompare(b.region) || a.name.localeCompare(b.name));
 
   try {
-    await redis.setEx(CACHE_KEY, CACHE_TTL_SECONDS, JSON.stringify(publicFoods));
+    await cacheSet(CACHE_KEY, CACHE_TTL_SECONDS, JSON.stringify(publicFoods));
   } catch (err) {
     logger.error("Public foods cache write failed.", err);
   }

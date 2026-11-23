@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { redis } from "../config/db.redis.js";
 import { sendError } from "../shared/response.js";
+import { redisUsable, withRedisTimeout } from "../shared/redisSafe.js";
 import logger from "../config/logger.js";
 
 interface RateLimitOptions {
@@ -52,26 +53,13 @@ setInterval(() => {
 }, 5 * 60 * 1000);
 
 // ---------------------------------------------------------------------------
-// Redis health tracking
+// Redis health
+// Tracked in shared/redisSafe.ts, shared with the caches. Calls there have a
+// time limit, a failure pauses Redis for every caller and a dead connection
+// is replaced. Previously this limiter awaited Redis with no time limit, so a
+// silently dropped Upstash connection made login, refresh, spin and chat hang,
+// and a single failed call could leave it on the memory store until restart.
 // ---------------------------------------------------------------------------
-let redisAvailable = true;
-
-redis.on("error", () => {
-  if (redisAvailable) {
-    redisAvailable = false;
-    logger.error(
-      "Redis unreachable. Rate limiter falling back to " +
-      "in-memory store. Brute force protection is degraded on multi-instance deployments."
-    );
-  }
-});
-
-redis.on("ready", () => {
-  if (!redisAvailable) {
-    redisAvailable = true;
-    logger.info("Redis reconnected. Rate limiter restored.");
-  }
-});
 
 // ---------------------------------------------------------------------------
 // Key builder
@@ -113,12 +101,15 @@ export function rateLimiter({
     const windowMs = windowSeconds * 1000;
 
     // Path A — Redis available
-    if (redisAvailable) {
+    if (redisUsable()) {
       try {
-        const pipeline = redis.multi();
-        pipeline.incr(key);
-        pipeline.expire(key, windowSeconds);
-        const results = await pipeline.exec();
+        // Never waits longer than REDIS_OP_TIMEOUT_MS, see redisSafe.ts.
+        const results = await withRedisTimeout(() => {
+          const pipeline = redis.multi();
+          pipeline.incr(key);
+          pipeline.expire(key, windowSeconds);
+          return pipeline.exec();
+        });
 
         // pipeline.exec() returns ReplyUnion[], a union type that TypeScript cannot safely narrow to number with a direct cast.
         // I cast through unknown first (safe because I confirmed the shape with the test-redis.ts output results[0] is always a number here),
@@ -150,12 +141,8 @@ export function rateLimiter({
         res.setHeader("X-RateLimit-Remaining", Math.max(0, maxRequests - count));
         next();
         return;
-      } catch (err) {
-        redisAvailable = false;
-        logger.error(
-          "Redis pipeline failed. Switching to memory fallback.",
-          err
-        );
+      } catch {
+        // Already recorded by withRedisTimeout, use the memory store below.
       }
     }
 
