@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { FoodItem } from "../../models/food.model.js";
-import { redis } from "../../config/db.redis.js";
+import { cacheGet, cacheSet } from "../../shared/redisSafe.js";
 import { pgPool } from "../../config/db.postgres.js";
 import { withImageUrl } from "../../shared/food.helpers.js";
 import { AppError } from "../../shared/errors.js";
@@ -240,7 +240,7 @@ export const getFoodsForSpin = async (
 
   // Check Redis cache first
   try {
-    const cached = await redis.get(cacheKey);
+    const cached = await cacheGet(cacheKey);
 
     if (cached) {
       logger.info(` Food cache hit. key. ${cacheKey}`);
@@ -309,7 +309,7 @@ export const getFoodsForSpin = async (
   // Allergen and exclusion filtering happen after retrieval, not here,
   // so the same cache entry serves all users in the same region.
   try {
-    await redis.setEx(cacheKey, 3600, JSON.stringify(foodsWithUrls));
+    await cacheSet(cacheKey, 3600, JSON.stringify(foodsWithUrls));
     logger.info(` Food list cached. key. ${cacheKey}`);
   } catch (err) {
     // Cache write failure is not a blocker. the user still gets their food list.
@@ -402,7 +402,7 @@ export const getAvailableFilters = async (
 
   // Check cache first
   try {
-    const cached = await redis.get(cacheKey);
+    const cached = await cacheGet(cacheKey);
     if (cached) return JSON.parse(cached);
   } catch (err) {
     logger.error(
@@ -447,7 +447,7 @@ export const getAvailableFilters = async (
 
   // Cache for 24 hours
   try {
-    await redis.setEx(cacheKey, 24 * 3600, JSON.stringify(filters));
+    await cacheSet(cacheKey, 24 * 3600, JSON.stringify(filters));
   } catch (err) {
     logger.error(
       "Redis filter cache write failed.",
