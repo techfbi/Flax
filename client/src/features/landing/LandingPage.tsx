@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -18,6 +18,7 @@ import {
   ScrollRevealGroup,
   ScrollRevealItem,
 } from "@/components/ui/ScrollReveal";
+import { LandingHero } from "./hero/LandingHero";
 import { sessionHint } from "@/lib/sessionHint";
 import { LANDING_FAQS } from "./landingFaqs";
 
@@ -57,44 +58,6 @@ const useSignedInRedirect = () => {
     }
     window.location.replace("/home");
   }, []);
-};
-
-/* ── Typing animation hook ───────────────────────────────────── */
-const PHRASES = [
-  "Figuring what to eat",
-  "Staying hydrated",
-  "Tracking your diet",
-];
-const TYPE_SPEED = 60;
-const DELETE_SPEED = 35;
-const PAUSE_AFTER = 2200;
-
-const useTypingAnimation = () => {
-  const [displayed, setDisplayed] = useState("");
-  const [phraseIndex, setPhraseIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    const current = PHRASES[phraseIndex];
-    if (!isDeleting && displayed === current) {
-      const t = setTimeout(() => setIsDeleting(true), PAUSE_AFTER);
-      return () => clearTimeout(t);
-    }
-    if (isDeleting && displayed === "") {
-      setIsDeleting(false);
-      setPhraseIndex((i) => (i + 1) % PHRASES.length);
-      return;
-    }
-    const delay = isDeleting ? DELETE_SPEED : TYPE_SPEED;
-    const t = setTimeout(() => {
-      setDisplayed((prev) =>
-        isDeleting ? prev.slice(0, -1) : current.slice(0, prev.length + 1),
-      );
-    }, delay);
-    return () => clearTimeout(t);
-  }, [displayed, isDeleting, phraseIndex]);
-
-  return displayed;
 };
 
 /* ── Donut chart — goal streak card ─────────────────────────── */
@@ -285,96 +248,13 @@ const NOURA_CAPABILITIES = [
 
 /* ── Main component ──────────────────────────────────────────── */
 const LandingPage = () => {
-  const typedText = useTypingAnimation();
   useSignedInRedirect();
 
   return (
     <div className="min-h-screen bg-off-white dark:bg-dark-bg font-body">
       <PublicNavbar variant="landing" />
 
-      {/* ══ HERO ════════════════════════════════════════════════
-          Gradient: light = off-white body, green enters from top-left corner slanting.
-          Dark = dark-bg body, green enters from top-left corner edge slanting.
-          The navbar floats above so we add pt to clear it (fixed nav = 56px + 12px gap).
-      ══════════════════════════════════════════════════════════ */}
-      {/* Gradients are the same values as before, via the brand-gradient
-          tokens in tailwind.config.js so the server HTML is right for
-          both themes. Light: moringa-faded bleeds from top-left. Dark:
-          dark-bg dominates, moringa bleeds from the top-left edge. */}
-      {/* Heights are capped: Google renders pages in a viewport stretched
-          to the whole page height (thousands of px), an uncapped 100vh
-          hero then pushed the headline ~3000px down and Search Console's
-          screenshot showed only the navbar. Real screens are below the
-          caps, so visitors see exactly the same full height hero. */}
-      <section className="relative overflow-hidden min-h-[min(100vh,1000px)] md:min-h-[min(70vh,1000px)] lg:min-h-[min(100vh,1300px)] flex items-center bg-brand-gradient dark:bg-brand-gradient-dark">
-        <div className="w-full max-w-7xl mx-auto px-6 pt-20 md:pt-24 pb-0 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
-          {/* Left: text + CTA */}
-          <div className=" w-full md:max-w-[520px] flex flex-col items-center text-center md:items-start md:text-left">
-            {/* Line 1: animated phrase in pawpaw */}
-            <h1
-              className="font-heading font-bold leading-tight text-cocoa dark:text-dark-white"
-              style={{ fontSize: "clamp(1.7rem, 3vw, 3rem)" }}
-            >
-              {/* The typed phrase starts empty, so screen readers and
-                  search engines get the three phrases as real text here,
-                  the animation itself is decorative. */}
-              <span className="sr-only">
-                Figuring what to eat, staying hydrated and tracking your diet{" "}
-              </span>
-              <span
-                className="text-pawpaw dark:text-black-pawpaw whitespace-nowrap"
-                aria-hidden="true"
-              >
-                {typedText}
-                <span className="typing-cursor" />
-              </span>
-              {/* Line 2: static, always visible */}
-              <br />
-              <span>doesn't have to be complicated</span>
-            </h1>
-
-            <p className="mt-5 text-xs md:text-sm lg:text-base text-cocoa dark:text-dark-white leading-relaxed max-w-md">
-              <strong>Flax</strong> learns your goal and helps you stay on track
-              with it, meal by meal, glass by glass. Log what you eat, keep tabs
-              on your water, and build the kind of consistency that actually
-              sticks. And whenever you're unsure,
-              <strong> Noura</strong>, your AI nutrition assistant, is right
-              there with an answer built around you.
-            </p>
-
-            {/* Get Started — moringa filled, no bottom margin so it touches the section edge */}
-            <div className="mt-8">
-              <Link
-                href="/register"
-                className="
-                  inline-flex items-center gap-3 px-7 py-3 rounded-lg
-                  bg-moringa dark:bg-moringa-faded
-                  text-surface font-semibold text-sm
-                  hover:opacity-90 transition-opacity
-                "
-              >
-                Get Started
-                <ArrowRight size={18} aria-hidden="true" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Hero Image. width/height reserve its space before it loads
-              (no layout shift), fetchPriority because it is the largest
-              element above the fold. */}
-          <div className="flex-shrink-0 flex items-end justify-center md:justify-end md:self-end">
-            <img
-              src="/images/heroImage1.png"
-              alt="A balanced plate of food next to a water bottle, tracked with Flax"
-              width={757}
-              height={700}
-              fetchPriority="high"
-              className="w-[330px] md:w-[380px] lg:w-[500px] object-contain object-bottom "
-              draggable={false}
-            />
-          </div>
-        </div>
-      </section>
+      <LandingHero />
 
       {/* ══ WHY THE BASICS MATTER ═══════════════════════════════
           Section bg: surface (light) / black-surface (dark)

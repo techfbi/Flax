@@ -19,8 +19,10 @@ export const SITE = {
   },
   twitter: "@ojayy__x",
   email: "support@useflax.cc",
-  ogImage: { url: "/og-image.png", width: 1081, height: 569 },
-  twitterImage: "/twitter_og_image.png",
+  // Screenshot of the landing hero. Use a new filename when it changes, social
+  // networks cache previews by URL.
+  ogImage: { url: "/og-hero.jpg", width: 2400, height: 1260 },
+  twitterImage: "/og-hero.jpg",
   logo: "/android-chrome-512x512.png",
   locale: "en_NG",
 } as const;
