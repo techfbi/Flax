@@ -1,0 +1,104 @@
+/*
+  Landing hero sizing.
+
+  Phones and tablets stack, with sizes from the width only.
+
+  Landscape screens from 1024px up put the app beside the text. There one
+  unit, --u, is the smaller of 1% of the width and what the height allows,
+  and everything is a multiple of it, so the whole hero grows and shrinks
+  together with the window. 31.5 is the app window height in units (45 wide
+  at 800:560), 210px is the navbar, the step line and the margins.
+
+  Full height stops at very tall viewports (below 1:2): Google renders pages
+  thousands of px tall, an uncapped 100vh hero would push the headline far
+  down its screenshot and hide the rest of the page.
+*/
+.hero {
+  --title: clamp(1.6rem, 7.8vw, 2.9rem);
+  --demo: 330px;
+}
+.hero-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  margin: 0 auto;
+  align-items: center;
+  gap: 3rem;
+  padding: 7rem 1rem 4rem;
+  text-align: center;
+}
+.hero-grid > * { min-width: 0; }
+.hero-title { font-size: var(--title); }
+.hero-title-lines { justify-content: center; }
+.hero-text { margin: 1.5rem auto 0; max-width: 36rem; font-size: 1rem; }
+.hero-actions { margin-top: 2rem; display: flex; flex-direction: column; justify-content: center; gap: 0.75rem; }
+.hero-btn { padding: 0.875rem 1.75rem; font-size: 0.875rem; }
+.hero-demo { width: 100%; max-width: var(--demo); margin: 0 auto; text-align: left; }
+.hero-step { font-size: 11px; }
+
+@media (min-width: 640px) {
+  .hero { --demo: 620px; }
+  .hero-grid { padding-inline: 1.5rem; }
+  .hero-actions { flex-direction: row; }
+  .hero-step { font-size: 12px; }
+}
+@media (min-width: 768px) {
+  .hero-grid { padding-top: 8rem; }
+  .hero-text { font-size: 1.125rem; }
+}
+
+/* Full screen height, landscape or portrait, but not Google's stretched page. */
+@media (min-width: 768px) and (min-aspect-ratio: 1/2) {
+  .hero { min-height: 100vh; min-height: 100svh; }
+}
+
+/* Portrait monitors and large tablets: stacked, scaled up to fill. */
+@media (min-width: 1024px) and (max-aspect-ratio: 1/1) and (min-aspect-ratio: 1/2) {
+  .hero {
+    --title: min(6vw, 5svh);
+    --demo: clamp(620px, calc((100svh - 640px) * 1.35), 80vw);
+  }
+  .hero-text { font-size: clamp(1.125rem, 1.7vw, 1.75rem); max-width: 34em; }
+}
+
+/* Side by side. */
+@media (min-width: 1024px) and (min-aspect-ratio: 1/1) {
+  .hero {
+    --u: max(min(1vw, (100svh - 210px) / 31.5), 9.6px);
+    --title: calc(var(--u) * 3.25);
+    /* 524px keeps the desktop layout of the app, which needs 520. */
+    --demo: max(calc(var(--u) * 45), 524px);
+  }
+  .hero-grid {
+    grid-template-columns: minmax(0, calc(var(--u) * 40)) var(--demo);
+    justify-content: center;
+    gap: clamp(28px, calc(var(--u) * 4), 120px);
+    padding: 7rem 2rem 2.5rem;
+    text-align: left;
+  }
+  .hero-title-lines { justify-content: flex-start; }
+  .hero-text {
+    margin: calc(var(--u) * 1.7) 0 0;
+    max-width: 32em;
+    font-size: clamp(0.95rem, calc(var(--u) * 1.25), 2.25rem);
+  }
+  .hero-actions { justify-content: flex-start; flex-wrap: wrap; gap: calc(var(--u) * 0.85); margin-top: calc(var(--u) * 2.3); }
+  .hero-btn { font-size: clamp(0.8rem, calc(var(--u) * 0.97), 1.6rem); padding: 1em 1.9em; }
+  .hero-step { font-size: clamp(11px, calc(var(--u) * 0.83), 18px); }
+}
+
+/*
+  Page load entrance: headline, text, buttons and app window settle in one
+  after the other. CSS only, so it starts with the first paint instead of
+  waiting for JavaScript. The headline keeps a trace of opacity from the
+  start so it counts as painted at once.
+*/
+@media (prefers-reduced-motion: no-preference) {
+  .hero-in { animation: hero-in 900ms cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms) backwards; }
+  .hero-in-title { animation: hero-in-title 900ms cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms) backwards; }
+  .hero-in-window { animation: hero-in-window 1200ms cubic-bezier(0.22, 1, 0.36, 1) 250ms backwards; }
+}
+@keyframes hero-in { from { opacity: 0; transform: translate3d(0, 18px, 0); } }
+@keyframes hero-in-title { from { opacity: 0.01; transform: translate3d(0, 24px, 0); } }
+@keyframes hero-in-window { from { opacity: 0; transform: translate3d(0, 36px, 0) scale(0.97); } }
