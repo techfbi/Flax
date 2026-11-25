@@ -123,17 +123,72 @@ useEffect(() => {
   }
 }, [history]);
 
+  /*
+    The chat follows the newest text (isAtBottom) so a streaming reply is
+    always in view, until the user scrolls up to read. From then on it
+    leaves the position alone, and follows again when they scroll back
+    down to the end or send a message.
+
+    Scrolling up is detected by direction, not distance. Text arrives every
+    18ms, a slow drag would be pulled back before it got far enough from
+    the bottom to count. Wheel and touch are read too because they fire
+    before the first scroll event.
+  */
+  const lastScroll = useRef({ top: 0, height: 0, client: 0 });
+  const touchY = useRef<number | null>(null);
+
+  const stopFollowing = () => {
+    // Nothing above to read, scrolling up cannot have been the intent.
+    if (scrollRef.current && scrollRef.current.scrollTop > 0) {
+      isAtBottom.current = false;
+    }
+  };
+
   const handleScroll = () => {
     if (!scrollRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-    isAtBottom.current = scrollHeight - scrollTop - clientHeight < 60;
+    const last = lastScroll.current;
+    // The browser also moves the list up by itself when its content
+    // shrinks or the keyboard closes, that is not the user scrolling.
+    const resized = scrollHeight < last.height || clientHeight > last.client;
+    if (scrollTop > last.top) {
+      if (scrollHeight - scrollTop - clientHeight < 60) isAtBottom.current = true;
+    } else if (scrollTop < last.top && !resized) {
+      isAtBottom.current = false;
+    }
+    lastScroll.current = { top: scrollTop, height: scrollHeight, client: clientHeight };
+  };
+
+  // Spread on the scrolling list.
+  const scrollHandlers = {
+    onScroll: handleScroll,
+    onWheel: (e: React.WheelEvent) => {
+      if (e.deltaY < 0) stopFollowing();
+    },
+    onTouchStart: (e: React.TouchEvent) => {
+      touchY.current = e.touches[0].clientY;
+    },
+    onTouchMove: (e: React.TouchEvent) => {
+      const y = e.touches[0].clientY;
+      if (touchY.current !== null && y > touchY.current) stopFollowing();
+      touchY.current = y;
+    },
+    onTouchEnd: () => {
+      touchY.current = null;
+    },
+    onTouchCancel: () => {
+      touchY.current = null;
+    },
   };
 
   const scrollToBottom = (force = false) => {
     if (!scrollRef.current) return;
-    if (!force && !isAtBottom.current) return;
+    if (force) isAtBottom.current = true;
+    if (!isAtBottom.current) return;
     requestAnimationFrame(() => {
-      if (scrollRef.current) {
+      // Checked again, the user may have scrolled up since. Never moved
+      // under a finger, on iOS that cancels the drag.
+      if (scrollRef.current && isAtBottom.current && (force || touchY.current === null)) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
       }
     });
@@ -235,6 +290,8 @@ useEffect(() => {
       // no-op
     }
 
+    // Sending always returns to the newest message.
+    isAtBottom.current = true;
     const id = `user-${Date.now()}`;
     setLocalMessages((prev) => [
       ...prev,
@@ -296,7 +353,7 @@ useEffect(() => {
     isThinking,
     streamingText,
     scrollRef,
-    handleScroll,
+    scrollHandlers,
     scrollToBottom,
     handleSend,
     handleStreamDone,

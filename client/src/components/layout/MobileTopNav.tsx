@@ -28,8 +28,15 @@ import { useReviewUnread } from "@/hooks/useReviewUnread";
   Mobile top nav. Floating rounded card, same pattern as landing page navbar.
   Logo left. Bell (with unread badge) + avatar circle + hamburger right.
   Hamburger opens a drawer with nav links.
+
+  inline: render in normal flow instead of position: fixed. Used by pages
+  that pin their own shell to the visual viewport (Ask Noura). A fixed nav
+  is anchored to the layout viewport, so when iOS shifts the visual
+  viewport for the keyboard it scrolls out of sight while the shell stays.
+  Inline, the nav is part of the shell and moves with it. The drawer then
+  overlays the content below instead of pushing it.
 */
-export const MobileTopNav = () => {
+export const MobileTopNav = ({ inline = false }: { inline?: boolean } = {}) => {
   const { resolvedTheme, theme, setTheme } = useTheme();
   const { clearAuth } = useAuthStore();
   const navigate = useNavigate();
@@ -71,7 +78,7 @@ export const MobileTopNav = () => {
 
   return (
     <>
-      <div className="px-0 fixed top-0 left-0 right-0 z-50">
+      <div className={inline ? "relative z-50 shrink-0" : "px-0 fixed top-0 left-0 right-0 z-50"}>
         <div
           className="bg-white/70 dark:bg-cocoa/70
           backdrop-blur-md
@@ -132,8 +139,8 @@ export const MobileTopNav = () => {
         {/* Mobile drawer */}
         {menuOpen && (
           <div
-            className="mt-1 bg-surface dark:bg-black-surface rounded-2xl
-            shadow-md px-4 py-3 flex flex-col gap-1"
+            className={`mt-1 bg-surface dark:bg-black-surface rounded-2xl
+            shadow-md px-4 py-3 flex flex-col gap-1 ${inline ? "absolute left-0 right-0 top-full" : ""}`}
           >
             {[
               { to: "/", icon: Home, label: "Homepage" },

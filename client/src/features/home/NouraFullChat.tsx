@@ -13,8 +13,8 @@ import { NouraMarkdown } from "@/components/ui/NouraMarkdown";
   its sticky bottom position and stays there.
 
   Auto scroll runs on every character the typing animation reveals,
-  not just once when streaming starts, so the animation is always in
-  view until it finishes.
+  not just once when streaming starts, so the animation stays in view
+  until it finishes, unless the user scrolls up to read.
 */
 export const NouraFullChat = () => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -32,7 +32,7 @@ export const NouraFullChat = () => {
     isThinking,
     streamingText,
     scrollRef,
-    handleScroll,
+    scrollHandlers,
     scrollToBottom,
     handleSend,
     handleStreamDone,
@@ -74,8 +74,9 @@ export const NouraFullChat = () => {
         setDisplayed(streamingText.slice(0, indexRef.current + 1));
         indexRef.current++;
         // Keeps the growing bubble in view for every character typed,
-        // not only once when the stream starts.
-        scrollToBottom(true);
+        // not only once when the stream starts. Not forced, so it stops
+        // when the user scrolls up to read.
+        scrollToBottom();
       } else {
         clearInterval(interval);
         handleStreamDone();
@@ -125,7 +126,7 @@ export const NouraFullChat = () => {
 
       <div
         ref={scrollRef}
-        onScroll={handleScroll}
+        {...scrollHandlers}
         className="flex-1 overflow-y-auto min-h-0 px-4 py-6 flex flex-col gap-4"
       >
         {showDefault && (
@@ -228,10 +229,15 @@ export const NouraFullChat = () => {
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask Noura..."
-            disabled={isSending}
-            className="flex-1 bg-transparent outline-none px-3 py-2 text-base text-cocoa dark:text-dark-white placeholder:text-cocoa-faded disabled:opacity-50"
+            className="flex-1 bg-transparent outline-none px-3 py-2 text-base text-cocoa dark:text-dark-white placeholder:text-cocoa-faded"
           />
+          {/* The input is never disabled: a disabled field loses focus,
+          which closed the mobile keyboard on every send. handleSend and
+          the disabled button already block sending while Noura answers.
+          preventDefault on mousedown keeps focus in the input, so
+          tapping send does not close the keyboard either. */}
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={handleSend}
             disabled={isSending || !message.trim()}
             aria-label="Send message"

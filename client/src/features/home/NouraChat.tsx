@@ -86,8 +86,9 @@ const TypingText = ({
         indexRef.current++;
         // Keeps the growing bubble in view for every character typed,
         // matching what the full chat page already does, this file's own
-        // copy of the reveal logic was just missing this one call.
-        scrollToBottom(true);
+        // copy of the reveal logic was just missing this one call. Not
+        // forced, so it stops when the user scrolls up to read.
+        scrollToBottom();
       } else {
         clearInterval(interval);
         onDone();
@@ -119,7 +120,7 @@ export const NouraChat = () => {
     isThinking,
     streamingText,
     scrollRef,
-    handleScroll,
+    scrollHandlers,
     handleSend,
     handleStreamDone,
     handleKeyDown,
@@ -174,7 +175,7 @@ export const NouraChat = () => {
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 min-h-0"
-        onScroll={handleScroll}
+        {...scrollHandlers}
       >
         {showDefault && (
           <div className="flex justify-start">
