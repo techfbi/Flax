@@ -228,10 +228,15 @@ export const NouraFullChat = () => {
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask Noura..."
-            disabled={isSending}
-            className="flex-1 bg-transparent outline-none px-3 py-2 text-base text-cocoa dark:text-dark-white placeholder:text-cocoa-faded disabled:opacity-50"
+            className="flex-1 bg-transparent outline-none px-3 py-2 text-base text-cocoa dark:text-dark-white placeholder:text-cocoa-faded"
           />
+          {/* The input is never disabled: a disabled field loses focus,
+          which closed the mobile keyboard on every send. handleSend and
+          the disabled button already block sending while Noura answers.
+          preventDefault on mousedown keeps focus in the input, so
+          tapping send does not close the keyboard either. */}
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={handleSend}
             disabled={isSending || !message.trim()}
             aria-label="Send message"

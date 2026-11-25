@@ -66,9 +66,28 @@ export const AskNouraPage = () => {
 
     const vv = window.visualViewport;
 
+    const isTyping = () => {
+      const active = document.activeElement;
+      return (
+        active instanceof HTMLInputElement ||
+        active instanceof HTMLTextAreaElement ||
+        (active instanceof HTMLElement && active.isContentEditable)
+      );
+    };
+
     const update = () => {
       const el = shellRef.current;
       if (!el || !vv) return;
+      // The keyboard can only be open while a text field has focus. At
+      // any other time the visualViewport numbers are not trusted, iOS
+      // can keep reporting the keyboard sized height and offset after
+      // the keyboard is gone, which left the shell short with a blank
+      // block under it. Full screen is always right in that state.
+      if (!isTyping()) {
+        el.style.height = "100dvh";
+        el.style.top = "0px";
+        return;
+      }
       // vv.height is the actual visible height above the keyboard,
       // it shrinks when the keyboard opens on iOS.
       // vv.offsetTop is how far iOS has scrolled the visual viewport
@@ -79,14 +98,39 @@ export const AskNouraPage = () => {
       el.style.top = `${vv.offsetTop}px`;
     };
 
+    // The keyboard animates for a few hundred ms and iOS does not always
+    // send a resize event for the final position, so keep measuring for
+    // a second after focus moves instead of relying on events alone.
+    let frame = 0;
+    const onFocusChange = () => {
+      cancelAnimationFrame(frame);
+      const until = performance.now() + 1000;
+      const step = () => {
+        update();
+        if (performance.now() < until) {
+          frame = requestAnimationFrame(step);
+        } else if (!isTyping()) {
+          // iOS can also leave the document itself scrolled by the
+          // amount it moved to reveal the input.
+          window.scrollTo(0, 0);
+        }
+      };
+      frame = requestAnimationFrame(step);
+    };
+
     if (vv) {
       update();
       vv.addEventListener("resize", update);
       vv.addEventListener("scroll", update);
     }
+    document.addEventListener("focusin", onFocusChange);
+    document.addEventListener("focusout", onFocusChange);
 
     return () => {
       document.body.style.overflow = "";
+      cancelAnimationFrame(frame);
+      document.removeEventListener("focusin", onFocusChange);
+      document.removeEventListener("focusout", onFocusChange);
       if (vv) {
         vv.removeEventListener("resize", update);
         vv.removeEventListener("scroll", update);
@@ -129,9 +173,15 @@ export const AskNouraPage = () => {
 
   return (
     <AppLayout>
+      {/* Pinned on BOTH sides on mobile. With only right-0, a fixed box
+          shrinks to fit its content: before the first message the wide
+          welcome text kept it full width, after sending only short
+          bubbles were left, so it shrank against the right edge and
+          left an empty strip on the left that looked like a sidebar
+          sliding in, until a long reply widened it again. */}
       <div
         ref={shellRef}
-        className="fixed md:static right-0 top-0 flex flex-col overflow-hidden"
+        className="fixed md:static inset-x-0 top-0 flex flex-col overflow-hidden"
         style={{
           // 100dvh is the initial height before the visualViewport
           // effect fires on first render. JS takes over after that.
@@ -149,10 +199,14 @@ export const AskNouraPage = () => {
           <PageTopBar leftContent={<NouraIdentity />} />
 
           {/* Mobile: Flax nav first, then the identity row right under
-          it, both outside the chat's own scroll area. */}
+          it, both outside the chat's own scroll area. The nav is inline,
+          part of this shell, so it stays on screen when the keyboard
+          opens (a fixed nav scrolled away with the iOS viewport shift).
+          pt-6 + the nav's own 56px keeps the identity row exactly where
+          the old pt-20 under a fixed nav put it. */}
           <div className="md:hidden shrink-0">
-            <MobileTopNav />
-            <div className="px-4 pt-20 pb-3">
+            <MobileTopNav inline />
+            <div className="px-4 pt-6 pb-3">
               <NouraIdentity />
             </div>
           </div>
