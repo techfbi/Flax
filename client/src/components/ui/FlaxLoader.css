@@ -1,0 +1,90 @@
+/*
+  The Flax mark as the loading animation: the outline sketches itself,
+  fills, the ball drops in and the figure takes its weight, then kicks it
+  away, fades and starts again. Every part runs on one shared 4.6s
+  timeline with no delays, so the last frame equals the first and the loop
+  restarts without a flash. Under reduced motion the static logo shows.
+*/
+.flax-loader { display: block; overflow: visible; }
+.flax-loader .upper, .flax-loader .lower { fill: currentColor; }
+.flax-loader .dot { fill: #E8623C; }
+.flax-loader .ring { fill: none; stroke: #E8623C; stroke-width: 5; opacity: 0; }
+.flax-loader .upper, .flax-loader .lower, .flax-loader .dot, .flax-loader .ring { transform-box: fill-box; }
+
+.flax-loader .upper, .flax-loader .lower {
+  stroke: currentColor; stroke-width: 5; stroke-linejoin: round; stroke-dasharray: 1;
+}
+.flax-loader .upper { transform-origin: 0% 100%; animation: flax-loader-upper-line 4.6s infinite, flax-loader-body 4.6s infinite; }
+.flax-loader .lower { transform-origin: 100% 0%; animation: flax-loader-lower-line 4.6s infinite, flax-loader-foot 4.6s infinite; }
+.flax-loader .dot { transform-origin: 50% 50%; animation: flax-loader-ball 4.6s infinite; }
+.flax-loader .ring { transform-origin: 50% 50%; animation: flax-loader-ring 4.6s infinite; }
+
+/* sketch 0-22%, fill 24-34%, hold, fade out 80-92%, then the outline resets
+   in one jump while it is invisible (a gradual reset showed a flash) */
+@keyframes flax-loader-upper-line {
+  0% { stroke-dashoffset: 1; stroke-opacity: 1; fill-opacity: 0; animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1); }
+  22% { stroke-dashoffset: 0; stroke-opacity: 1; fill-opacity: 0; animation-timing-function: ease-out; }
+  34% { stroke-dashoffset: 0; stroke-opacity: 0; fill-opacity: 1; }
+  80% { stroke-dashoffset: 0; stroke-opacity: 0; fill-opacity: 1; animation-timing-function: ease-in; }
+  92% { stroke-dashoffset: 0; stroke-opacity: 0; fill-opacity: 0; animation-timing-function: step-end; }
+  93%, 100% { stroke-dashoffset: 1; stroke-opacity: 0; fill-opacity: 0; }
+}
+/* the foot starts sketching a beat after the body, inside the same loop */
+@keyframes flax-loader-lower-line {
+  0%, 4% { stroke-dashoffset: 1; stroke-opacity: 1; fill-opacity: 0; animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1); }
+  25% { stroke-dashoffset: 0; stroke-opacity: 1; fill-opacity: 0; animation-timing-function: ease-out; }
+  35% { stroke-dashoffset: 0; stroke-opacity: 0; fill-opacity: 1; }
+  80% { stroke-dashoffset: 0; stroke-opacity: 0; fill-opacity: 1; animation-timing-function: ease-in; }
+  92% { stroke-dashoffset: 0; stroke-opacity: 0; fill-opacity: 0; animation-timing-function: step-end; }
+  93%, 100% { stroke-dashoffset: 1; stroke-opacity: 0; fill-opacity: 0; }
+}
+
+/* the catch: the body dips under the ball at 46-49%, rebounds, nods on the
+   small bounce at 56%. The kick: wind up 64-69%, kick 69-73%, settle by 82% */
+@keyframes flax-loader-body {
+  0%, 45% { transform: rotate(0deg); }
+  46% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1); }
+  49% { transform: rotate(3.5deg); animation-timing-function: ease-in-out; }
+  53% { transform: rotate(-1deg); animation-timing-function: ease-in-out; }
+  56% { transform: rotate(1.2deg); animation-timing-function: ease-in-out; }
+  60% { transform: rotate(0deg); }
+  64% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1); }
+  69% { transform: rotate(4deg); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
+  73% { transform: rotate(-5deg); animation-timing-function: ease-in-out; }
+  82%, 100% { transform: rotate(0deg); }
+}
+@keyframes flax-loader-foot {
+  0%, 46% { transform: rotate(0deg); }
+  49% { transform: rotate(-2deg); animation-timing-function: ease-in-out; }
+  53% { transform: rotate(0.6deg); animation-timing-function: ease-in-out; }
+  56% { transform: rotate(-0.7deg); animation-timing-function: ease-in-out; }
+  60%, 64% { transform: rotate(0deg); }
+  69% { transform: rotate(-3deg); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1); }
+  73% { transform: rotate(3deg); animation-timing-function: ease-in-out; }
+  82%, 100% { transform: rotate(0deg); }
+}
+
+/* ball: hidden while sketching, drops in 37-46%, bounce, rests,
+   squashes on the wind up, flies off and fades by 84% */
+@keyframes flax-loader-ball {
+  0%, 36% { transform: translate(0, -110px) scale(1); opacity: 0; }
+  37% { transform: translate(0, -110px) scale(1); opacity: 1; animation-timing-function: cubic-bezier(0.55, 0, 0.85, 0.35); }
+  46% { transform: translate(0, 0) scale(1.16, 0.84); opacity: 1; animation-timing-function: ease-out; }
+  51% { transform: translate(0, -16px) scale(0.96, 1.04); animation-timing-function: ease-in; }
+  56% { transform: translate(0, 0) scale(1); }
+  64% { transform: translate(0, 0) scale(1); opacity: 1; }
+  69% { transform: translate(0, 6px) scale(1.08, 0.9); opacity: 1; animation-timing-function: cubic-bezier(0.15, 0.7, 0.35, 1); }
+  84% { transform: translate(-16px, -150px) scale(0.9, 1.06); opacity: 0; }
+  100% { transform: translate(0, -110px) scale(1); opacity: 0; }
+}
+/* one soft ripple where the ball lands */
+@keyframes flax-loader-ring {
+  0%, 45% { transform: scale(1); opacity: 0; }
+  46% { transform: scale(1); opacity: 0.5; animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1); }
+  62%, 100% { transform: scale(2.1); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flax-loader .upper, .flax-loader .lower, .flax-loader .dot, .flax-loader .ring { animation: none; }
+  .flax-loader .upper, .flax-loader .lower { fill-opacity: 1; stroke: none; }
+}

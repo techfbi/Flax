@@ -4,11 +4,14 @@ import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
 import type { ApiResponse, GoogleAuthData } from "@/types/apiTypes";
 import { resolvePostAuthRoute } from "@/utils/resolvePostAuthRoute";
+import { PageLoader } from "@/components/ui/PageLoader";
+import { useSignInLoader } from "@/store/signInLoaderStore";
 
 const AuthCallbackPage = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { setAuth, setPendingNavigation } = useAuthStore();
+  const { start: startSignInLoader, stop: stopSignInLoader } = useSignInLoader();
   const didRun = useRef(false);
 
   useEffect(() => {
@@ -20,6 +23,10 @@ const AuthCallbackPage = () => {
       navigate("/login?authError=google_cancelled", { replace: true });
       return;
     }
+
+    // Google sends people back here mid sign in, so the logo animation
+    // starts now and covers the exchange and the move to home.
+    startSignInLoader();
 
     const exchange = async () => {
       try {
@@ -47,6 +54,7 @@ const AuthCallbackPage = () => {
         */
       } catch (err: unknown) {
         setPendingNavigation(false);
+        stopSignInLoader();
         const status = (err as { response?: { status?: number } })?.response
           ?.status;
         const errorCode =
@@ -57,21 +65,10 @@ const AuthCallbackPage = () => {
     };
 
     exchange();
-  }, [params, navigate, setAuth, setPendingNavigation]);
+  }, [params, navigate, setAuth, setPendingNavigation, startSignInLoader, stopSignInLoader]);
 
-  return (
-    <div className="min-h-screen bg-off-white dark:bg-dark-bg flex items-center justify-center">
-      <div className="flex flex-col items-center gap-3">
-        <div
-          className="w-8 h-8 rounded-full animate-spin
-          border-2 border-moringa dark:border-moringa-faded
-          border-t-transparent dark:border-t-transparent"
-          style={{ borderTopColor: "transparent" }}
-        />
-        <p className="text-sm text-cocoa-faded">Signing you in...</p>
-      </div>
-    </div>
-  );
+  // Covered by the sign in animation, this only shows if that is not up.
+  return <PageLoader />;
 };
 
 export default AuthCallbackPage;

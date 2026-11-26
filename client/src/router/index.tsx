@@ -11,6 +11,8 @@ import api from "@/lib/api";
 import type { ApiResponse, AuthUser, FullProfile } from "@/types/apiTypes";
 import { motion, useReducedMotion } from "framer-motion";
 import { NouraChatProvider } from "@/context/NouraChatContext";
+import { PageLoader } from "@/components/ui/PageLoader";
+import { SignInLoader } from "@/components/ui/SignInLoader";
 
 /*
   This router now only runs the signed in app and the auth screens. It
@@ -46,20 +48,6 @@ const SettingsPage = lazy(() => import("@/screens/SettingsPage"));
 const NotificationsPage = lazy(() => import("@/screens/NotificationsPage"));
 const DashboardPage = lazy(() => import("@/screens/DashboardPage"));
 
-/* Full screen spinner, shown while verifying session */
-const PageLoader = () => (
-  <div
-    className="min-h-screen flex items-center justify-center
-    bg-off-white dark:bg-dark-bg"
-  >
-    <div
-      className="w-8 h-8 rounded-full animate-spin
-      border-2 border-moringa dark:border-moringa-faded
-      border-t-transparent dark:border-t-transparent"
-      style={{ borderTopColor: "transparent" }}
-    />
-  </div>
-);
 
 /*
   Enter only, no exit. The old page unmounts instantly like a normal
@@ -279,6 +267,8 @@ const AppRouter = () => {
 
   return (
     <BrowserRouter>
+      {/* Logo animation after a sign in, above every route */}
+      <SignInLoader />
       <SessionGate>
         <NouraChatProvider>
           <Suspense fallback={<PageLoader />}>

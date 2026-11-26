@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useState, type CSSProperties } from "react";
-import { Montserrat } from "next/font/google";
 import { preload } from "react-dom";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { DEMO_STEPS, FlaxAppDemo, PLATE_IMG } from "./FlaxAppDemo";
+import { montserrat } from "./fonts";
 import "./hero.css";
 
-const montserrat = Montserrat({ subsets: ["latin"], weight: ["800"], display: "swap" });
 
 /* ── Typing animation ────────────────────────────────────────── */
 const PHRASES = ["Figuring what to eat", "Staying hydrated", "Tracking your diet"];

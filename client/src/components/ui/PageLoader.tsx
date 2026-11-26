@@ -1,9 +1,12 @@
-/* Full screen spinner, identical to the one in src/router/index.tsx. */
+import { FlaxLoader } from "./FlaxLoader";
+
+/*
+  Full screen loading state, shared by the router (while the session is
+  verified and while a screen's code loads) and the Next shell (before the
+  app mounts), so every loading moment looks the same.
+*/
 export const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-off-white dark:bg-dark-bg">
-    <div
-      className="w-8 h-8 rounded-full animate-spin border-2 border-moringa dark:border-moringa-faded border-t-transparent dark:border-t-transparent"
-      style={{ borderTopColor: "transparent" }}
-    />
+  <div role="status" aria-label="Loading" className="min-h-screen flex items-center justify-center bg-off-white dark:bg-dark-bg">
+    <FlaxLoader className="w-16 text-cocoa dark:text-white" />
   </div>
 );

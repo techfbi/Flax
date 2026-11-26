@@ -18,6 +18,7 @@ import { SecondAuthLayout } from "@/components/layout/SecondAuthLayout";
 import { handleApiError } from "@/utils/handleApiError";
 import { resolvePostAuthRoute } from "@/utils/resolvePostAuthRoute";
 import type { InternalAxiosRequestConfig } from "axios";
+import { useSignInLoader } from "@/store/signInLoaderStore";
 
 /**
  * Login page.
@@ -41,6 +42,7 @@ const PANEL_ITEMS = [
 const LoginForm = () => {
   const navigate = useNavigate();
   const { setAuth, setPendingNavigation } = useAuthStore();
+  const startSignInLoader = useSignInLoader((s) => s.start);
   const [apiError, setApiError] = useState("");
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -141,6 +143,8 @@ const LoginForm = () => {
         },
         { _skipRefresh: true } as InternalAxiosRequestConfig,
       );
+      // Signed in: the logo animation covers the move to home.
+      startSignInLoader();
       setPendingNavigation(true);
       const route = await resolvePostAuthRoute(data.data.accessToken);
       setAuth(data.data.user, data.data.accessToken);
