@@ -19,6 +19,8 @@ import {
   ScrollRevealItem,
 } from "@/components/ui/ScrollReveal";
 import { LandingHero } from "./hero/LandingHero";
+import { BasicsDay } from "./basics/BasicsDay";
+import { HowItWorks } from "./HowItWorks";
 import { sessionHint } from "@/lib/sessionHint";
 import { LANDING_FAQS } from "./landingFaqs";
 
@@ -256,76 +258,7 @@ const LandingPage = () => {
 
       <LandingHero />
 
-      {/* ══ WHY THE BASICS MATTER ═══════════════════════════════
-          Section bg: surface (light) / black-surface (dark)
-          Cards: moringa filled (dark green) with white text
-      ══════════════════════════════════════════════════════════ */}
-      <section className="bg-surface dark:bg-black-surface py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <ScrollReveal>
-            <h2 className="font-heading text-1xl md:text-[20px] lg:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-2 lg:mb-4 max-w-80 md:max-w-2xl mx-auto">
-              Most nutrition advice fails because it ignores the{" "}
-              <span className="text-pawpaw dark:text-black-pawpaw">habits</span>{" "}
-              people struggle with every day.
-            </h2>
-            <p className="text-center text-xs md:text-sm font-bold text-cocoa-faded mb-12">
-              Why the basics matter
-            </p>
-          </ScrollReveal>
-
-          {/* Two moringa-filled cards */}
-          <ScrollRevealGroup className="grid md:grid-cols-2 gap-6">
-            <ScrollRevealItem className="bg-moringa dark:bg-moringa-faded/50 rounded-2xl p-8 shadow-sm">
-              {/* Card 1 */}
-              <div>
-                {/* Icon circle — amber/yellow bg */}
-                <div className="w-14 h-14 rounded-full bg-surface-two flex items-center justify-center mb-6 shadow-sm">
-                  <img
-                    src="/images/forkKnife.png"
-                    alt="cutlery"
-                    width={32}
-                    height={32}
-                    className="object-contain"
-                  />
-                </div>
-                <h3 className="font-heading font-bold text-base text-surface mb-3">
-                  What you eat adds up faster than you think
-                </h3>
-                <p className="text-xs md:text-sm text-surface/80 leading-relaxed">
-                  A meal here, a snack there, it's easy to lose track. Log from
-                  a regional catalogue, describe something custom - a Nigerian,
-                  Ghanaian or any African dish, or snap your plate and Noura
-                  will identify it and estimate it for you, whichever way you
-                  actually eat.
-                </p>
-              </div>
-            </ScrollRevealItem>
-
-            <ScrollRevealItem className="bg-moringa dark:bg-moringa-faded/50 rounded-2xl p-8 shadow-sm">
-              {/* Card 2 */}
-              <div>
-                <div className="w-14 h-14 rounded-full bg-surface-two flex items-center justify-center mb-6 shadow-sm">
-                  <img
-                    src="/images/cupWhite.svg"
-                    alt="water drop"
-                    width={28}
-                    height={28}
-                    className="object-contain"
-                  />
-                </div>
-                <h3 className="font-heading font-bold text-base text-surface mb-3">
-                  Hydration is the part everyone forgets
-                </h3>
-                <p className="text-xs md:text-sm text-surface/80 leading-relaxed">
-                  Water affects energy, appetite, and how your body actually
-                  uses what you eat. Flax calculates a target built for your
-                  body, so you're working toward a real number, not a guess.
-                </p>
-              </div>
-            </ScrollRevealItem>
-          </ScrollRevealGroup>
-        </div>
-      </section>
+      <BasicsDay />
 
       {/* ══ HOW FLAX ACTUALLY HELPS ═════════════════════════════
           Section bg: off-white (light) / dark-bg (dark) — normal body bg, no fill
@@ -796,116 +729,7 @@ const LandingPage = () => {
         </ScrollReveal>
       </section>
 
-      {/* ══ HOW IT WORKS ════════════════════════════════════════
-          Section bg: off-white (light) / dark-bg (dark) — normal body, no fill
-          Four cards: surface (light) / black-surface (dark)
-          Each card: rounded icon circle (its own color) + bold title + body text
-      ══════════════════════════════════════════════════════════ */}
-      <section id="how-it-works" className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <ScrollReveal>
-            <h2 className="font-heading text-1xl md:text-[20px] lg:text-3xl font-bold text-center text-cocoa dark:text-dark-white mb-2 lg:mb-4">
-              How it works
-            </h2>
-            <p className="text-center text-xs md:text-sm font-bold text-cocoa-faded mb-12">
-              From sign up to your first streak
-            </p>
-          </ScrollReveal>
-
-          <ScrollRevealGroup className="grid sm:grid-cols-2 gap-5 max-w-[55rem] mx-auto">
-            {" "}
-            {/* Card 1 — Set your goal, moringa circle */}
-            <ScrollRevealItem className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
-              <div className="w-12 h-12 rounded-full bg-moringa-faded flex items-center justify-center shrink-0">
-                <img
-                  src="/images/targetHit.png"
-                  alt="target hit"
-                  width={32}
-                  height={32}
-                  className="object-contain"
-                />
-              </div>
-              <div>
-                <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
-                  Set your goal
-                </p>
-                <p className="text-xs md:text-sm text-cocoa-faded leading-relaxed">
-                  Calorie targets are auto-calculated from your age, height,
-                  weight, activity level and goal. Hydration target is
-                  auto-calculated based on your gender and activity level.
-                </p>
-              </div>
-            </ScrollRevealItem>
-            {/* Card 2 — Get a suggestion, pawpaw circle */}
-            <ScrollRevealItem className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
-              <div className="w-12 h-12 rounded-full bg-pawpaw dak:bg-black-pawpaw flex items-center justify-center shrink-0">
-                <img
-                  src="/images/arrowSpin.png"
-                  alt="spin"
-                  width={32}
-                  height={32}
-                  className="object-contain"
-                />
-              </div>
-              <div>
-                <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
-                  Get a suggestion
-                </p>
-                <p className="text-xs md:text-sm text-cocoa-faded leading-relaxed">
-                  You ran out of ideas? Spin for a meal that fits your goal and
-                  what's already in your kitchen. Noura also tells you why the
-                  meal was picked.
-                </p>
-              </div>
-            </ScrollRevealItem>
-            {/* Card 3 — Log it in seconds, black circle */}
-            <ScrollRevealItem className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
-              <div className="w-12 h-12 rounded-full bg-cocoa dark:bg-dark-bg flex items-center justify-center shrink-0">
-                <img
-                  src="/images/log.png"
-                  alt="log"
-                  width={30}
-                  height={30}
-                  className="object-contain"
-                />
-              </div>
-              <div>
-                <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
-                  Log it in seconds
-                </p>
-                <p className="text-xs md:text-sm text-cocoa-faded leading-relaxed">
-                  From the catalogue, your own custom entry, or a quick photo
-                  scan Noura reads for you (including Wanke, Egusi and other
-                  local ingredients). No nutrition database memorized required.
-                </p>
-              </div>
-            </ScrollRevealItem>
-            {/* Card 4 — Watch your streak grow, yellow circle */}
-            <ScrollRevealItem className="bg-surface dark:bg-black-surface rounded-2xl p-6 flex gap-4 shadow-sm">
-              <div className="w-12 h-12 rounded-full bg-[#FEF3C7] flex items-center justify-center shrink-0">
-                <span className="text-2xl">
-                  <img
-                    src="/images/fire.png"
-                    alt="fire"
-                    width={32}
-                    height={32}
-                    className="object-contain"
-                  />
-                </span>
-              </div>
-              <div>
-                <p className="font-heading font-bold text-sm md:text-[16px] text-cocoa dark:text-dark-white mb-1">
-                  Watch your streak grow
-                </p>
-                <p className="text-xs md:text-sm text-cocoa-faded leading-relaxed">
-                  Every day you hit your goal counts. Consistency, not
-                  perfection.
-                </p>
-              </div>
-            </ScrollRevealItem>
-          </ScrollRevealGroup>
-        </div>
-      </section>
+      <HowItWorks />
 
       {/* ══ FAQ ═════════════════════════════════════════════════
           Same section rhythm as How it works: centered heading + faded
