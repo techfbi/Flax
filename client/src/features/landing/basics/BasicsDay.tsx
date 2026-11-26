@@ -398,19 +398,19 @@ export const BasicsDay = () => {
                   className="bd-step grid grid-cols-[2rem_1fr] gap-x-3"
                 >
                   <span
-                    className={`bd-num ${montserrat.className} text-xl font-extrabold leading-7 text-cocoa/25 dark:text-dark-white/25`}
+                    className={`bd-num ${montserrat.className} text-sm font-extrabold leading-snug text-cocoa/25 md:text-[16px] dark:text-dark-white/25`}
                   >
                     {i + 1}
                   </span>
                   <div>
                     <h3
-                      className={`${montserrat.className} text-lg font-bold leading-7 text-cocoa dark:text-dark-white`}
+                      className={`${montserrat.className} text-sm font-bold leading-snug text-cocoa dark:text-dark-white md:text-[16px]`}
                     >
                       {s.title}
                     </h3>
                     <div className="bd-body">
                       <div className="min-h-0 overflow-hidden">
-                        <p className="mt-1.5 text-[15px] leading-relaxed text-cocoa/65 dark:text-dark-white/60 lg:text-[clamp(0.85rem,1.75vh,0.95rem)]">
+                        <p className="mt-1 text-xs leading-relaxed text-cocoa-faded md:text-sm">
                           {s.body}
                         </p>
                         {i === 2 && (
@@ -449,7 +449,7 @@ export const BasicsDay = () => {
                                 </span>
                               ))}
                             </div>
-                            <p className="whitespace-nowrap text-sm text-cocoa/60 dark:text-dark-white/60">
+                            <p className="whitespace-nowrap text-xs text-cocoa-faded md:text-sm">
                               <span
                                 ref={(el) => {
                                   els.current.streak = el;
